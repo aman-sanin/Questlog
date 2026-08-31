@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:questlog/domain/constants/titles.dart';
 import 'package:questlog/domain/constants/unlock_schedule.dart';
 import 'package:questlog/domain/constants/xp_constants.dart';
+import 'package:questlog/domain/engine/calling.dart';
 import 'package:questlog/domain/engine/insights.dart';
 import 'package:questlog/domain/engine/progression.dart';
 import 'package:questlog/domain/engine/schedule_rule.dart';
@@ -577,6 +578,51 @@ void main() {
       final period = rule.periodOf(monday);
       expect(period.startLocalDate, equals(monday));
       expect(period.endLocalDate, equals(monday));
+    });
+  });
+
+  group('Group H: The Path & Progression Tree (P10)', () {
+    test('Domain milestone thresholds flip at exact XP: 250 (I) -> 1000 (II) -> 5000 (III)', () {
+      // 0 XP -> Recruit
+      final stats0 = CallingEngine.calculateDomainStats(
+        domain: CallingDomain.warrior,
+        domainXp: 0,
+        completionsCount: 0,
+      );
+      expect(stats0.tier, equals(0));
+      expect(stats0.tierTitle, equals('WARRIOR RECRUIT'));
+      expect(stats0.progressToNext, equals(0.0));
+      expect(stats0.nextThreshold, equals(250));
+
+      // 250 XP -> Tier I
+      final stats250 = CallingEngine.calculateDomainStats(
+        domain: CallingDomain.warrior,
+        domainXp: 250,
+        completionsCount: 15,
+      );
+      expect(stats250.tier, equals(1));
+      expect(stats250.tierTitle, equals('WARRIOR I'));
+      expect(stats250.nextThreshold, equals(1000));
+
+      // 1000 XP -> Tier II
+      final stats1000 = CallingEngine.calculateDomainStats(
+        domain: CallingDomain.warrior,
+        domainXp: 1000,
+        completionsCount: 50,
+      );
+      expect(stats1000.tier, equals(2));
+      expect(stats1000.tierTitle, equals('WARRIOR II'));
+      expect(stats1000.nextThreshold, equals(5000));
+
+      // 5000 XP -> Tier III
+      final stats5000 = CallingEngine.calculateDomainStats(
+        domain: CallingDomain.warrior,
+        domainXp: 5000,
+        completionsCount: 200,
+      );
+      expect(stats5000.tier, equals(3));
+      expect(stats5000.tierTitle, equals('WARRIOR III'));
+      expect(stats5000.progressToNext, equals(1.0));
     });
   });
 }

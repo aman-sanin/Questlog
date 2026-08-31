@@ -81,4 +81,78 @@ class CallingEngine {
   static CallingInfo getInfo(CallingDomain domain) {
     return callings[domain]!;
   }
+
+  static const List<int> milestoneThresholds = [250, 1000, 5000];
+
+  /// Calculate derived stats and progression tier for a specific calling domain
+  static DomainStats calculateDomainStats({
+    required CallingDomain domain,
+    required int domainXp,
+    required int completionsCount,
+  }) {
+    int tier = 0;
+    for (int i = 0; i < milestoneThresholds.length; i++) {
+      if (domainXp >= milestoneThresholds[i]) {
+        tier = i + 1;
+      }
+    }
+
+    int prevThreshold = tier == 0 ? 0 : milestoneThresholds[tier - 1];
+    int nextThreshold = tier < milestoneThresholds.length
+        ? milestoneThresholds[tier]
+        : milestoneThresholds.last;
+
+    double progress = 1.0;
+    if (tier < milestoneThresholds.length) {
+      final range = nextThreshold - prevThreshold;
+      final currentInRange = (domainXp - prevThreshold).clamp(0, range);
+      progress = range > 0 ? currentInRange / range : 1.0;
+    }
+
+    return DomainStats(
+      domain: domain,
+      info: getInfo(domain),
+      totalXp: domainXp,
+      completionsCount: completionsCount,
+      tier: tier,
+      tierTitle: tier == 0 ? '${domain.name.toUpperCase()} RECRUIT' : '${domain.name.toUpperCase()} ${tierRoman(tier)}',
+      progressToNext: progress,
+      nextThreshold: nextThreshold,
+    );
+  }
+
+  static String tierRoman(int tier) {
+    switch (tier) {
+      case 1:
+        return 'I';
+      case 2:
+        return 'II';
+      case 3:
+        return 'III';
+      default:
+        return 'III';
+    }
+  }
+}
+
+class DomainStats {
+  final CallingDomain domain;
+  final CallingInfo info;
+  final int totalXp;
+  final int completionsCount;
+  final int tier; // 0, 1 (250), 2 (1000), 3 (5000)
+  final String tierTitle;
+  final double progressToNext;
+  final int nextThreshold;
+
+  const DomainStats({
+    required this.domain,
+    required this.info,
+    required this.totalXp,
+    required this.completionsCount,
+    required this.tier,
+    required this.tierTitle,
+    required this.progressToNext,
+    required this.nextThreshold,
+  });
 }

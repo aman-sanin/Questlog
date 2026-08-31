@@ -165,6 +165,46 @@ class InsightsScreen extends ConsumerWidget {
                   ],
                   const SizedBox(height: 20),
 
+                  // The Path Teaser Card
+                  InkWell(
+                    onTap: () => context.push('/path'),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: tokens.tonal,
+                        border: Border.all(color: tokens.accent, width: 1.5),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Symbols.account_tree, size: 22, color: tokens.accent),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'THE PATH · PROGRESSION TREE',
+                                  style: tokens.headline(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: tokens.accent,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Explore the 6 calling branches, radial mini-map, and trial mastery.',
+                                  style: tokens.body(fontSize: 12, color: tokens.textSecondary),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(Symbols.arrow_forward, size: 16, color: tokens.accent),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
                   // Monthly Recap Teaser Card
                   InkWell(
                     onTap: () => context.push('/recap'),
@@ -203,7 +243,7 @@ class InsightsScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
 
                   // Rotating Weekly Insight Card
                   Container(

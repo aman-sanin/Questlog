@@ -6,6 +6,7 @@ import 'root_scaffold.dart';
 import 'screens/debug_inspector_screen.dart';
 import 'screens/insights_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/path_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/recap_screen.dart';
 import 'screens/settings_screen.dart';
@@ -25,6 +26,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/onboarding',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const OnboardingScreen(),
+      ),
+      GoRoute(
+        path: '/path',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const PathScreen(),
       ),
       GoRoute(
         path: '/settings',

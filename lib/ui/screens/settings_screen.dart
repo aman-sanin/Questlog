@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../app/providers/database_provider.dart';
 import '../../app/providers/profile_provider.dart';
@@ -34,7 +35,7 @@ class SettingsScreen extends ConsumerWidget {
         backgroundColor: tokens.bg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Symbols.arrow_back),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -214,15 +215,19 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 32),
 
-          // App Meta Info
+          // App Meta Info & Debug Entry
           Center(
-            child: Text(
-              'QUESTLOG v1.0 · LOCAL FIRST · NO ACCOUNTS',
-              style: tokens.monoText(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                letterSpacing: 1.0,
-                color: tokens.textSecondary.withOpacity(0.5),
+            child: GestureDetector(
+              onTap: () => context.push('/debug'),
+              onLongPress: () => context.push('/debug'),
+              child: Text(
+                'QUESTLOG v1.0 · LOCAL FIRST · NO ACCOUNTS',
+                style: tokens.monoText(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 1.0,
+                  color: tokens.textSecondary.withOpacity(0.5),
+                ),
               ),
             ),
           ),
@@ -286,7 +291,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               )
             else if (isSelected)
-              Icon(Icons.check, size: 16, color: tokens.accent),
+              Icon(Symbols.check, size: 16, color: tokens.accent, weight: 700),
           ],
         ),
       ),

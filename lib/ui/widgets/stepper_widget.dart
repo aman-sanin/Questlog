@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../theme/tokens.dart';
 
 class StepperWidget extends StatelessWidget {
@@ -20,62 +21,64 @@ class StepperWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
-    final bool canDecrement = current > 0;
-    final bool isCompleted = current >= target;
+    final isOverachieved = current > target;
+    final isDone = current >= target;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         // Decrement button
-        InkWell(
-          onTap: canDecrement ? onDecrement : null,
+        GestureDetector(
+          onTap: current > 0 ? onDecrement : null,
           child: Container(
-            width: 36,
-            height: 36,
+            width: 28,
+            height: 28,
             decoration: BoxDecoration(
               color: tokens.tonal,
-              border: Border.all(
-                color: canDecrement ? tokens.lineRest : tokens.lineRule,
-                width: 1,
-              ),
+              border: Border.all(color: tokens.lineRule, width: 1),
             ),
             alignment: Alignment.center,
             child: Icon(
-              Icons.remove,
-              size: 16,
-              color: canDecrement ? tokens.textPrimary : tokens.textSecondary.withOpacity(0.4),
+              Symbols.remove,
+              size: 14,
+              color: current > 0 ? tokens.textPrimary : tokens.textSecondary.withOpacity(0.3),
             ),
           ),
         ),
-        const SizedBox(width: 10),
-        // Monospace count
+        const SizedBox(width: 8),
+
+        // Count Text
         Text(
-          unit != null ? '$current/$target $unit' : '$current/$target',
+          '$current/$target${unit != null ? " $unit" : ""}',
           style: tokens.monoText(
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: isCompleted ? tokens.hero : tokens.textPrimary,
+            color: isOverachieved
+                ? tokens.accent
+                : (isDone ? tokens.hero : tokens.textPrimary),
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 8),
+
         // Increment button
-        InkWell(
+        GestureDetector(
           onTap: onIncrement,
           child: Container(
-            width: 36,
-            height: 36,
+            width: 28,
+            height: 28,
             decoration: BoxDecoration(
-              color: isCompleted ? tokens.hero.withOpacity(0.15) : tokens.tonal,
+              color: isDone ? tokens.hero : tokens.tonal,
               border: Border.all(
-                color: isCompleted ? tokens.hero : tokens.lineRest,
+                color: isDone ? tokens.hero : tokens.lineRule,
                 width: 1,
               ),
             ),
             alignment: Alignment.center,
             child: Icon(
-              Icons.add,
-              size: 16,
-              color: isCompleted ? tokens.hero : tokens.textPrimary,
+              Symbols.add,
+              size: 14,
+              color: isDone ? tokens.onSolid : tokens.textPrimary,
+              weight: 700,
             ),
           ),
         ),

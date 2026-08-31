@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../../app/providers/database_provider.dart';
 import '../../app/providers/profile_provider.dart';
 import '../../app/providers/today_provider.dart';
@@ -94,6 +95,8 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
 
     final actions = ref.read(questActionsProvider);
     final now = DateTime.now();
+    final today = ref.read(effectiveLocalDateProvider);
+    final weekStart = ref.read(weekStartProvider);
 
     if (widget.quest == null) {
       await actions.createQuest(
@@ -107,6 +110,8 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
         goalId: _selectedGoalId,
         domain: _selectedDomain,
         now: now,
+        today: today,
+        weekStart: weekStart,
       );
     } else {
       await actions.updateQuest(
@@ -123,6 +128,9 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
         pausedUntil: widget.quest!.pausedUntil,
         archivedAt: widget.quest!.archivedAt,
         createdAt: widget.quest!.createdAt,
+        today: today,
+        weekStart: weekStart,
+        now: now,
       );
     }
 
@@ -243,7 +251,7 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
                   Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.remove),
+                        icon: const Icon(Symbols.remove),
                         onPressed: _timesPerPeriod > 1
                             ? () {
                                 setState(() {
@@ -258,7 +266,7 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
                         style: tokens.monoText(fontSize: 15, fontWeight: FontWeight.w600),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.add),
+                        icon: const Icon(Symbols.add),
                         onPressed: _timesPerPeriod < 7
                             ? () {
                                 setState(() {
@@ -378,9 +386,10 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              _essential ? Icons.star : Icons.star_border,
+                              _essential ? Symbols.star : Symbols.star_border,
                               size: 18,
                               color: _essential ? tokens.hero : tokens.textSecondary,
+                              fill: _essential ? 1.0 : 0.0,
                             ),
                             const SizedBox(width: 6),
                             Text(

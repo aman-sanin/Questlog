@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../../app/providers/profile_view_provider.dart';
 import '../../domain/model/models.dart';
 import '../ceremonies/ceremonies.dart';
@@ -53,7 +54,7 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.settings_outlined),
+                        icon: const Icon(Symbols.settings),
                         onPressed: () => context.push('/settings'),
                       ),
                     ],
@@ -229,7 +230,7 @@ class ProfileScreen extends ConsumerWidget {
                             ),
                           ),
                           Icon(
-                            item.level <= prog.level ? Icons.check : Icons.lock,
+                            item.level <= prog.level ? Symbols.check : Symbols.lock,
                             size: 16,
                             color: item.level <= prog.level ? tokens.hero : tokens.textSecondary.withOpacity(0.4),
                           ),

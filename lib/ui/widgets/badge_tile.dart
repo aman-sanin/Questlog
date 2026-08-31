@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../../domain/engine/badges.dart';
 import '../theme/tokens.dart';
 
@@ -20,68 +21,58 @@ class BadgeTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 44,
-        height: 44,
         decoration: BoxDecoration(
-          color: tokens.tonal,
+          color: isEarned ? tokens.tonal : Colors.transparent,
           border: Border.all(
-            color: isEarned ? tokens.lineRest : tokens.lineRule,
-            width: 1,
+            color: isEarned ? tokens.hero : tokens.lineRule,
+            width: isEarned ? 1.5 : 1.0,
           ),
         ),
         alignment: Alignment.center,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Icon(
-              _resolveIconData(badge.definition.icon),
-              size: 20,
-              color: isEarned ? tokens.hero : tokens.textSecondary.withOpacity(0.35),
-            ),
-            if (!isEarned)
-              Positioned(
-                bottom: 2,
-                right: 2,
-                child: Icon(
-                  Icons.lock,
-                  size: 10,
-                  color: tokens.textSecondary.withOpacity(0.5),
-                ),
+        child: isEarned
+            ? Icon(
+                _iconForBadge(badge.definition.key),
+                size: 20,
+                color: tokens.hero,
+                fill: 1.0,
+              )
+            : Icon(
+                Symbols.lock,
+                size: 16,
+                color: tokens.textSecondary.withOpacity(0.3),
               ),
-          ],
-        ),
       ),
     );
   }
 
-  IconData _resolveIconData(String iconName) {
-    switch (iconName) {
-      case 'footprint':
-        return Icons.directions_walk;
-      case 'repeat':
-        return Icons.repeat;
-      case 'shield':
-        return Icons.shield;
-      case 'workspace_premium':
-        return Icons.workspace_premium;
-      case 'military_tech':
-        return Icons.military_tech;
-      case 'counter_1':
-        return Icons.looks_one;
-      case 'diamond':
-        return Icons.diamond;
-      case 'hotel_class':
-        return Icons.hotel_class;
-      case 'all_inclusive':
-        return Icons.all_inclusive;
-      case 'flag':
-        return Icons.flag;
-      case 'wb_sunny':
-        return Icons.wb_sunny;
-      case 'refresh':
-        return Icons.refresh;
+  IconData _iconForBadge(String key) {
+    switch (key) {
+      case 'first_step':
+        return Symbols.directions_walk;
+      case 'streak_7':
+        return Symbols.repeat;
+      case 'streak_30':
+        return Symbols.shield;
+      case 'streak_100':
+        return Symbols.workspace_premium;
+      case 'streak_365':
+        return Symbols.military_tech;
+      case 'centurion':
+        return Symbols.looks_one;
+      case 'millennial':
+        return Symbols.diamond;
+      case 'perfect_ten':
+        return Symbols.hotel_class;
+      case 'polymath':
+        return Symbols.all_inclusive;
+      case 'goal_getter':
+        return Symbols.flag;
+      case 'early_bird':
+        return Symbols.wb_sunny;
+      case 'comeback':
+        return Symbols.refresh;
       default:
-        return Icons.military_tech;
+        return Symbols.military_tech;
     }
   }
 }

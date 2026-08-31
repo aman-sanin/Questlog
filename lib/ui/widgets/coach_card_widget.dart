@@ -1,25 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../theme/tokens.dart';
-import 'action_button.dart';
 
 class CoachCardWidget extends StatelessWidget {
   final String title;
-  final String body;
-  final String primaryAction;
-  final String? secondaryAction;
-  final VoidCallback onPrimary;
-  final VoidCallback? onSecondary;
-  final VoidCallback onDismiss;
+  final String message;
+  final VoidCallback? onDismiss;
+  final VoidCallback? onAction;
+  final String? actionLabel;
 
   const CoachCardWidget({
     super.key,
     required this.title,
-    required this.body,
-    required this.primaryAction,
-    this.secondaryAction,
-    required this.onPrimary,
-    this.onSecondary,
-    required this.onDismiss,
+    required this.message,
+    this.onDismiss,
+    this.onAction,
+    this.actionLabel,
   });
 
   @override
@@ -36,66 +32,59 @@ class CoachCardWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(
-                Icons.lightbulb_outline,
-                size: 18,
-                color: tokens.accent,
+              Row(
+                children: [
+                  Icon(
+                    Symbols.lightbulb,
+                    size: 18,
+                    color: tokens.accent,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    title.toUpperCase(),
+                    style: tokens.title(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: tokens.textPrimary,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  style: tokens.title(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: tokens.textPrimary,
+              if (onDismiss != null)
+                GestureDetector(
+                  onTap: onDismiss,
+                  child: Icon(
+                    Symbols.close,
+                    size: 16,
+                    color: tokens.textSecondary,
                   ),
                 ),
-              ),
-              GestureDetector(
-                onTap: onDismiss,
-                child: Icon(
-                  Icons.close,
-                  size: 18,
-                  color: tokens.textSecondary,
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
-            body,
+            message,
             style: tokens.body(
               fontSize: 13,
               color: tokens.textSecondary,
             ),
           ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: ActionButton(
-                  label: primaryAction,
-                  onPressed: onPrimary,
-                  height: 38,
-                  variant: ActionButtonVariant.primary,
+          if (onAction != null && actionLabel != null) ...[
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: onAction,
+              child: Text(
+                actionLabel!,
+                style: tokens.monoText(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: tokens.accent,
                 ),
               ),
-              if (secondaryAction != null && onSecondary != null) ...[
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ActionButton(
-                    label: secondaryAction!,
-                    onPressed: onSecondary,
-                    height: 38,
-                    variant: ActionButtonVariant.secondary,
-                  ),
-                ),
-              ],
-            ],
-          ),
+            ),
+          ],
         ],
       ),
     );

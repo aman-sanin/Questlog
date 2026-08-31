@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../../app/providers/insights_provider.dart';
 import '../../app/providers/profile_provider.dart';
 import '../../domain/model/models.dart';
@@ -61,7 +62,7 @@ class InsightsScreen extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.chevron_left),
+                        icon: const Icon(Symbols.chevron_left),
                         onPressed: () {
                           final prev = selectedMonth.month == 1
                               ? LocalDate(selectedMonth.year - 1, 12, 1)
@@ -79,7 +80,7 @@ class InsightsScreen extends ConsumerWidget {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.chevron_right),
+                        icon: const Icon(Symbols.chevron_right),
                         onPressed: () {
                           final next = selectedMonth.month == 12
                               ? LocalDate(selectedMonth.year + 1, 1, 1)
@@ -117,7 +118,7 @@ class InsightsScreen extends ConsumerWidget {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.auto_awesome, size: 20, color: tokens.hero),
+                          Icon(Symbols.auto_awesome, size: 20, color: tokens.hero, fill: 1.0),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -139,7 +140,7 @@ class InsightsScreen extends ConsumerWidget {
                               ],
                             ),
                           ),
-                          Icon(Icons.arrow_forward, size: 16, color: tokens.hero),
+                          Icon(Symbols.arrow_forward, size: 16, color: tokens.hero),
                         ],
                       ),
                     ),

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../../domain/engine/badges.dart';
 import '../theme/tokens.dart';
 import '../widgets/action_button.dart';
+import '../widgets/burst_widget.dart';
 
 class BadgeSheet extends StatelessWidget {
   final BadgeStatus badge;
@@ -11,6 +13,7 @@ class BadgeSheet extends StatelessWidget {
   static Future<void> show(BuildContext context, {required BadgeStatus badge}) {
     return showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => BadgeSheet(badge: badge),
     );
@@ -19,7 +22,8 @@ class BadgeSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
-    final def = badge.definition;
+    final b = badge.definition;
+    final isEarned = badge.isEarned;
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -33,52 +37,64 @@ class BadgeSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
-            width: 36,
-            height: 4,
-            color: tokens.lineRule,
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              color: tokens.lineRule,
+            ),
           ),
           const SizedBox(height: 24),
-          // Large Badge Icon
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: tokens.tonal,
-              border: Border.all(
-                color: badge.isEarned ? tokens.hero : tokens.lineRule,
-                width: 1.5,
+
+          // Badge Icon Hero
+          BurstWidget(
+            size: 100,
+            child: Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isEarned ? tokens.tonal : Colors.transparent,
+                border: Border.all(
+                  color: isEarned ? tokens.hero : tokens.lineRule,
+                  width: 2,
+                ),
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                isEarned ? Symbols.military_tech : Symbols.lock,
+                size: 32,
+                color: isEarned ? tokens.hero : tokens.textSecondary.withOpacity(0.4),
+                fill: isEarned ? 1.0 : 0.0,
               ),
             ),
-            alignment: Alignment.center,
-            child: Icon(
-              Icons.military_tech,
-              size: 36,
-              color: badge.isEarned ? tokens.hero : tokens.textSecondary.withOpacity(0.4),
-            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
+
+          // Badge Title
           Text(
-            def.title,
+            b.title.toUpperCase(),
             style: tokens.headline(
               fontSize: 22,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
               color: tokens.textPrimary,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
-            badge.isEarned ? 'EARNED' : 'LOCKED',
+            isEarned ? 'EARNED' : 'LOCKED',
             style: tokens.monoText(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              letterSpacing: 1.0,
-              color: badge.isEarned ? tokens.hero : tokens.textSecondary,
+              letterSpacing: 1.2,
+              color: isEarned ? tokens.hero : tokens.textSecondary,
             ),
           ),
           const SizedBox(height: 16),
+
+          // Flavor text
           Text(
-            def.flavor,
+            '"${b.flavor}"',
             textAlign: TextAlign.center,
             style: tokens.body(
               fontSize: 14,
@@ -87,23 +103,41 @@ class BadgeSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
+
+          // Requirement Container
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: tokens.tonal,
-              border: Border.all(color: tokens.lineRule, width: 1),
+              border: Border.all(color: tokens.lineRest, width: 1),
             ),
-            child: Text(
-              'REQUIREMENT: ${def.requirement}',
-              textAlign: TextAlign.center,
-              style: tokens.monoText(
-                fontSize: 12,
-                color: tokens.textPrimary,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'REQUIREMENT',
+                  style: tokens.monoText(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: tokens.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  b.requirement,
+                  style: tokens.monoText(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: tokens.textPrimary,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 24),
+
+          // Close button
           ActionButton(
             label: 'DISMISS',
             variant: ActionButtonVariant.secondary,

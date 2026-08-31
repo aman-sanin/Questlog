@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../../app/providers/ceremony_provider.dart';
 import '../../app/providers/database_provider.dart';
 import '../../app/providers/profile_provider.dart';
@@ -90,7 +91,7 @@ class LevelUpCeremonyDialog extends StatelessWidget {
                   children: event.unlocks
                       .map((u) => Row(
                             children: [
-                              Icon(Icons.lock_open, size: 16, color: tokens.accent),
+                              Icon(Symbols.lock_open, size: 16, color: tokens.accent),
                               const SizedBox(width: 8),
                               Text(
                                 u.title,

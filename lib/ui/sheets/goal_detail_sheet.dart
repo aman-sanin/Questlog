@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../../app/providers/ceremony_provider.dart';
 import '../../app/providers/database_provider.dart';
 import '../../app/providers/profile_provider.dart';
@@ -93,7 +94,7 @@ class GoalDetailSheet extends ConsumerWidget {
                 ],
               ),
               IconButton(
-                icon: const Icon(Icons.edit_outlined),
+                icon: const Icon(Symbols.edit),
                 onPressed: () {
                   Navigator.of(context).pop();
                   GoalEditorSheet.show(context, goal: goal);

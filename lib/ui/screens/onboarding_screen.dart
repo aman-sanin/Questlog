@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../../app/providers/database_provider.dart';
 import '../../domain/model/models.dart';
 import '../../domain/templates.dart';
@@ -236,7 +237,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             ),
                           ),
                           Icon(
-                            isSelected ? Icons.check_box : Icons.check_box_outline_blank,
+                            isSelected ? Symbols.check_box : Symbols.check_box_outline_blank,
                             size: 20,
                             color: isSelected ? tokens.hero : tokens.textSecondary.withOpacity(0.4),
                           ),

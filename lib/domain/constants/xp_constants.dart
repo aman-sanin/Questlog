@@ -7,7 +7,7 @@ class XpConstants {
   static const int baseYearly = 400;
 
   static const int perfectDayBonus = 15;
-  static const int perfectWeekBonus = 50;
+  static const int perfectWeekBonus = 75; // +75 XP and grants 1 streak freeze
   static const int goalCompletionBonus = 250;
 
   static const int freezeWalletCapacity = 2;
@@ -37,11 +37,9 @@ class XpConstants {
   }
 
   static const Map<int, int> streakMilestones = {
-    7: 25,
-    14: 50,
-    30: 100,
-    60: 200,
+    7: 50,
+    30: 150,
     100: 500,
-    365: 1000,
+    365: 2000,
   };
 }

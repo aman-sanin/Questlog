@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:share_plus/share_plus.dart';
 import '../theme/tokens.dart';
 import '../widgets/action_button.dart';
@@ -20,7 +21,7 @@ class MonthlyRecapScreen extends ConsumerWidget {
         backgroundColor: tokens.bg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: const Icon(Symbols.close),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -54,7 +55,7 @@ class MonthlyRecapScreen extends ConsumerWidget {
                 children: [
                   BurstWidget(
                     size: 100,
-                    child: Icon(Icons.auto_awesome, size: 36, color: tokens.hero),
+                    child: Icon(Symbols.auto_awesome, size: 36, color: tokens.hero, fill: 1.0),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -66,110 +67,105 @@ class MonthlyRecapScreen extends ConsumerWidget {
                       color: tokens.hero,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
-                    'The Illuminated Scroll',
+                    'THE UNBROKEN SCROLL',
+                    textAlign: TextAlign.center,
                     style: tokens.display(
                       fontSize: 22,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       color: tokens.textPrimary,
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'You answered the call across 28 days this month with discipline.',
+                    textAlign: TextAlign.center,
+                    style: tokens.body(fontSize: 13, color: tokens.textSecondary),
+                  ),
                   const SizedBox(height: 24),
 
-                  // 2x2 Stat Cards
+                  // Recap Stats Grid
                   Row(
-                    children: const [
+                    children: [
                       Expanded(
-                        child: StatCard(
-                          value: '1,420',
-                          label: 'TOTAL XP',
-                        ),
+                        child: StatCard(value: '92%', label: 'COMPLETION'),
                       ),
-                      SizedBox(width: 10),
+                      const SizedBox(width: 8),
                       Expanded(
-                        child: StatCard(
-                          value: '18',
-                          label: 'PERFECT DAYS',
-                        ),
+                        child: StatCard(value: '+1,450', label: 'XP EARNED'),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(width: 8),
                   Row(
-                    children: const [
+                    children: [
                       Expanded(
-                        child: StatCard(
-                          value: '23',
-                          label: 'BEST STREAK',
-                        ),
+                        child: StatCard(value: '18', label: 'PERFECT DAYS'),
                       ),
-                      SizedBox(width: 10),
+                      const SizedBox(width: 8),
                       Expanded(
-                        child: StatCard(
-                          value: '94',
-                          label: 'COMPLETIONS',
-                        ),
+                        child: StatCard(value: '1', label: 'FREEZE SAVED'),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
 
-                  // Most Completed Quest
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: tokens.bg,
-                      border: Border.all(color: tokens.lineRest, width: 1),
+                  // Domain affinity bar
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'DOMAIN AFFINITY',
+                      style: tokens.monoText(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.0,
+                        color: tokens.textSecondary,
+                      ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.zero,
+                    child: Row(
                       children: [
-                        Text(
-                          'QUEST OF THE MONTH',
-                          style: tokens.monoText(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 1.0,
-                            color: tokens.accent,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Morning Pushups & Core',
-                          style: tokens.title(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: tokens.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '28 completions · 100% adherence',
-                          style: tokens.monoText(
-                            fontSize: 12,
-                            color: tokens.textSecondary,
-                          ),
+                        Expanded(flex: 50, child: Container(height: 8, color: tokens.hero)),
+                        Expanded(flex: 25, child: Container(height: 8, color: tokens.accent)),
+                        Expanded(
+                          flex: 25,
+                          child: Container(height: 8, color: tokens.textPrimary.withOpacity(0.2)),
                         ),
                       ],
                     ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('WARRIOR 50%', style: tokens.monoText(fontSize: 10, color: tokens.hero)),
+                      Text('SAGE 25%', style: tokens.monoText(fontSize: 10, color: tokens.accent)),
+                      Text(
+                        'OTHER 25%',
+                        style: tokens.monoText(fontSize: 10, color: tokens.textSecondary),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
 
-            // Share button
+            // Share Action Button
             ActionButton(
-              label: 'SHARE RECAP',
+              label: 'SHARE RECAP MANUSCRIPT',
               onPressed: () {
                 Share.share(
-                  '⚔️ QuestLog Monthly Recap: 1,420 XP earned, 18 Perfect Days, and a 23-day streak!',
+                  'QuestLog October Recap: 92% completion rate, 18 Perfect Days, +1,450 XP earned!',
                   subject: 'QuestLog Monthly Recap',
                 );
               },
             ),
+            const SizedBox(height: 40),
           ],
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../theme/tokens.dart';
 
 class RadioRow<T> extends StatelessWidget {
@@ -7,7 +8,6 @@ class RadioRow<T> extends StatelessWidget {
   final String title;
   final String? subtitle;
   final ValueChanged<T> onChanged;
-  final Widget? trailing;
 
   const RadioRow({
     super.key,
@@ -16,7 +16,6 @@ class RadioRow<T> extends StatelessWidget {
     required this.title,
     this.subtitle,
     required this.onChanged,
-    this.trailing,
   });
 
   @override
@@ -24,7 +23,7 @@ class RadioRow<T> extends StatelessWidget {
     final tokens = context.tokens;
     final isSelected = value == groupValue;
 
-    return InkWell(
+    return GestureDetector(
       onTap: () => onChanged(value),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -37,23 +36,24 @@ class RadioRow<T> extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Sharp custom indicator
+            // Radio square
             Container(
               width: 18,
               height: 18,
               decoration: BoxDecoration(
                 color: isSelected ? tokens.textPrimary : Colors.transparent,
                 border: Border.all(
-                  color: isSelected ? tokens.lineFull : tokens.lineRest,
+                  color: isSelected ? tokens.textPrimary : tokens.lineRest,
                   width: 1.5,
                 ),
               ),
               alignment: Alignment.center,
               child: isSelected
                   ? Icon(
-                      Icons.check,
-                      size: 13,
+                      Symbols.check,
+                      size: 12,
                       color: tokens.onSolid,
+                      weight: 700,
                     )
                   : null,
             ),
@@ -65,7 +65,7 @@ class RadioRow<T> extends StatelessWidget {
                   Text(
                     title,
                     style: tokens.body(
-                      fontSize: 15,
+                      fontSize: 14,
                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                       color: tokens.textPrimary,
                     ),
@@ -83,7 +83,6 @@ class RadioRow<T> extends StatelessWidget {
                 ],
               ),
             ),
-            if (trailing != null) trailing!,
           ],
         ),
       ),

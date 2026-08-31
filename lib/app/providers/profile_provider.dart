@@ -8,8 +8,11 @@ final profileStreamProvider = StreamProvider<ProfileData>((ref) {
   return ref.watch(profileDaoProvider).watchProfile();
 });
 
+final debugClockOffsetProvider = StateProvider<Duration>((ref) => Duration.zero);
+
 final currentDateTimeProvider = Provider<DateTime>((ref) {
-  return DateTime.now();
+  final offset = ref.watch(debugClockOffsetProvider);
+  return DateTime.now().add(offset);
 });
 
 final effectiveLocalDateProvider = Provider<LocalDate>((ref) {

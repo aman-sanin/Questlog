@@ -1,6 +1,7 @@
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:questlog/data/db/database.dart';
 import 'package:questlog/domain/engine/quest_state.dart';
 import 'package:questlog/domain/engine/schedule_rule.dart';
@@ -28,7 +29,7 @@ void main() {
       ),
     );
 
-    expect(find.byIcon(Icons.check), findsOneWidget);
+    expect(find.byIcon(Symbols.check), findsOneWidget);
   });
 
   testWidgets('StepperWidget increments count on tap', (tester) async {
@@ -52,7 +53,7 @@ void main() {
 
     expect(find.text('1/5 reps'), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.add));
+    await tester.tap(find.byIcon(Symbols.add));
     await tester.pump();
 
     expect(find.text('2/5 reps'), findsOneWidget);
@@ -85,7 +86,7 @@ void main() {
 
     expect(find.text('Morning Pushups'), findsOneWidget);
     expect(find.text('DAILY · 7 STREAK'), findsOneWidget);
-    expect(find.byIcon(Icons.star), findsOneWidget);
+    expect(find.byIcon(Symbols.star), findsOneWidget);
   });
 
   test('Initial database startup initializes default profile without throwing', () async {

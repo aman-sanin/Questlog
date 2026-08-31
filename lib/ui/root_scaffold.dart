@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../app/providers/ceremony_provider.dart';
 import 'ceremonies/ceremonies.dart';
 import 'sheets/quest_editor_sheet.dart';
@@ -13,6 +14,17 @@ class RootScaffold extends ConsumerWidget {
     super.key,
     required this.navigationShell,
   });
+
+  @override
+  Widget build(BuildContext context) {
+    return _RootScaffoldView(navigationShell: navigationShell);
+  }
+}
+
+class _RootScaffoldView extends ConsumerWidget {
+  final StatefulNavigationShell navigationShell;
+
+  const _RootScaffoldView({required this.navigationShell});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -59,7 +71,7 @@ class RootScaffold extends ConsumerWidget {
             _buildNavTab(
               context,
               tokens,
-              icon: Icons.checklist,
+              icon: Symbols.checklist,
               label: 'TODAY',
               isSelected: currentIndex == 0,
               onTap: () => navigationShell.goBranch(0),
@@ -77,9 +89,10 @@ class RootScaffold extends ConsumerWidget {
                 ),
                 alignment: Alignment.center,
                 child: Icon(
-                  Icons.add,
+                  Symbols.add,
                   size: 24,
                   color: tokens.onSolid,
+                  weight: 700,
                 ),
               ),
             ),
@@ -88,7 +101,7 @@ class RootScaffold extends ConsumerWidget {
             _buildNavTab(
               context,
               tokens,
-              icon: Icons.grid_view,
+              icon: Symbols.grid_view,
               label: 'INSIGHTS',
               isSelected: currentIndex == 1,
               onTap: () => navigationShell.goBranch(1),
@@ -98,7 +111,7 @@ class RootScaffold extends ConsumerWidget {
             _buildNavTab(
               context,
               tokens,
-              icon: Icons.person_outline,
+              icon: Symbols.person,
               label: 'PROFILE',
               isSelected: currentIndex == 2,
               onTap: () => navigationShell.goBranch(2),
@@ -128,6 +141,7 @@ class RootScaffold extends ConsumerWidget {
               icon,
               size: 20,
               color: isSelected ? tokens.textPrimary : tokens.textSecondary.withOpacity(0.5),
+              fill: isSelected ? 1.0 : 0.0,
             ),
             const SizedBox(height: 4),
             Text(

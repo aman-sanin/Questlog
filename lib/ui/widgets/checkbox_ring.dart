@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../theme/tokens.dart';
 
 class CheckboxRing extends StatelessWidget {
@@ -9,7 +10,7 @@ class CheckboxRing extends StatelessWidget {
 
   const CheckboxRing({
     super.key,
-    required this.isCompleted,
+    this.isCompleted = false,
     this.isAtRisk = false,
     this.isMissed = false,
     this.onTap,
@@ -21,32 +22,21 @@ class CheckboxRing extends StatelessWidget {
 
     Color borderColor;
     Color? fillColor;
-    Widget? icon;
 
     if (isCompleted) {
       borderColor = tokens.hero;
       fillColor = tokens.hero;
-      icon = Icon(
-        Icons.check,
-        size: 16,
-        color: tokens.onSolid,
-      );
-    } else if (isMissed) {
-      borderColor = tokens.miss;
-      fillColor = Colors.transparent;
     } else if (isAtRisk) {
       borderColor = tokens.accent;
-      fillColor = Colors.transparent;
+      fillColor = null;
     } else {
-      borderColor = tokens.textPrimary.withOpacity(0.40);
-      fillColor = Colors.transparent;
+      borderColor = tokens.lineRest;
+      fillColor = null;
     }
 
     return GestureDetector(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 120),
+      child: Container(
         width: 28,
         height: 28,
         decoration: BoxDecoration(
@@ -54,11 +44,18 @@ class CheckboxRing extends StatelessWidget {
           color: fillColor,
           border: Border.all(
             color: borderColor,
-            width: isMissed ? 2.0 : 1.5,
+            width: isCompleted ? 0 : (isAtRisk ? 2.0 : 1.5),
           ),
         ),
         alignment: Alignment.center,
-        child: icon,
+        child: isCompleted
+            ? Icon(
+                Symbols.check,
+                size: 16,
+                color: tokens.onSolid,
+                weight: 700,
+              )
+            : null,
       ),
     );
   }

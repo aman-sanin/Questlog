@@ -45,7 +45,7 @@ class SettlementEngine {
 
     final yesterday = today.subtractDays(1);
 
-    // 1. Process daily / weekly closed bonuses for profile
+    // 1. Process daily closed bonuses for profile
     LocalDate currentDay = profileSettledThrough != null
         ? profileSettledThrough.addDays(1)
         : today.subtractDays(30);
@@ -61,14 +61,14 @@ class SettlementEngine {
       int essentialCompletedCount = 0;
 
       for (final q in questsData) {
-        final bool isEssential = q['essential'] as bool;
+        final bool isEssential = q['essential'] as bool? ?? false;
         final ScheduleRule rule = q['rule'] as ScheduleRule;
         final String qId = q['id'] as String;
 
-        if (isEssential && !rule.isWindowScheduled && rule.isScheduledOn(currentDay)) {
+        if (isEssential && !rule.isWindowScheduled && rule.isScheduledOn(currentDay, weekStart.value)) {
           essentialScheduledCount++;
           final count = completionsByQuest[qId]?[currentDay] ?? 0;
-          final target = q['targetValue'] as int;
+          final target = q['targetValue'] as int? ?? 1;
           if (count >= target) {
             essentialCompletedCount++;
           }
@@ -76,14 +76,79 @@ class SettlementEngine {
       }
 
       if (essentialScheduledCount > 0 && essentialScheduledCount == essentialCompletedCount) {
-        final ref = currentDay.formatted;
-        if (!existingEventRefs.contains('perfect_day:$ref')) {
+        final refKey = 'perfect_day:${currentDay.formatted}';
+        if (!existingEventRefs.contains(refKey)) {
           pendingEvents.add(SettlementPendingEvent(
             type: XpEventType.perfectDay,
-            ref: ref,
+            ref: refKey,
             amount: XpConstants.perfectDayBonus,
             localDate: currentDay,
           ));
+        }
+      }
+
+      // Check closed weekly periods if currentDay is the end of a week
+      final currentWeekday = currentDay.toDateTime().weekday; // 1=Mon, 7=Sun
+      final isWeekEnd = (weekStart == WeekStart.monday && currentWeekday == 7) ||
+          (weekStart == WeekStart.sunday && currentWeekday == 6);
+
+      if (isWeekEnd) {
+        final weekRange = WeeklyRule.times(1).periodOf(currentDay, weekStart.value);
+        final weekStartDay = weekRange.startLocalDate;
+        final weekEndDay = weekRange.endLocalDate;
+
+        int scheduledQuestsCount = 0;
+        int satisfiedQuestsCount = 0;
+
+        for (final q in questsData) {
+          final ScheduleRule rule = q['rule'] as ScheduleRule;
+          final String qId = q['id'] as String;
+          final qCompletions = completionsByQuest[qId] ?? {};
+
+          int target = q['targetValue'] as int? ?? 1;
+          if (rule is WeeklyRule && rule.times != null) target = rule.times!;
+
+          // Total completions in week
+          int weekCount = 0;
+          for (final entry in qCompletions.entries) {
+            if (entry.key >= weekStartDay && entry.key <= weekEndDay) {
+              weekCount += entry.value;
+            }
+          }
+
+          bool wasScheduled = false;
+          if (rule.isWindowScheduled) {
+            wasScheduled = true;
+          } else {
+            // Check if scheduled on any day of the week
+            LocalDate d = weekStartDay;
+            while (d <= weekEndDay) {
+              if (rule.isScheduledOn(d, weekStart.value)) {
+                wasScheduled = true;
+                break;
+              }
+              d = d.addDays(1);
+            }
+          }
+
+          if (wasScheduled) {
+            scheduledQuestsCount++;
+            if (weekCount >= target) {
+              satisfiedQuestsCount++;
+            }
+          }
+        }
+
+        if (scheduledQuestsCount > 0 && scheduledQuestsCount == satisfiedQuestsCount) {
+          final refKey = 'perfect_week:${weekStartDay.formatted}';
+          if (!existingEventRefs.contains(refKey)) {
+            pendingEvents.add(SettlementPendingEvent(
+              type: XpEventType.perfectWeek,
+              ref: refKey,
+              amount: XpConstants.perfectWeekBonus,
+              localDate: weekEndDay,
+            ));
+          }
         }
       }
 

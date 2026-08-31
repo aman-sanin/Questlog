@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 import '../../data/db/database.dart';
 import '../../domain/engine/schedule_rule.dart';
+import '../../domain/engine/settlement.dart';
 import '../../domain/engine/xp.dart';
 import '../../domain/model/models.dart';
 
@@ -10,6 +11,80 @@ class QuestActions {
   final _uuid = const Uuid();
 
   QuestActions(this.db);
+
+  /// Settle closed periods and materialize pending bonuses
+  Future<void> settle({
+    required LocalDate today,
+    required WeekStart weekStart,
+    required DateTime now,
+  }) async {
+    final activeQuests = await db.questsDao.getAllActiveQuests();
+    final profile = await db.profileDao.getProfile();
+    final allEvents = await db.ledgerDao.getAllXpEvents();
+    final existingEventRefs = allEvents.map((e) => e.ref).toSet();
+
+    final sixtyDaysAgo = today.subtractDays(60);
+    final completions = await db.completionsDao.getCompletionsInDateRange(
+      sixtyDaysAgo.formatted,
+      today.formatted,
+    );
+
+    final Map<String, Map<LocalDate, int>> completionsByQuest = {};
+    for (final c in completions) {
+      final date = LocalDate.parse(c.localDate);
+      completionsByQuest.putIfAbsent(c.questId, () => {})[date] =
+          (completionsByQuest[c.questId]?[date] ?? 0) + c.value;
+    }
+
+    final List<Map<String, dynamic>> questsData = activeQuests
+        .map((q) => {
+              'id': q.id,
+              'essential': q.essential,
+              'rule': q.rule,
+              'targetValue': q.targetValue,
+            })
+        .toList();
+
+    LocalDate? profileSettledThrough;
+    if (profile.settledThrough != null) {
+      try {
+        profileSettledThrough = LocalDate.parse(profile.settledThrough!);
+      } catch (_) {}
+    }
+
+    final settlementResult = SettlementEngine.settle(
+      questsData: questsData,
+      completionsByQuest: completionsByQuest,
+      profileSettledThrough: profileSettledThrough,
+      today: today,
+      weekStart: weekStart,
+      existingEventRefs: existingEventRefs,
+    );
+
+    if (settlementResult.newEvents.isNotEmpty || settlementResult.profileSettledThrough != null) {
+      await db.transaction(() async {
+        for (final event in settlementResult.newEvents) {
+          await db.ledgerDao.insertXpEvent(
+            XpEventsCompanion(
+              id: Value(_uuid.v4()),
+              type: Value(event.type.index),
+              ref: Value(event.ref),
+              periodRef: Value(event.periodRef),
+              amount: Value(event.amount),
+              localDate: Value(event.localDate.formatted),
+              createdAt: Value(now),
+            ),
+          );
+        }
+
+        if (settlementResult.profileSettledThrough != null) {
+          await db.profileDao.updateSettledThrough(
+            settlementResult.profileSettledThrough!.formatted,
+          );
+        }
+      });
+    }
+  }
 
   /// Complete a quest (or increment its counter) for a scoring date
   Future<String> completeQuest({
@@ -91,15 +166,22 @@ class QuestActions {
       }
     });
 
+    // Run settlement
+    await settle(today: date, weekStart: weekStart, now: now);
+
     return completionId;
   }
 
   /// Undo a completion within the undo window
-  Future<void> undoCompletion(String completionId) async {
+  Future<void> undoCompletion(String completionId, {LocalDate? today, WeekStart? weekStart, DateTime? now}) async {
     await db.transaction(() async {
       await db.completionsDao.deleteCompletion(completionId);
       await db.ledgerDao.deleteXpEventsByRef(completionId);
     });
+
+    if (today != null && weekStart != null && now != null) {
+      await settle(today: today, weekStart: weekStart, now: now);
+    }
   }
 
   /// Create a new quest
@@ -116,6 +198,8 @@ class QuestActions {
     CallingDomain? domain,
     int? reminderMinute,
     required DateTime now,
+    LocalDate? today,
+    WeekStart? weekStart,
   }) async {
     final id = _uuid.v4();
     await db.questsDao.insertQuest(
@@ -135,6 +219,11 @@ class QuestActions {
         createdAt: Value(now),
       ),
     );
+
+    if (today != null && weekStart != null) {
+      await settle(today: today, weekStart: weekStart, now: now);
+    }
+
     return id;
   }
 
@@ -155,6 +244,9 @@ class QuestActions {
     String? pausedUntil,
     DateTime? archivedAt,
     required DateTime createdAt,
+    LocalDate? today,
+    WeekStart? weekStart,
+    DateTime? now,
   }) async {
     await db.questsDao.updateQuest(
       QuestsCompanion(
@@ -175,6 +267,10 @@ class QuestActions {
         createdAt: Value(createdAt),
       ),
     );
+
+    if (today != null && weekStart != null && now != null) {
+      await settle(today: today, weekStart: weekStart, now: now);
+    }
   }
 
   /// Pause a quest until a local date

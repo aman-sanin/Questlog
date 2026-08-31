@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../theme/tokens.dart';
 
 class PerfectDayBanner extends StatelessWidget {
@@ -22,9 +23,10 @@ class PerfectDayBanner extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            Icons.auto_awesome,
+            Symbols.auto_awesome,
             size: 18,
             color: tokens.hero,
+            fill: 1.0,
           ),
           const SizedBox(width: 10),
           Expanded(

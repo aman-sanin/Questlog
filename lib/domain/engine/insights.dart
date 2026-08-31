@@ -116,12 +116,20 @@ class InsightsEngine {
     }
   }
 
-  /// Evaluates coach recommendation cards (>90% or <50% completion over 14 days)
+  /// Evaluates coach recommendation cards (>90%, <50%, or 14+ days away)
   static CoachCardData? evaluateCoachCard({
     required double fourteenDayRate,
     required int activeQuestsCount,
     required bool isCooldownActive,
+    int? daysSinceLastActive,
   }) {
+    if (daysSinceLastActive != null && daysSinceLastActive >= 14) {
+      return const CoachCardData(
+        title: 'Welcome Back',
+        message: 'A fresh chapter begins today. Your past history remains honored, and today is unwritten.',
+      );
+    }
+
     if (isCooldownActive) return null;
 
     if (fourteenDayRate >= 0.90 && activeQuestsCount < 6) {

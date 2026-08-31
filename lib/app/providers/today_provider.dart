@@ -36,6 +36,11 @@ class TodayScreenState {
     required this.completedDueCount,
     required this.isEmpty,
   });
+
+  List<QuestEvaluation> get allQuests => [
+        ...generalQuests,
+        for (final g in goalSections) ...g.quests,
+      ];
 }
 
 final activeQuestsStreamProvider = StreamProvider<List<QuestData>>((ref) {

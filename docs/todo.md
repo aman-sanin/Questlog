@@ -1,231 +1,286 @@
-# P0 — Trust Audit (half a day, blocks everything)
+# QuestLog — TODO (from P7: feature wave + ship)
 
-**Goal:** confirm the report's claims before a single new line is written. The last audit found the test suite is cosmetic and the engines are unproven; this phase turns "unproven" into either "verified" or "fixed."
-
-### P0.1 — The five greps
-
-| Command                                           | Expected                                               | If it fails                                                                                                                                                                            |
-| ------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `grep -rn "DateTime.now()" lib/domain/`           | **Zero hits**                                          | Highest-priority refactor: inject the clock through a provider, pass effective-now into every engine call. Nothing downstream (tests, debug clock, QA) is possible until this is clean |
-| `grep -rn "settle(" lib/app/write/`               | Called in complete, undo, backfill, quest edit, import | Wire it — settlement is not optional plumbing                                                                                                                                          |
-| `grep -rn "settled_through\|settledThrough" lib/` | Present on quests + profile, advanced by settlement    | Add columns now — schema changes are **free pre-release** (no users = no migration burden), expensive forever after                                                                    |
-| `grep -rn "StreakRepair\|streak_repairs" lib/`    | Table + writes on freeze consumption                   | Add; the whole freeze economy hinges on persisted consumption                                                                                                                          |
-| `grep -rn "Icons\." lib/ui/`                      | Near-zero                                              | Flutter's built-in `Icons` is the wrong font (no FILL axis, wrong family) — replace with `Symbol()` references                                                                         |
-
-### P0.2 — Spec-drift checklist (the report graded itself wrong)
-
-Each row: check → expected → fix if wrong.
-
-| Claim/area      | Spec truth                                                                                                                                                                   |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Perfect Week    | **+75** and **grants a streak freeze** — not +50 with no grant                                                                                                               |
-| Milestones      | Must exist: 7→+50, 30→+150, 100→+500, 365→+2000, paid at period close, once                                                                                                  |
-| Perfect Day     | +15 **only** when ≥1 scheduled _day-unit_ essential, all satisfied; window quests gate weeks, not days; zero-essential days are **neutral** (no bonus, no meta-streak break) |
-| Badge inventory | Report says 12; spec is ~14 general + 12 trials. At minimum confirm **Comeback** survived (the return-reward badge) — it's the psychology                                    |
-| Burst usage     | Fires **only** in the three ceremonies. If Today shows "animated celebration bursts" on completion → remove; completion is the border flash + spring check                   |
-| Import          | Export-only is half a feature — import is Phase 4c, but confirm it's genuinely absent, not hidden                                                                            |
-| Guardrails      | Cadence-edit streak warning + "6th essential daily" nudge — verify both exist                                                                                                |
-| Unlock track    | Real ladder only (Sage L3, widget II L4, Ice L5, crest icon L7, celebration L9, flair L10, Copper L13). "Golden Wrench" style inventions get deleted                         |
-| Sigils          | Construction law: simple geometric marks (shield, orb, ensō, three bars, peaks, hex-dot), 24dp grid, 2dp stroke. "Greatsword" is too busy — restyle task lands in P6         |
-| Ember           | Constant in both themes; Frost is the only swappable slot; **red never appears on Today** (misses = neutral card + `MISSED YESTERDAY` meta)                                  |
-| Templates       | Spot-check the 40+: all 8 categories covered, cadence variety, domains auto-set                                                                                              |
-| pubspec         | `flutter pub outdated                                                                                                                                                        | head`— confirm the version upgrade actually took (the old resolve happened before implementation) and`sqlite3_flutter_libs`isn't the EOL line (current drift wants`drift_flutter`) |
-
-### P0.3 — Structural spot-checks
-
-- **Drift:** `schemaVersion = 1`, `MigrationStrategy` stub present, generated `*.g.dart` committed, table columns match the architecture doc §4.1 (XpEvent `UNIQUE(type, ref)` especially — it's your idempotency guarantee).
-- **Riverpod 3:** compile errors will surface legacy `StateNotifier`/`ChangeNotifier` patterns; also check no `ref` is used after widget disposal (v3 is stricter).
-- **Manifest:** no `INTERNET` permission, `allowBackup="true"`.
-- **Fonts:** all three families actually bundled in pubspec assets (not silently falling back to Roboto — the report _claims_ mono typography, verify a `FontFamily('JetBrainsMono')` actually resolves).
-
-**Gate:** every grep clean or its fix merged; drift column list matches §4.1; manifest correct. Only then proceed — everything after this assumes the foundation is real.
+Status: P0–P6 complete (debug clock, glue, guardrails, assets verified per
+feature inventory). Protocol unchanged: one phase at a time · paste real
+command output, not summaries · every new suite must fail on an injected
+mutation before it counts.
 
 ---
 
-# P1 — Debug Clock + Data Inspector (half a day)
+# P7 — Accent system + drift closure (~½–1 day) — NOW
 
-**Goal:** the QA multiplier. Every time-dependent behavior (rollover, freezes, settlement, the calendar gauntlet, Comeback) becomes manually testable in seconds instead of days. This is _only_ cheap because P0 confirmed clock injection — if the agent says it's hard, that's the diagnostic telling you P0.1 failed.
+**Goal:** fix Frost rendering as Ember's gold, add the gold as a proper
+prestige unlock, close the two outstanding spec drifts, and confirm the
+engine suite is real.
 
-**Spec:**
+### 7.1 Frost hex fix — `lib/ui/theme/tokens.dart`
 
-- **Entry:** hidden — long-press the version number in Settings → About (5s), or `--dart-define=DEBUG_CLOCK` gating.
-- **Controls:** `+1d`, `+7d`, `+30d`, jump-to-date picker, reset to real time. Overrides the same clock provider production code reads — no separate code path, or it tests nothing.
-- **Data inspector** (same screen, read-only): current effective today, both settlement markers, freeze wallet balance, last 10 ledger events, active seen-flags. A DB tail viewer costs an hour and makes every future bug report self-explanatory.
+- [ ] Frost accent: Onyx `#4A90E2` · Ivory `#0060AC`
+- [ ] Hero (Ember) untouched: Onyx `#E0A458` · Ivory graphics `#A9762B` ·
+      Ivory text `#8A5A13`
+- [ ] Hardcoding sweep: `grep -rn "E0A458\|A9762B\|4A90E2\|0060AC" lib/` —
+      every hit routes through tokens, none inline
+- [ ] Settings copy: "Frost (Default neutral gold)" → "Frost (Default)"
+- [ ] Gate: progress ring, XP bar, level chip arc, at-risk ring render
+      BLUE in both themes; gold appears only on completion/arrival surfaces
 
-**Gate:** advance +1d while the app is open → the Today header date flips, no restart, no manual refresh.
+### 7.2 Ember as unlockable accent — L16
 
----
+- [ ] `Accent.ember` resolves to the hero values (same hexes both themes —
+      no new colors; contrast already validated)
+- [ ] `unlock_schedule.dart`: append `L16 · Ember accent` after Copper L13
+- [ ] Settings: 5th swatch with `L16` lock badge; locked tap → toast
+      "UNLOCKS AT LEVEL 16"
+- [ ] Profile unlock track: L16 node
+- [ ] Treatment rules (distinction survives hue unification — comment in code):
+      at-risk = gold OUTLINE vs completed = gold FILL · heatmap 100% day =
+      solid + `lineFull` border vs opacity steps below · progress hitting
+      100% = existing border flash
 
-# P2 — The Engine Test Suite (1–2 days — the core deliverable of the whole roadmap)
+### 7.3 Drift closure
 
-**Goal:** replace 19 render-checks with the ~40 behavioral tests that can actually fail. All pure Dart, injected clock, hand-computed expectations. Grouped, with expected values:
+- [ ] Title ladder: 8 rungs — Recruit · Squire · Soldier · Veteran ·
+      Champion · Warlord · Paragon · Legend (then Legend ★N) — all six
+      callings; boundary tests at L1/L2/L4/L7/L11/L16/L21/L30/L31
+- [ ] Perfect Week: **+75 XP AND freeze grant**; test: exactly one event
+      (amount 75, UNIQUE ref) + wallet +1; settle-twice idempotent
+- [ ] Verify the P2 engine suite exists and passed a mutation check —
+      if not, it gates P13 at minimum
 
-### A. Recurrence properties
+### 7.4 Tests + goldens + docs
 
-| Case                       | Expected                                                       |
-| -------------------------- | -------------------------------------------------------------- |
-| MWF rule over a full year  | Never yields Sat/Sun; exactly ~156 days                        |
-| `every_day` over a year    | 365 (366 leap)                                                 |
-| Interval n=3, anchored     | Scheduled exactly every 3rd day from anchor                    |
-| 2nd Tuesday                | Exactly one day per month                                      |
-| `day_of_month: 31` in June | Fires June 30 (clamped, not vanished)                          |
-| Feb 29 in non-leap year    | Fires Feb 28                                                   |
-| `last_day`                 | Correct for Feb 28/29, 30/31-day months                        |
-| Week of Dec 29–Jan 4       | One period key, correct for both week-start settings           |
-| 5th-Friday rule            | Most months: zero scheduled Fridays — and zero possible misses |
+- [ ] `accent != hero` assertion for Frost/Sage/Ice/Copper — write BEFORE
+      the fix merges and demonstrate it failing (locks out the bug class)
+- [ ] Ember-mode treatment tests: outline ≠ fill; 100% square has border,
+      70% does not
+- [ ] Regenerate goldens deliberately: 2 themes × {Frost, Ember} — expect
+      diffs from the gold era, approve consciously, never blind
+- [ ] Design doc §2.1 addendum: hero constant for arrival; Ember accent =
+      sanctioned unification, L16, prestige semantics
 
-### B. Streak money tests
-
-| Case                                                | Expected                                                                                                      |
-| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| MWF, complete Mon+Wed, skip Tue                     | Streak = 2; Tuesday registers as nothing at all                                                               |
-| New quest, 3 uncompleted days                       | Grace: no miss, no red, no streak                                                                             |
-| Pause spanning a full week                          | Neutral — streak intact, week invisible                                                                       |
-| Freeze consumed on miss, streak evaluated **twice** | Consumed exactly once (re-read test — this is the UNIQUE-constraint test)                                     |
-| Backfill into a repaired period                     | Repair row deleted, freeze refunded to wallet                                                                 |
-| Miss definition                                     | Only scheduled + active + closed + insufficient — assert misses never appear for grace/pause/nonexistent days |
-
-### C. XP math (lock the rounding mode: Dart `.round()`, half-away-from-zero)
-
-| Case                             | Expected                                                                                                                                                                         |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Gym ×3/week medium, 3 increments | 18 / 17 / 18 — invariant: **sum = round(35 × 1.5) = 53**                                                                                                                         |
-| 4th increment                    | ≈ +13 (quarter-rate **per extra unit**). ⚠️ Note: the arch doc's inline formula expressed quarter-rate per progress-_fraction_ — lock the per-unit semantics, they're the intent |
-| Cap                              | 2 extra units max, period total = round(1.5 × 52.5) = 79; a 3rd extra unit pays 0                                                                                                |
-| Partial week, 2 of 3 sessions    | Sum = round(52.5 × 2/3) = 35                                                                                                                                                     |
-| Off-schedule completion          | Logged in the DB, scores 0 XP                                                                                                                                                    |
-| All values                       | Integers, no exceptions thrown for edge rounding                                                                                                                                 |
-
-### D. Settlement (the deepest group)
-
-| Case                                        | Expected                                                                     |
-| ------------------------------------------- | ---------------------------------------------------------------------------- |
-| `settle()` twice, back to back              | Ledger **byte-identical** (count per type+ref equal)                         |
-| Complete → undo                             | Ledger empty, markers rolled back                                            |
-| Perfect week closes                         | One event **+75** AND wallet +1                                              |
-| Perfect day with zero scheduled essentials  | No event, and the meta-streak does not break                                 |
-| Milestone                                   | Fires when the 7th unit _closes_; still banked if the streak breaks on day 8 |
-| Toggle Essential on an old quest, re-settle | History unchanged — the snapshot law                                         |
-| Week-start setting changed, re-settle       | No double-granted weeks (range dedup)                                        |
-
-### E. Progression
-
-| Case                                          | Expected                                               |
-| --------------------------------------------- | ------------------------------------------------------ |
-| cumXP(2)=100, cumXP(6)=1,000, cumXP(10)=2,700 | Exact                                                  |
-| Unlock gates at L3/L5/L13                     | Eligibility flips at exactly those thresholds          |
-| Title bands                                   | L7 → band rung, L30 → "Legend"                         |
-| Affinity                                      | Percentages sum to 100, chosen-calling bar full-weight |
-
-### F. Insights
-
-Coach triggers at >90% / <50% over 14 days; 30-day cooldown enforced; insight rotation deterministic by ISO week (same week → same card).
-
-### G. Widget + golden
-
-The 9 QuestRow states render correctly; golden tests lock tokens for 2 themes × 2 accents.
-
-**Gate (the mutation check — this is how you grade an agent-authored suite):** deliberately break an engine — change 75 to 50 in the perfect-week constant, or break the UNIQUE constraint — and confirm tests **fail**. A suite that survives mutation isn't a suite. Restore, re-run green. That's the difference between this phase and the report's "19 tests passed."
+**Gate:** blue Frost everywhere structural; L30 = Legend; a closed perfect
+week grants exactly 75 + 1 freeze; mutation check on the new tests.
 
 ---
 
-# P3 — Manual QA pass (half a day + fix time)
+# P8 — N-times daily + interval exposure (~½ day)
 
-Run the 60-minute script from two turns back (now with the debug clock, so the freeze/rollover/gauntlet items are actually executable). Log every defect with severity, fix, re-run. Additional checks now unlocked:
+**Ruling: a target, not a schedule rule.** "3 glasses daily" = day-scheduled
+rule + counter target — no new rule mode, engine already supports it.
 
-- Calling ceremony fires exactly once at L2, never again after restart (seen-flag persistence)
-- Undo past 5s offers nothing; undo inside 5s returns XP exactly
-- Exactly one `perfect_day` event per date after multiple writes (idempotency in the real flow, not just the test)
-- Cadence edit → warning; confirm → streak resets
-- Ivory theme is warm paper; Ember identical in both; locked swatches refuse with the L-badge toast
-- Export → wipe → import (if import exists yet) → identical derived state, no re-celebrations
+- [ ] Editor: TARGET section (✓ Done / ⊕ Counter + N + unit) selectable for
+      ALL cadences; expose the Daily **Every-N-days** mode (schema has it)
+- [ ] Today row: stepper, 3dp track, meta `DAILY · 2/3 TODAY`; at-risk at
+      18h when count < N
+- [ ] XP: increments = shares of `round(10 × difficulty)` — medium 3×/day
+      pays 5/5/5, sum 15; quarter-rate overachievement, 1.5× cap
+- [ ] Streak: satisfied = count ≥ N at day close; partial day = miss;
+      essential counter counts only at full N
+- [ ] Tests: incremental-sum invariant on the daily period · partial day =
+      miss · overachievement cap · grace · pause neutrality
+- [ ] Compose check: "3× per day on MWF" = weekdays + counter, no new rule
 
-**Gate:** script passes end-to-end with zero open defects. _This is the moment the app becomes trustworthy._
-
----
-
-# P4 — The glue, in risk order (½–1 day each)
-
-### 4a. Rollover & lifecycle
-
-Ticker armed to the next reset boundary; **app-resume re-arms and re-invalidates** (Drift watches tables, not time — this is the one manual invalidation); at-risk flips at 18h into the effective day.
-**Gate:** app open across a debug-clock midnight → Today flips; app backgrounded 3 "days" and resumed → everything recomputes.
-
-### 4b. Notifications
-
-The reconciler (desired set = digest + per-quest reminders; cancel-all-and-reschedule on every quest CRUD, settings change, completion, and cold start); POST_NOTIFICATIONS ask **at onboarding exit** with one context line (journey discovery #1); SCHEDULE_EXACT_ALARM with inexact fallback; reboot re-arm; tap → `questlog://today`; copy law enforced — factual, never streak-fear.
-**Gate:** digest fires at the set time; completing a quest cancels today's reminder; permission denial = quiet blocked state and nothing else changes; after a device reboot, reminders exist.
-
-### 4c. Import (the missing half of backup)
-
-Parse → validate (schema version ≤ app, integrity, `UnsupportedRule` tolerated) → stage in memory → **transactional swap**; seen-flags and settlement markers travel so nothing re-celebrates; failure = data untouched + error snackbar.
-**Gate:** export → wipe → import round-trip yields identical level/streaks/wallet/badge count with zero re-toasts; feeding it a hand-corrupted JSON fails cleanly with the DB intact.
-
-### 4d. Widget bridge
-
-Snapshot push (essentials list, counts, theme colors) on every write/settlement/rollover via `home_widget`; style I ships free, II–IV gated; tap deep-links.
-**Gate:** completing a quest updates the widget within seconds; theme change reflects; survives reboot.
+**Gate:** a "3 glasses, weekdays" quest creates, renders, and its test
+suite passes with the sum invariant.
 
 ---
 
-# P5 — Guardrails & the seven journey deltas (half a day)
+# P9 — Quest detail sheet + year heatmap (~1–1.5 days)
 
-The findings from the user-journey walkthrough, plus the two guardrails — all small, all load-bearing for the _feel_:
+**Goal:** the read surfaces — Today is currently write-only.
 
-1. Cadence-edit streak warning (if not already verified in P0)
-2. Essential-overload nudge ("start this Monday instead?")
-3. `STREAK SAVED · ❄` meta line for one day after a freeze consumption — the rescue must be _perceived_ once
-4. Welcome-back CoachCard after 14+ days away ("Away 30 days — today is unwritten") — one-shot, one row in the cooldown store
-5. Red-never-on-Today as an enforced law, not an implication
-6. Settings → Data sub-line: "Your log survives reinstall on this device"
-7. Notification ask at onboarding exit (done in 4b)
+- [ ] **Quest detail sheet** (tap a quest row): current/best streak · total
+      completions · XP earned · 5-week per-quest mini heatmap (existing dot
+      grammar) · recent completions list · Edit button
+- [ ] **Year heatmap** (Insights Month/Year toggle): GitHub-style columns of
+      weeks, 12 months scrollable; tap any square = existing DaySheet; today
+      ring; same grammar — Frost intensity, Ember 100%, red miss, hollow
+      pause, 8% off-day
+- [ ] Tests: aggregation queries vs hand-computed values on a seeded 60-day
+      quest; goldens for both themes
+
+**Gate:** a quest with 60 days of history shows correct streak/stats in
+detail; year view renders and scrolls smoothly.
+
+---
+
+# P10 — The Path — progression tree (~1–1.5 days)
+
+**Goal:** visualize the job tree. Everything derived — zero new tables,
+zero writes. One pure function: `domainStats()` (per-domain lifetime XP,
+completion counts, trial badges).
+
+- [ ] Insights "THE PATH" card → full-screen route
+- [ ] Radial mini-map (~280dp): central crest, 6 branches at 60°, tap a
+      branch → jumps to its row below
+- [ ] Six domain rows: sigil · name · mono XP · 14dp node squares · thin
+      Frost bar to next node
+- [ ] Nodes per branch: milestones at **250 / 1,000 / 5,000 domain XP**
+      (SAGE I / II / III — numeric, no per-domain titles) + the 2 class
+      trials as secondary nodes
+- [ ] Styling per law: branches = 1dp hairlines · earned = **Ember fill** ·
+      next = Frost outline + faint pulse · locked = 25% · chosen branch =
+      `lineFull` line + Ember sigil, others `lineRest`
+- [ ] Sigil draw-on (600ms, existing code) on first screen open — the one
+      sanctioned flourish; no burst (data surface, not ceremony)
+- [ ] **Multiclass teaser row:** `MULTICLASS · SECOND CALLING — L15`
+      locked, 25%, lock icon
+- [ ] Ruling: purely informational — no XP, no unlocks, no gates
+
+**Gate:** chosen branch visually distinct without color legend-hunting;
+L15 row visible; ledger provably untouched after viewing; tests: aggregation
+sums, threshold flips at exact values, goldens 2 themes.
+
+---
+
+# P11 — Quest packs (~1.5–2 days)
+
+**Goal:** bulk import/export as JSON "quest packs" — one format, designed
+for authoring and sharing; strictly separate from backups (pack = content,
+backup = state).
+
+- [ ] **Format:** `{"format":"questlog-pack","version":1,"name":…}` with
+      `goals[]` and `quests[]`; **title is the only required field** — all
+      else defaults (daily · every_day · checkbox · easy · non-essential);
+      per-cadence optional fields mirror the editor exactly; quests
+      reference goals by title
+- [ ] **Validation matrix:** wrong format/version → reject file cleanly ·
+      bad rows (empty title, target < 1, days out of 1–7, invalid combos) →
+      row-level reject, shown with reason, rest imports · unknown fields →
+      UnsupportedRule "legacy" import · caps 200 quests / 500KB · duplicate
+      titles → flagged, deselected by default · unresolvable goal ref →
+      quest imports unassigned
+- [ ] **Pack preview screen** (the real deliverable): every quest rendered
+      with defaults made explicit, per-row include toggles, rejected rows
+      with reasons, aggregate warning if pack sets **>5 essential dailies**
+- [ ] **Import:** one transaction; failure = zero rows; 5s undo snackbar
+      (we know the created IDs; grace-state quests are safe to delete);
+      auto-detect pack vs backup vs garbage by discriminator
+- [ ] **Export-as-pack:** Settings → Data → multi-select quests → goals
+      auto-embed → share sheet
+- [ ] **Example pack as the template:** "Get pack template" ships an
+      importable example (daily-counter, weekly-times, monthly-nth-weekday,
+      one embedded goal) — learning by importing beats a field reference
+- [ ] Optional: "IMPORT PACK" button on onboarding step 3 (migration moment)
+- [ ] Privacy line near the buttons: "Packs contain quest setups only —
+      your history stays on your device."
+- [ ] **Tests:** validation matrix cases · mid-pack failure = zero rows ·
+      defaults resolution (title-only quest) · goal embedding/resolution ·
+      duplicate flag-and-deselect · caps · pack-vs-backup detection ·
+      round-trip (export 5 → import → identical definitions) ·
+      UnsupportedRule degradation · >5-essentials warning
+
+**Gate:** round-trip passes; a hand-corrupted file fails cleanly with the
+DB intact; grace means imported quests show no streak/red until first
+completion.
+
+---
+
+# P12 — Micro batch (~1 day)
+
+- [ ] **Templates in the editor:** "New from template" reusing onboarding
+      step-3 UI verbatim (the 40-template library currently dies after
+      onboarding)
+- [ ] **Completion notes:** long-press the check → "Log with note" (column
+      exists); notes surface in DaySheet and quest detail
+- [ ] **Rest day:** row context menu → paused-until-tomorrow; renders as
+      the existing hollow heatmap dot; DaySheet says "REST DAY". Honest
+      split: **rest = planned, freeze = unplanned** — freezes become
+      purely for accidents
+- [ ] **Records** (Profile lifetime stats): most XP in one day · best week ·
+      current perfect-day meta-streak · freezes used — one query each
+- [ ] Tests: records vs hand-computed seeds; rest-day renders neutral;
+      note round-trips through backup
 
 **Gate:** each item has a two-minute manual test; all pass.
 
 ---
 
-# P6 — Identity & assets (1 day)
+# P13 — Constrained windows (~½ day — REQUIRES mutation-verified suite)
 
-- **Launcher icons:** the default quest-marker (filled Ember diamond on Onyx, one `Path`), plus 6 crest variants — adaptive icons with foreground/background/**monochrome** layer, glyph inside the 66dp safe zone, strokes _bolder_ than UI glyphs (a 2dp stroke dies at 48dp). `flutter_launcher_icons` config + generated PNGs.
-- **L7 runtime icon switch:** `activity-alias` entries for all 7 pre-declared, enabled/disabled at runtime — with a confirm dialog, because the switch briefly restarts the app.
-- **Sigil restyle** (if P0 confirmed drift): back to the construction law — shield, orb, ensō, three bars, peaks, hex-dot; sibling-test each against a Material Symbol at the same size.
-- **Sounds:** 3 OGGs, setting default **off**, audioplayers wired.
-- **Splash:** Android 12+ derives from the launcher icon — verify it on both wallpapers.
+- [ ] Weekly times-mode + optional allowed `days[]`; completions count only
+      on allowed days; miss logic unchanged (window scoring — the week is
+      still the unit)
+- [ ] Editor: optional "allowed days" row on weekly-times; validated
+      non-empty if shown
+- [ ] Tests (engine-touching — mutation check mandatory): completion on
+      disallowed day counts 0 · miss still fires only at week close ·
+      allowed-days + interval interplay
 
-**Gate:** icon renders on the launcher; themed (monochrome) icon works on 13+; the L7 switch works after confirm + restart.
-
----
-
-# P7 — Release hardening (1 day)
-
-- `flutter analyze` zero issues; full suite green
-- `flutter build appbundle --release --analyze-size` — **test the release build by hand**: R8 stripping plugin classes is the classic debug-works-release-crashes trap (local_notifications and home_widget usually ship consumer rules — verify)
-- Size gate: warn 25MB, fail 35MB
-- Accessibility: quest-row semantics ("Practice guitar, daily quest, essential, streak 23, not completed"), TalkBack live region announces level-ups, 48dp targets, reduced-motion honored
-- Performance: seed a 10k-completion DB, confirm Today stays jank-free (the 400-day watch recompute is the risk)
-- Deep link cold-start _and_ warm-start both land on Today
-- Re-verify manifest in the release artifact: no INTERNET, allowBackup on
+**Gate:** "3×/week, weekdays only" behaves exactly as spec — sessions
+logged Saturday count toward the log but not the window.
 
 ---
 
-# P8 — Dogfood (2–4 weeks, the real QA)
+# P14 — Release hardening (1 day)
 
-Use it daily. Keep a defect log. Weekly, run the debug clock through edge scenarios (a missed month, a freeze economy cycle, a return-from-absence). Watch the two flagged economics: perfect-day inflation at low essential counts (discovery #4) and the freeze asymmetry for heavy users (discovery #5) — both are one constant away from changing if they feel wrong in practice.
+- [ ] `flutter analyze` zero issues; full suite green including P7–P13
+- [ ] `flutter build appbundle --release --analyze-size` — **hand-test the
+      release build**: R8 stripping plugin classes is the classic
+      debug-works-release-crashes trap (local_notifications, home_widget —
+      verify consumer rules survive)
+- [ ] Size gate: warn 25MB / fail 35MB
+- [ ] Accessibility: quest-row semantics; NEW surfaces included — quest
+      detail ("Practice guitar, 23-day streak, 62 completions"), Path nodes
+      labeled ("Sage, 1,240 XP, second milestone earned"), pack preview
+      rows; TalkBack live region announces level-ups; 48dp targets;
+      reduced-motion honored (incl. Path pulse + sigil draw)
+- [ ] Performance: seed 10k-completion DB → Today, year heatmap, and The
+      Path all stay jank-free (the 400-day watch recompute + Path painter
+      are the risks)
+- [ ] Deep link cold-start AND warm-start land on Today
+- [ ] Goldens: 2 themes × {Frost, Ember} across all screens
+- [ ] Manifest in the release artifact: no INTERNET, allowBackup on
 
-Then decide distribution: Play Store (needs listing + privacy policy URL even for a zero-data app) or personal sideload.
+**Gate:** release APK passes the full 60-minute QA script by hand.
 
 ---
 
-## Commissioning protocol (how to hand this to the agent)
+# P15 — Dogfood (2–4 weeks — the real QA)
 
-One phase at a time, and every commission ends with the same three requirements: **(1)** paste the actual command output — `flutter test` summary, grep results, build log — not a summary of it; **(2)** state which acceptance-gate items were _not_ met, explicitly; **(3)** for test suites, expect a mutation check — I'll hand you a deliberately-broken constant to inject and the suite must catch it. Claims are worthless; outputs are the contract.
+Use it daily. Keep a defect log. Weekly debug-clock edge scenarios (a
+missed month, a freeze economy cycle, return-from-absence).
 
-## Definition of done (v1)
+**Watchlist:**
 
-All gates green · engine suite passing + mutation-proof · the five flows (cold start, completion, rollover, undo, import) verified end-to-end · both themes locked by goldens · release APK under 25MB · no INTERNET permission in the shipped manifest · 2 weeks of dogfood with no open P0/P1 defects.
+- Original economics: perfect-day inflation at low essential counts ·
+  freeze asymmetry for heavy loads — both one constant from changing
+- New economics: Path pacing (does 250 domain XP land in 2–3 weeks?) ·
+  N-times-daily partial-day fairness (2/3 at close = miss — the law, but
+  does it _feel_ fair in practice?) · rest-day discoverability ·
+  pack round-trips in real sharing · year-heatmap scroll on low-end devices
+- Ember accent: reach L16 honestly (no debug clock) before judging it
+
+Then decide distribution: Play Store (listing + privacy-policy URL even for
+a zero-data app) or personal sideload.
+
+---
+
+## Commissioning protocol (unchanged)
+
+One phase at a time. Every commission ends with: **(1)** paste actual
+command output — `flutter test` summary, grep results, build logs — not
+summaries; **(2)** state which gate items were NOT met, explicitly; **(3)**
+for test suites, expect a mutation check — a deliberately-broken constant
+injected, and the suite must fail. Claims are worthless; outputs are the
+contract.
+
+## Definition of done — v1.1
+
+All gates green · engine suite passing + mutation-proof · flows verified
+end-to-end: cold start, completion, rollover, undo, backup import, **pack
+round-trip** · goldens lock 2 themes × 2 accents across all screens ·
+The Path renders with zero ledger writes · release APK under 25MB · no
+INTERNET permission in the shipped manifest · 2 weeks dogfood with no open
+P0/P1 defects.
 
 ## Parked (explicitly not now)
 
-Multiclass L15, self-authored commitments, merge-on-import, sync — all v1.5/v2 by prior ruling.
+Multiclass (L15) · self-authored commitments · merge-on-import · sync ·
+widget tap-to-complete (feasibility investigation first)
 
----
+```
+
+One sequencing note baked into the doc that's worth saying out loud: **P13 is the only engine-touching phase left**, which is why it's gated behind the mutation-verified suite — and P7's 7.3 checkbox is the cheap way to confirm that suite is real before you need it. If that check fails, run the full P2 suite from the old roadmap before commissioning P13.
+
+```

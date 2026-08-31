@@ -1,15 +1,26 @@
 import '../model/models.dart';
 
 class CallingTitles {
+  static const List<String> _genericTitles = [
+    'Recruit',    // L1
+    'Squire',     // L2-3
+    'Soldier',    // L4-6
+    'Veteran',    // L7-10
+    'Champion',   // L11-15
+    'Warlord',    // L16-20
+    'Paragon',    // L21-29
+    'Legend',     // L30+
+  ];
+
   static const Map<CallingDomain, List<String>> _titles = {
     CallingDomain.warrior: [
       'Recruit',       // L1
-      'Soldier',       // L2-3
-      'Man-at-Arms',   // L4-6
-      'Knight',        // L7-10
-      'Captain',       // L11-15
-      'Commander',     // L16-20
-      'Warlord',       // L21-29
+      'Squire',        // L2-3
+      'Soldier',       // L4-6
+      'Veteran',       // L7-10
+      'Champion',      // L11-15
+      'Warlord',       // L16-20
+      'Paragon',       // L21-29
       'Legendary Warlord', // L30+
     ],
     CallingDomain.sage: [
@@ -65,18 +76,8 @@ class CallingTitles {
   };
 
   static String titleFor({CallingDomain? calling, required int level}) {
-    if (calling == null) {
-      if (level == 1) return 'Initiate';
-      if (level <= 3) return 'Aspirant';
-      if (level <= 6) return 'Seeker';
-      if (level <= 10) return 'Traveler';
-      if (level <= 15) return 'Journeyman';
-      if (level <= 20) return 'Adept';
-      if (level <= 29) return 'Champion';
-      return 'Legend';
-    }
-
-    final list = _titles[calling]!;
+    final list = calling != null ? _titles[calling]! : _genericTitles;
+    
     int index;
     if (level <= 1) {
       index = 0;
@@ -96,6 +97,10 @@ class CallingTitles {
       index = 7;
     }
 
-    return list[index];
+    final baseTitle = list[index];
+    if (level > 30) {
+      return '$baseTitle ★${level - 30}';
+    }
+    return baseTitle;
   }
 }

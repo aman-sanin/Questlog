@@ -86,6 +86,14 @@ class UnlockSchedule {
       type: UnlockType.accent,
       assetRef: 'copper',
     ),
+    UnlockItem(
+      level: 16,
+      key: 'ember_accent',
+      title: 'Ember Accent',
+      description: 'Prestige arrival gold palette for the motion accent.',
+      type: UnlockType.accent,
+      assetRef: 'ember',
+    ),
   ];
 
   static List<UnlockItem> unlocksForLevel(int level) {

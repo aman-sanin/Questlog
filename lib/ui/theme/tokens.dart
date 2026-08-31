@@ -4,7 +4,8 @@ enum AccentTheme {
   frost,
   sage,
   ice,
-  copper;
+  copper,
+  ember;
 
   String get key => name;
 
@@ -166,6 +167,8 @@ class AppTokens extends ThemeExtension<AppTokens> {
         return isDark ? const Color(0xFF8FD3E8) : const Color(0xFF005C7A);
       case AccentTheme.copper:
         return isDark ? const Color(0xFFCD7F32) : const Color(0xFF8B4513);
+      case AccentTheme.ember:
+        return isDark ? const Color(0xFFE0A458) : const Color(0xFFA9762B);
     }
   }
 

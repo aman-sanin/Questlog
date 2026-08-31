@@ -135,6 +135,16 @@ class SettingsScreen extends ConsumerWidget {
             isUnlocked: currentLevel >= 13,
             unlockRequirement: 'Unlocks at Level 13',
           ),
+          const SizedBox(height: 6),
+          _buildAccentOption(
+            context,
+            ref,
+            label: 'Ember (Prestige)',
+            accentKey: 'ember',
+            currentAccent: profile.accent,
+            isUnlocked: currentLevel >= 16,
+            unlockRequirement: 'Unlocks at Level 16',
+          ),
           const SizedBox(height: 24),
 
           // Cadence & Day Reset Section
@@ -395,13 +405,16 @@ class SettingsScreen extends ConsumerWidget {
   Color _accentColorFor(AppTokens tokens, String key) {
     switch (key) {
       case 'sage':
-        return const Color(0xFF6B8E7B);
+        return const Color(0xFF9CAF9C);
       case 'ice':
-        return const Color(0xFF88C0D0);
+        return const Color(0xFF8FD3E8);
       case 'copper':
-        return const Color(0xFFD08770);
+        return const Color(0xFFCD7F32);
+      case 'ember':
+        return const Color(0xFFE0A458);
+      case 'frost':
       default:
-        return const Color(0xFFD4A373);
+        return const Color(0xFF4A90E2);
     }
   }
 }

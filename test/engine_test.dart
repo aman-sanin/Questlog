@@ -357,7 +357,7 @@ void main() {
       expect(ProgressionEngine.levelFromXp(2700), equals(10));
     });
 
-    test('Unlock gates at L3 (Sage), L5 (Ice), L13 (Copper)', () {
+    test('Unlock gates at L3 (Sage), L5 (Ice), L13 (Copper), L16 (Ember)', () {
       final l3Unlocks = UnlockSchedule.unlocksForLevel(3);
       expect(l3Unlocks.any((u) => u.key == 'sage_accent'), isTrue);
 
@@ -366,17 +366,33 @@ void main() {
 
       final l13Unlocks = UnlockSchedule.unlocksForLevel(13);
       expect(l13Unlocks.any((u) => u.key == 'copper_accent'), isTrue);
+
+      final l16Unlocks = UnlockSchedule.unlocksForLevel(16);
+      expect(l16Unlocks.any((u) => u.key == 'ember_accent'), isTrue);
     });
 
-    test('Title bands: L7 rung and L30 generic/calling rungs', () {
-      final titleL7 = CallingTitles.titleFor(calling: CallingDomain.warrior, level: 7);
-      expect(titleL7, equals('Knight'));
+    test('Title ladder 8 rungs boundary tests at L1/L2/L4/L7/L11/L16/L21/L30/L31', () {
+      // Generic ladder
+      expect(CallingTitles.titleFor(calling: null, level: 1), equals('Recruit'));
+      expect(CallingTitles.titleFor(calling: null, level: 2), equals('Squire'));
+      expect(CallingTitles.titleFor(calling: null, level: 4), equals('Soldier'));
+      expect(CallingTitles.titleFor(calling: null, level: 7), equals('Veteran'));
+      expect(CallingTitles.titleFor(calling: null, level: 11), equals('Champion'));
+      expect(CallingTitles.titleFor(calling: null, level: 16), equals('Warlord'));
+      expect(CallingTitles.titleFor(calling: null, level: 21), equals('Paragon'));
+      expect(CallingTitles.titleFor(calling: null, level: 30), equals('Legend'));
+      expect(CallingTitles.titleFor(calling: null, level: 31), equals('Legend ★1'));
 
-      final genericL30 = CallingTitles.titleFor(calling: null, level: 30);
-      expect(genericL30, equals('Legend'));
-
-      final callingL30 = CallingTitles.titleFor(calling: CallingDomain.warrior, level: 30);
-      expect(callingL30, equals('Legendary Warlord'));
+      // Sage calling ladder
+      expect(CallingTitles.titleFor(calling: CallingDomain.sage, level: 1), equals('Student'));
+      expect(CallingTitles.titleFor(calling: CallingDomain.sage, level: 2), equals('Scholar'));
+      expect(CallingTitles.titleFor(calling: CallingDomain.sage, level: 4), equals('Librarian'));
+      expect(CallingTitles.titleFor(calling: CallingDomain.sage, level: 7), equals('Sage'));
+      expect(CallingTitles.titleFor(calling: CallingDomain.sage, level: 11), equals('Master Scholar'));
+      expect(CallingTitles.titleFor(calling: CallingDomain.sage, level: 16), equals('Arch-Scholar'));
+      expect(CallingTitles.titleFor(calling: CallingDomain.sage, level: 21), equals('Oracle'));
+      expect(CallingTitles.titleFor(calling: CallingDomain.sage, level: 30), equals('Archmage'));
+      expect(CallingTitles.titleFor(calling: CallingDomain.sage, level: 35), equals('Archmage ★5'));
     });
 
     test('Domain affinity percentages sum to 1.0 (100%)', () {

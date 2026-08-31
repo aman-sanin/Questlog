@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../app/providers/database_provider.dart';
 import '../../app/providers/profile_provider.dart';
@@ -224,7 +225,16 @@ class SettingsScreen extends ConsumerWidget {
                   variant: ActionButtonVariant.secondary,
                   onPressed: () async {
                     final jsonStr = await ref.read(backupServiceProvider).exportBackupJson();
-                    await Share.share(jsonStr, subject: 'QuestLog-Backup.json');
+                    final tempDir = await getTemporaryDirectory();
+                    final now = DateTime.now();
+                    final dateStr =
+                        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+                    final file = File('${tempDir.path}/questlog_backup_$dateStr.json');
+                    await file.writeAsString(jsonStr);
+                    await Share.shareXFiles(
+                      [XFile(file.path, mimeType: 'application/json')],
+                      subject: 'QuestLog Backup $dateStr',
+                    );
                   },
                 ),
               ),

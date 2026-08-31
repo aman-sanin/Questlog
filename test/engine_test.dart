@@ -5,6 +5,7 @@ import 'package:questlog/domain/constants/xp_constants.dart';
 import 'package:questlog/domain/engine/calling.dart';
 import 'package:questlog/domain/engine/insights.dart';
 import 'package:questlog/domain/engine/progression.dart';
+import 'package:questlog/domain/engine/quest_state.dart';
 import 'package:questlog/domain/engine/schedule_rule.dart';
 import 'package:questlog/domain/engine/settlement.dart';
 import 'package:questlog/domain/engine/streak.dart';
@@ -623,6 +624,110 @@ void main() {
       expect(stats5000.tier, equals(3));
       expect(stats5000.tierTitle, equals('WARRIOR III'));
       expect(stats5000.progressToNext, equals(1.0));
+    });
+  });
+
+  group('Group I: Constrained Windows (P13)', () {
+    test('"3x/week, weekdays only" achieves target on allowed days and ignores disallowed Saturday', () {
+      const rule = WeeklyTimesRule(times: 3, allowedDays: [1, 2, 3, 4, 5]);
+      final monday = const LocalDate(2025, 1, 6); // Weekday
+      final wednesday = const LocalDate(2025, 1, 8); // Weekday
+      final friday = const LocalDate(2025, 1, 10); // Weekday
+      final saturday = const LocalDate(2025, 1, 11); // Disallowed weekend
+
+      // Check scheduled status
+      expect(rule.isScheduledOn(monday), isTrue);
+      expect(rule.isScheduledOn(wednesday), isTrue);
+      expect(rule.isScheduledOn(friday), isTrue);
+      expect(rule.isScheduledOn(saturday), isFalse);
+
+      // Evaluate progression: Mon + Wed + Sat
+      // Only Mon (1) and Wed (1) count towards target (total 2/3, not completed)
+      final evalMid = QuestEvaluation.evaluate(
+        questId: 'q-constrained',
+        title: '3x/week Gym',
+        rule: rule,
+        targetType: TargetType.checkbox,
+        targetValue: 3,
+        difficulty: Difficulty.medium,
+        essential: true,
+        completionDates: [monday, wednesday, saturday],
+        completionValues: {
+          monday: 1,
+          wednesday: 1,
+          saturday: 1,
+        },
+        today: saturday,
+        now: DateTime(2025, 1, 11, 12, 0),
+        weekStart: WeekStart.monday,
+        streak: 0,
+      );
+
+      expect(evalMid.completedValue, equals(2)); // Saturday excluded from window count
+      expect(evalMid.isCompleted, isFalse);
+
+      // Now add Friday (3rd allowed weekday) -> Target achieved (3/3)
+      final evalFull = QuestEvaluation.evaluate(
+        questId: 'q-constrained',
+        title: '3x/week Gym',
+        rule: rule,
+        targetType: TargetType.checkbox,
+        targetValue: 3,
+        difficulty: Difficulty.medium,
+        essential: true,
+        completionDates: [monday, wednesday, friday, saturday],
+        completionValues: {
+          monday: 1,
+          wednesday: 1,
+          friday: 1,
+          saturday: 1,
+        },
+        today: saturday,
+        now: DateTime(2025, 1, 11, 12, 0),
+        weekStart: WeekStart.monday,
+        streak: 0,
+      );
+
+      expect(evalFull.completedValue, equals(3));
+      expect(evalFull.isCompleted, isTrue);
+    });
+
+    test('SettlementEngine honors allowedDays for constrained weekly windows', () {
+      const rule = WeeklyTimesRule(times: 3, allowedDays: [1, 2, 3, 4, 5]);
+      final monday = const LocalDate(2025, 1, 6);
+      final wednesday = const LocalDate(2025, 1, 8);
+      final saturday = const LocalDate(2025, 1, 11);
+      final sunday = const LocalDate(2025, 1, 12); // Week close
+      final mondayNext = const LocalDate(2025, 1, 13);
+
+      final questsData = [
+        {
+          'id': 'q-constrained',
+          'essential': true,
+          'rule': rule,
+          'targetValue': 3,
+        }
+      ];
+
+      // Case A: 2 weekday sessions + 1 saturday session = 2 valid (misses target)
+      final resultMiss = SettlementEngine.settle(
+        questsData: questsData,
+        completionsByQuest: {
+          'q-constrained': {
+            monday: 1,
+            wednesday: 1,
+            saturday: 1,
+          }
+        },
+        profileSettledThrough: null,
+        today: mondayNext,
+        weekStart: WeekStart.monday,
+        existingEventRefs: {},
+      );
+
+      // No perfect week bonus awarded
+      final hasWeekBonus = resultMiss.newEvents.any((e) => e.type == XpEventType.perfectWeek);
+      expect(hasWeekBonus, isFalse);
     });
   });
 }

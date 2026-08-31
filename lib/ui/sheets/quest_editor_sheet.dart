@@ -45,6 +45,8 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
   String? _selectedGoalId;
   CallingDomain? _selectedDomain;
   Set<int> _selectedDays = {1, 2, 3, 4, 5};
+  Set<int> _weeklyAllowedDays = {1, 2, 3, 4, 5};
+  bool _isWeeklyConstrained = false;
   int _timesPerPeriod = 3;
   int _intervalDays = 2;
 
@@ -58,6 +60,12 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
     _rule = q?.rule ?? const DailyEveryDayRule();
     if (_rule is DailyIntervalRule) {
       _intervalDays = (_rule as DailyIntervalRule).interval ?? 2;
+    }
+    if (_rule is WeeklyRule &&
+        (_rule as WeeklyRule).allowedDays != null &&
+        (_rule as WeeklyRule).allowedDays!.isNotEmpty) {
+      _isWeeklyConstrained = true;
+      _weeklyAllowedDays = (_rule as WeeklyRule).allowedDays!.toSet();
     }
     _targetType = q != null ? TargetType.values[q.targetType] : TargetType.checkbox;
     _targetValue = q?.targetValue ?? 1;
@@ -400,7 +408,10 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
                             ? () {
                                 setState(() {
                                   _timesPerPeriod--;
-                                  _rule = WeeklyTimesRule(times: _timesPerPeriod);
+                                  _rule = WeeklyTimesRule(
+                                    times: _timesPerPeriod,
+                                    allowedDays: _isWeeklyConstrained ? _weeklyAllowedDays.toList() : null,
+                                  );
                                 });
                               }
                             : null,
@@ -415,7 +426,10 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
                             ? () {
                                 setState(() {
                                   _timesPerPeriod++;
-                                  _rule = WeeklyTimesRule(times: _timesPerPeriod);
+                                  _rule = WeeklyTimesRule(
+                                    times: _timesPerPeriod,
+                                    allowedDays: _isWeeklyConstrained ? _weeklyAllowedDays.toList() : null,
+                                  );
                                 });
                               }
                             : null,
@@ -424,6 +438,44 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
                   ),
                 ],
               ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'CONSTRAIN TO SPECIFIC DAYS',
+                    style: tokens.monoText(fontSize: 11, color: tokens.textSecondary),
+                  ),
+                  Switch.adaptive(
+                    value: _isWeeklyConstrained,
+                    activeColor: tokens.accent,
+                    onChanged: (val) {
+                      setState(() {
+                        _isWeeklyConstrained = val;
+                        _rule = WeeklyTimesRule(
+                          times: _timesPerPeriod,
+                          allowedDays: val ? _weeklyAllowedDays.toList() : null,
+                        );
+                      });
+                    },
+                  ),
+                ],
+              ),
+              if (_isWeeklyConstrained) ...[
+                const SizedBox(height: 8),
+                WeekdayToggles(
+                  selectedDays: _weeklyAllowedDays,
+                  onChanged: (days) {
+                    setState(() {
+                      _weeklyAllowedDays = days.isEmpty ? {1} : days;
+                      _rule = WeeklyTimesRule(
+                        times: _timesPerPeriod,
+                        allowedDays: _weeklyAllowedDays.toList(),
+                      );
+                    });
+                  },
+                ),
+              ],
             ],
             const SizedBox(height: 20),
 

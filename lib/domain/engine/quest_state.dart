@@ -75,11 +75,17 @@ class QuestEvaluation {
         ? period.contains(today)
         : rule.isScheduledOn(today, weekStart.value);
 
-    // Calculate completions in current period
+    // Calculate completions in current period (honoring allowedDays if constrained)
     int periodCompleted = 0;
     for (final entry in completionValues.entries) {
       if (entry.key >= period.startLocalDate && entry.key <= period.endLocalDate) {
-        periodCompleted += entry.value;
+        if (rule is WeeklyRule && rule.allowedDays != null && rule.allowedDays!.isNotEmpty) {
+          if (rule.allowedDays!.contains(entry.key.toDateTime().weekday)) {
+            periodCompleted += entry.value;
+          }
+        } else {
+          periodCompleted += entry.value;
+        }
       }
     }
 

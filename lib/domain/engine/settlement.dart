@@ -108,11 +108,17 @@ class SettlementEngine {
           int target = q['targetValue'] as int? ?? 1;
           if (rule is WeeklyRule && rule.times != null) target = rule.times!;
 
-          // Total completions in week
+          // Total completions in week (honoring allowedDays constraint if specified)
           int weekCount = 0;
           for (final entry in qCompletions.entries) {
             if (entry.key >= weekStartDay && entry.key <= weekEndDay) {
-              weekCount += entry.value;
+              if (rule is WeeklyRule && rule.allowedDays != null && rule.allowedDays!.isNotEmpty) {
+                if (rule.allowedDays!.contains(entry.key.toDateTime().weekday)) {
+                  weekCount += entry.value;
+                }
+              } else {
+                weekCount += entry.value;
+              }
             }
           }
 

@@ -108,11 +108,28 @@ class QuestActions {
     int prevCount = 0;
     for (final c in completionsInPeriod) {
       if (c.questId == quest.id) {
-        prevCount += c.value;
+        final cDate = LocalDate.parse(c.localDate);
+        if (quest.rule is WeeklyRule &&
+            (quest.rule as WeeklyRule).allowedDays != null &&
+            (quest.rule as WeeklyRule).allowedDays!.isNotEmpty) {
+          if ((quest.rule as WeeklyRule).allowedDays!.contains(cDate.toDateTime().weekday)) {
+            prevCount += c.value;
+          }
+        } else {
+          prevCount += c.value;
+        }
       }
     }
 
-    final newCount = prevCount + incrementValue;
+    final isScheduled = quest.rule is WeeklyRule &&
+            (quest.rule as WeeklyRule).allowedDays != null &&
+            (quest.rule as WeeklyRule).allowedDays!.isNotEmpty
+        ? (quest.rule as WeeklyRule).allowedDays!.contains(date.toDateTime().weekday)
+        : (quest.rule.isWindowScheduled
+            ? period.contains(date)
+            : quest.rule.isScheduledOn(date));
+
+    final newCount = isScheduled ? (prevCount + incrementValue) : prevCount;
 
     int target = quest.targetValue;
     if (quest.rule is WeeklyRule && (quest.rule as WeeklyRule).times != null) {
@@ -122,10 +139,6 @@ class QuestActions {
     } else if (quest.rule is YearlyRule && (quest.rule as YearlyRule).times != null) {
       target = (quest.rule as YearlyRule).times!;
     }
-
-    final isScheduled = quest.rule.isWindowScheduled
-        ? period.contains(date)
-        : quest.rule.isScheduledOn(date);
 
     final xpAmount = XpEngine.calculateIncrementalXp(
       rule: quest.rule,

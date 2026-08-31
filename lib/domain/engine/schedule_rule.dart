@@ -120,10 +120,18 @@ class WeeklyRule extends ScheduleRule {
   final Cadence cadence = Cadence.weekly;
   final String mode; // times, on_days
   final int? times;
-  final List<int>? onDays; // weekdays 1-7
+  final List<int>? onDays; // weekdays 1-7 (for on_days mode)
+  final List<int>? allowedDays; // weekdays 1-7 (for constrained times mode)
 
-  const WeeklyRule.times(int count) : mode = 'times', times = count, onDays = null;
-  const WeeklyRule.onDays(List<int> days) : mode = 'on_days', times = null, onDays = days;
+  const WeeklyRule.times(int count, [this.allowedDays])
+      : mode = 'times',
+        times = count,
+        onDays = null;
+  const WeeklyRule.onDays(List<int> days)
+      : mode = 'on_days',
+        times = null,
+        onDays = days,
+        allowedDays = null;
 
   factory WeeklyRule.fromJson(String? mode, Map<String, dynamic> json) {
     if (mode == 'on_days') {
@@ -131,7 +139,8 @@ class WeeklyRule extends ScheduleRule {
       return WeeklyRule.onDays(list ?? [1]);
     }
     final times = json['times'] as int? ?? 1;
-    return WeeklyRule.times(times);
+    final allowed = (json['allowed_days'] as List?)?.map((e) => e as int).toList();
+    return WeeklyRule.times(times, allowed);
   }
 
   @override
@@ -139,7 +148,12 @@ class WeeklyRule extends ScheduleRule {
 
   @override
   bool isScheduledOn(LocalDate d, [dynamic weekStart]) {
-    if (mode == 'times') return true; // window is open all days of the week
+    if (mode == 'times') {
+      if (allowedDays != null && allowedDays!.isNotEmpty) {
+        return allowedDays!.contains(d.toDateTime().weekday);
+      }
+      return true; // window is open all days of the week
+    }
     if (mode == 'on_days') {
       return onDays?.contains(d.toDateTime().weekday) ?? false;
     }
@@ -171,12 +185,14 @@ class WeeklyRule extends ScheduleRule {
       'mode': mode,
       if (times != null) 'times': times,
       if (onDays != null) 'on_days': onDays,
+      if (allowedDays != null) 'allowed_days': allowedDays,
     };
   }
 }
 
 class WeeklyTimesRule extends WeeklyRule {
-  const WeeklyTimesRule({required int times}) : super.times(times);
+  const WeeklyTimesRule({required int times, List<int>? allowedDays})
+      : super.times(times, allowedDays);
 }
 
 class WeeklyOnDaysRule extends WeeklyRule {

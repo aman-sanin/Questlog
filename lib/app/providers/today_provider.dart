@@ -58,6 +58,21 @@ final recentCompletionsStreamProvider = StreamProvider<List<CompletionData>>((re
   return ref.watch(completionsDaoProvider).watchCompletionsInDateRange(start, end);
 });
 
+/// 365-day window for the year heatmap — watched by insightsStateProvider
+final yearCompletionsStreamProvider = StreamProvider<List<CompletionData>>((ref) {
+  final today = ref.watch(effectiveLocalDateProvider);
+  final start = today.subtractDays(364).formatted;
+  final end = today.formatted;
+  return ref.watch(completionsDaoProvider).watchCompletionsInDateRange(start, end);
+});
+
+/// Per-month completions for the month heatmap (keyed by first-of-month LocalDate)
+final monthCompletionsProvider = StreamProvider.family<List<CompletionData>, LocalDate>((ref, month) {
+  final nextMonth = month.month == 12 ? LocalDate(month.year + 1, 1, 1) : LocalDate(month.year, month.month + 1, 1);
+  final endOfMonth = nextMonth.subtractDays(1);
+  return ref.watch(completionsDaoProvider).watchCompletionsInDateRange(month.formatted, endOfMonth.formatted);
+});
+
 final streakRepairsStreamProvider = StreamProvider<List<StreakRepairData>>((ref) {
   return ref.watch(ledgerDaoProvider).watchStreakRepairs();
 });

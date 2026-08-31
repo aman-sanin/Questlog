@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:questlog/domain/constants/titles.dart';
 import 'package:questlog/domain/constants/unlock_schedule.dart';
-import 'package:questlog/domain/constants/xp_constants.dart';
 import 'package:questlog/domain/engine/calling.dart';
 import 'package:questlog/domain/engine/insights.dart';
 import 'package:questlog/domain/engine/progression.dart';
@@ -15,10 +14,10 @@ import 'package:questlog/domain/model/models.dart';
 void main() {
   group('Group B: Streak Money Tests', () {
     test('MWF quest: complete Mon + Wed, skip Tue -> Streak = 2, Tuesday registers nothing', () {
-      final rule = const DailyWeekdaysRule(days: [1, 3, 5]); // Mon, Wed, Fri
-      final monday = const LocalDate(2025, 1, 6);
-      final wednesday = const LocalDate(2025, 1, 8);
-      final thursday = const LocalDate(2025, 1, 9); // evaluation day
+      const rule = DailyWeekdaysRule(days: [1, 3, 5]); // Mon, Wed, Fri
+      const monday = LocalDate(2025, 1, 6);
+      const wednesday = LocalDate(2025, 1, 8);
+      const thursday = LocalDate(2025, 1, 9); // evaluation day
 
       final completions = {
         monday: 1,
@@ -41,7 +40,7 @@ void main() {
 
     test('New quest, 3 uncompleted days: Grace -> no miss, no red, no streak', () {
       const rule = DailyEveryDayRule();
-      final today = const LocalDate(2025, 1, 4);
+      const today = LocalDate(2025, 1, 4);
 
       final result = StreakEngine.calculate(
         rule: rule,
@@ -60,9 +59,8 @@ void main() {
 
     test('Pause spanning a full week: neutral -> streak intact, week invisible', () {
       const rule = WeeklyTimesRule(times: 3);
-      final w1 = const LocalDate(2025, 1, 6);  // Mon week 1
-      final w2 = const LocalDate(2025, 1, 13); // Mon week 2 (paused)
-      final w3 = const LocalDate(2025, 1, 20); // Mon week 3 (today)
+      const w1 = LocalDate(2025, 1, 6); // Mon week 1
+      const w3 = LocalDate(2025, 1, 20); // Mon week 3 (today)
 
       final completions = {
         w1: 3,
@@ -85,9 +83,8 @@ void main() {
 
     test('Freeze consumed on miss, streak evaluated twice: consumed exactly once (UNIQUE constraint test)', () {
       const rule = DailyEveryDayRule();
-      final day1 = const LocalDate(2025, 1, 1);
-      final day2 = const LocalDate(2025, 1, 2); // missed
-      final day3 = const LocalDate(2025, 1, 3); // today, completed
+      const day1 = LocalDate(2025, 1, 1);
+      const day3 = LocalDate(2025, 1, 3); // today, completed
 
       final completions = {
         day1: 1,
@@ -235,9 +232,8 @@ void main() {
 
   group('Group D: Settlement Engine', () {
     test('settle() twice back-to-back: byte-identical & idempotent', () {
-      final monday = const LocalDate(2025, 1, 6);
-      final sunday = const LocalDate(2025, 1, 12);
-      final nextMon = const LocalDate(2025, 1, 13);
+      const sunday = LocalDate(2025, 1, 12);
+      const nextMon = LocalDate(2025, 1, 13);
 
       final questsData = [
         {
@@ -281,8 +277,7 @@ void main() {
     });
 
     test('Perfect Week closes -> grants +75 XP', () {
-      final monday = const LocalDate(2025, 1, 6);
-      final nextMon = const LocalDate(2025, 1, 13);
+      const nextMon = LocalDate(2025, 1, 13);
 
       final questsData = [
         {
@@ -694,11 +689,10 @@ void main() {
 
     test('SettlementEngine honors allowedDays for constrained weekly windows', () {
       const rule = WeeklyTimesRule(times: 3, allowedDays: [1, 2, 3, 4, 5]);
-      final monday = const LocalDate(2025, 1, 6);
-      final wednesday = const LocalDate(2025, 1, 8);
-      final saturday = const LocalDate(2025, 1, 11);
-      final sunday = const LocalDate(2025, 1, 12); // Week close
-      final mondayNext = const LocalDate(2025, 1, 13);
+      const monday = LocalDate(2025, 1, 6);
+      const wednesday = LocalDate(2025, 1, 8);
+      const saturday = LocalDate(2025, 1, 11);
+      const mondayNext = LocalDate(2025, 1, 13);
 
       final questsData = [
         {

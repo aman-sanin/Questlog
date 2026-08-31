@@ -6,7 +6,7 @@ part 'goals_dao.g.dart';
 
 @DriftAccessor(tables: [Goals])
 class GoalsDao extends DatabaseAccessor<AppDatabase> with _$GoalsDaoMixin {
-  GoalsDao(AppDatabase db) : super(db);
+  GoalsDao(super.db);
 
   Stream<List<GoalData>> watchActiveGoals() {
     return (select(goals)..where((tbl) => tbl.archivedAt.isNull())).watch();

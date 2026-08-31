@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:questlog/ui/theme/tokens.dart';
 
@@ -19,24 +18,24 @@ void main() {
 
     test('Exact palette hex values in Dark and Light mode', () {
       // Frost
-      expect(AppTokens.getAccentColor(AccentTheme.frost, true).value, equals(0xFF4A90E2));
-      expect(AppTokens.getAccentColor(AccentTheme.frost, false).value, equals(0xFF0060AC));
+      expect(AppTokens.getAccentColor(AccentTheme.frost, true).toARGB32(), equals(0xFF4A90E2));
+      expect(AppTokens.getAccentColor(AccentTheme.frost, false).toARGB32(), equals(0xFF0060AC));
 
       // Sage
-      expect(AppTokens.getAccentColor(AccentTheme.sage, true).value, equals(0xFF9CAF9C));
-      expect(AppTokens.getAccentColor(AccentTheme.sage, false).value, equals(0xFF5F7A66));
+      expect(AppTokens.getAccentColor(AccentTheme.sage, true).toARGB32(), equals(0xFF9CAF9C));
+      expect(AppTokens.getAccentColor(AccentTheme.sage, false).toARGB32(), equals(0xFF5F7A66));
 
       // Ice
-      expect(AppTokens.getAccentColor(AccentTheme.ice, true).value, equals(0xFF8FD3E8));
-      expect(AppTokens.getAccentColor(AccentTheme.ice, false).value, equals(0xFF005C7A));
+      expect(AppTokens.getAccentColor(AccentTheme.ice, true).toARGB32(), equals(0xFF8FD3E8));
+      expect(AppTokens.getAccentColor(AccentTheme.ice, false).toARGB32(), equals(0xFF005C7A));
 
       // Copper
-      expect(AppTokens.getAccentColor(AccentTheme.copper, true).value, equals(0xFFCD7F32));
-      expect(AppTokens.getAccentColor(AccentTheme.copper, false).value, equals(0xFF8B4513));
+      expect(AppTokens.getAccentColor(AccentTheme.copper, true).toARGB32(), equals(0xFFCD7F32));
+      expect(AppTokens.getAccentColor(AccentTheme.copper, false).toARGB32(), equals(0xFF8B4513));
 
       // Ember (L16 unlock)
-      expect(AppTokens.getAccentColor(AccentTheme.ember, true).value, equals(0xFFE0A458));
-      expect(AppTokens.getAccentColor(AccentTheme.ember, false).value, equals(0xFFA9762B));
+      expect(AppTokens.getAccentColor(AccentTheme.ember, true).toARGB32(), equals(0xFFE0A458));
+      expect(AppTokens.getAccentColor(AccentTheme.ember, false).toARGB32(), equals(0xFFA9762B));
     });
   });
 }

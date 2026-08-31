@@ -158,7 +158,7 @@ class QuestEvaluation {
     if (hasFreezeSavedYesterday) {
       metaParts.add('STREAK SAVED · ❄');
     } else if (isPaused) {
-      metaParts.add('PAUSED UNTIL ${pausedUntil?.formatted}');
+      metaParts.add('PAUSED UNTIL ${pausedUntil.formatted}');
     } else if (winInfo != null && !completed) {
       metaParts.add('${winInfo.daysLeftInPeriod} DAYS LEFT');
     } else if (missedYesterday) {

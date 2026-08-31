@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../../app/providers/ceremony_provider.dart';
 import '../../app/providers/database_provider.dart';
-import '../../app/providers/profile_provider.dart';
-import '../../domain/constants/unlock_schedule.dart';
 import '../../domain/engine/calling.dart';
 import '../../domain/model/models.dart';
 import '../theme/tokens.dart';

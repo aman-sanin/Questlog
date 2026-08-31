@@ -3,7 +3,6 @@ import '../../domain/constants/xp_constants.dart';
 import '../../domain/engine/insights.dart';
 import '../../domain/engine/quest_state.dart';
 import '../../domain/model/models.dart';
-import 'database_provider.dart';
 import 'profile_provider.dart';
 import 'today_provider.dart';
 
@@ -60,8 +59,6 @@ final insightsStateProvider = Provider<AsyncValue<InsightsScreenState>>((ref) {
   final month = ref.watch(selectedInsightsMonthProvider);
   final today = ref.watch(effectiveLocalDateProvider);
   final todayStateAsync = ref.watch(todayStateProvider);
-  final ledgerDao = ref.watch(ledgerDaoProvider);
-  final completionsDao = ref.watch(completionsDaoProvider);
 
   if (todayStateAsync is AsyncLoading) return const AsyncLoading();
   if (todayStateAsync.hasError) return AsyncError(todayStateAsync.error!, todayStateAsync.stackTrace!);

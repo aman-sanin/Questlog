@@ -6,7 +6,7 @@ part 'profile_dao.g.dart';
 
 @DriftAccessor(tables: [Profiles])
 class ProfileDao extends DatabaseAccessor<AppDatabase> with _$ProfileDaoMixin {
-  ProfileDao(AppDatabase db) : super(db);
+  ProfileDao(super.db);
 
   Stream<ProfileData> watchProfile() {
     return (select(profiles)..where((tbl) => tbl.id.equals(1)))

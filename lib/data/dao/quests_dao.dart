@@ -6,7 +6,7 @@ part 'quests_dao.g.dart';
 
 @DriftAccessor(tables: [Quests])
 class QuestsDao extends DatabaseAccessor<AppDatabase> with _$QuestsDaoMixin {
-  QuestsDao(AppDatabase db) : super(db);
+  QuestsDao(super.db);
 
   Stream<List<QuestData>> watchActiveQuests() {
     return (select(quests)..where((tbl) => tbl.archivedAt.isNull())).watch();

@@ -5,7 +5,6 @@ import '../../domain/engine/badges.dart';
 import '../../domain/engine/progression.dart';
 import '../../domain/model/models.dart';
 import 'database_provider.dart';
-import 'profile_provider.dart';
 
 class ProfileRecords {
   final int maxDayXp;
@@ -75,7 +74,7 @@ final profileViewStateProvider = FutureProvider<ProfileScreenState>((ref) async 
     maxDayXp: maxDayXp,
     maxDayDate: maxDayDate,
     bestWeekXp: maxDayXp > 0 ? (maxDayXp * 3) : 0,
-    bestStreak: dailyXpMap.length > 0 ? dailyXpMap.length : 0,
+    bestStreak: dailyXpMap.isNotEmpty ? dailyXpMap.length : 0,
     freezesUsed: streakRepairs.length,
   );
 

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../app/providers/database_provider.dart';
 import 'root_scaffold.dart';
 import 'screens/debug_inspector_screen.dart';
 import 'screens/insights_screen.dart';

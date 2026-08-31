@@ -86,24 +86,24 @@ class MonthlyRecapScreen extends ConsumerWidget {
                   const SizedBox(height: 24),
 
                   // Recap Stats Grid
-                  Row(
+                  const Row(
                     children: [
                       Expanded(
                         child: StatCard(value: '92%', label: 'COMPLETION'),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Expanded(
                         child: StatCard(value: '+1,450', label: 'XP EARNED'),
                       ),
                     ],
                   ),
-                  const SizedBox(width: 8),
-                  Row(
+                  const SizedBox(height: 8),
+                  const Row(
                     children: [
                       Expanded(
                         child: StatCard(value: '18', label: 'PERFECT DAYS'),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Expanded(
                         child: StatCard(value: '1', label: 'FREEZE SAVED'),
                       ),

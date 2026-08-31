@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../../app/providers/database_provider.dart';
 import '../../app/providers/profile_provider.dart';
-import '../../app/providers/today_provider.dart';
 import '../../data/db/database.dart';
 import '../../domain/engine/quest_state.dart';
 import '../../domain/model/models.dart';
@@ -46,7 +44,6 @@ class QuestDetailSheet extends ConsumerWidget {
     final tokens = context.tokens;
     final completionsDao = ref.watch(completionsDaoProvider);
     final today = ref.watch(effectiveLocalDateProvider);
-    final weekStart = ref.watch(weekStartProvider);
 
     final domain = quest.domain != null ? CallingDomain.values[quest.domain!] : CallingDomain.warrior;
     final diff = Difficulty.values[quest.difficulty];

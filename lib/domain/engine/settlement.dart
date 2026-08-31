@@ -1,6 +1,5 @@
 import '../constants/xp_constants.dart';
 import '../model/models.dart';
-import 'recurrence.dart';
 import 'schedule_rule.dart';
 
 class SettlementPendingEvent {

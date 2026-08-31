@@ -6,7 +6,7 @@ part 'ledger_dao.g.dart';
 
 @DriftAccessor(tables: [XpEvents, StreakRepairs, SeenMoments, Kvs])
 class LedgerDao extends DatabaseAccessor<AppDatabase> with _$LedgerDaoMixin {
-  LedgerDao(AppDatabase db) : super(db);
+  LedgerDao(super.db);
 
   Stream<int> watchTotalXp() {
     final amountCol = xpEvents.amount.sum();

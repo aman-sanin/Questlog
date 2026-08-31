@@ -4,7 +4,6 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../app/providers/ceremony_provider.dart';
 import '../../app/providers/database_provider.dart';
 import '../../app/providers/profile_provider.dart';
-import '../../app/providers/today_provider.dart';
 import '../../data/db/database.dart';
 import '../../domain/engine/quest_state.dart';
 import '../theme/tokens.dart';

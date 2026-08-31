@@ -6,7 +6,7 @@ part 'completions_dao.g.dart';
 
 @DriftAccessor(tables: [Completions])
 class CompletionsDao extends DatabaseAccessor<AppDatabase> with _$CompletionsDaoMixin {
-  CompletionsDao(AppDatabase db) : super(db);
+  CompletionsDao(super.db);
 
   Stream<List<CompletionData>> watchCompletionsForDate(String date) {
     return (select(completions)..where((tbl) => tbl.localDate.equals(date))).watch();

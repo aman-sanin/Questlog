@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/constants/unlock_schedule.dart';
-import '../../domain/model/models.dart';
 
 abstract class CeremonyEvent {
   const CeremonyEvent();

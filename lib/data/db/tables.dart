@@ -1,5 +1,4 @@
 import 'package:drift/drift.dart';
-import '../../domain/engine/schedule_rule.dart';
 import 'converters.dart';
 
 @DataClassName('ProfileData')

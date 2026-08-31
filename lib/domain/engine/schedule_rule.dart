@@ -1,4 +1,3 @@
-import 'dart:convert';
 import '../model/models.dart';
 
 abstract class ScheduleRule {

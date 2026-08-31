@@ -604,6 +604,69 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
                 );
               }).toList(),
             ),
+            if (goals.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              Text(
+                'LINKED GOAL (OPTIONAL)',
+                style: tokens.monoText(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: tokens.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  GestureDetector(
+                    onTap: () => setState(() => _selectedGoalId = null),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: _selectedGoalId == null ? tokens.tonal : Colors.transparent,
+                        border: Border.all(
+                          color: _selectedGoalId == null ? tokens.accent : tokens.lineRule,
+                          width: _selectedGoalId == null ? 1.5 : 1.0,
+                        ),
+                      ),
+                      child: Text(
+                        'NONE',
+                        style: tokens.monoText(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: _selectedGoalId == null ? tokens.accent : tokens.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  ...goals.map((g) {
+                    final isSelected = _selectedGoalId == g.id;
+                    return GestureDetector(
+                      onTap: () => setState(() => _selectedGoalId = g.id),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isSelected ? tokens.tonal : Colors.transparent,
+                          border: Border.all(
+                            color: isSelected ? tokens.accent : tokens.lineRule,
+                            width: isSelected ? 1.5 : 1.0,
+                          ),
+                        ),
+                        child: Text(
+                          '${g.emoji} ${g.title.toUpperCase()}',
+                          style: tokens.monoText(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: isSelected ? tokens.accent : tokens.textSecondary,
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ],
             const SizedBox(height: 20),
 
             // Difficulty & Essential Switches

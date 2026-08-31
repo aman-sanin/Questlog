@@ -196,6 +196,11 @@ void main() {
     );
 
     expect(find.byType(YearHeatmapGrid), findsOneWidget);
+    // The grid has reverse:true so today's column is visible on-screen.
+    // Tap the last GestureDetector (today's area) which is within bounds.
+    final cells = find.byType(GestureDetector);
+    await tester.tap(cells.last);
+    expect(tappedDate != null, isTrue);
   });
 
   test('P9 Aggregation query: 60-day seeded quest correctly aggregates completions, streak, and XP', () async {

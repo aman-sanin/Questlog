@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:questlog/domain/engine/recurrence.dart';
 import 'package:questlog/domain/engine/schedule_rule.dart';
 import 'package:questlog/domain/model/models.dart';
 

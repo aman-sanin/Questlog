@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../app/providers/database_provider.dart';
 import '../../app/providers/profile_provider.dart';
 import '../../app/providers/profile_view_provider.dart';
+import '../../app/services/sound_service.dart';
 import '../theme/tokens.dart';
 import '../widgets/action_button.dart';
 import '../widgets/radio_row.dart';
@@ -194,6 +195,34 @@ class SettingsScreen extends ConsumerWidget {
                     resetMinute: profile.resetMinute,
                     weekStart: val,
                   );
+            },
+          ),
+          const SizedBox(height: 24),
+
+          // Feedback & Audio
+          Text(
+            'FEEDBACK & AUDIO',
+            style: tokens.monoText(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.0,
+              color: tokens.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Consumer(
+            builder: (context, ref, _) {
+              final isSoundEnabled = ref.watch(soundEnabledProvider);
+              return RadioRow<bool>(
+                value: true,
+                groupValue: isSoundEnabled,
+                title: 'Tactile Sound Effects',
+                subtitle: 'Play subtle audio feedback on completions and level ups.',
+                onChanged: (val) {
+                  ref.read(soundEnabledProvider.notifier).state = val;
+                  SoundService.soundEnabled = val;
+                },
+              );
             },
           ),
           const SizedBox(height: 24),

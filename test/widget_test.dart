@@ -9,6 +9,7 @@ import 'package:questlog/domain/engine/quest_state.dart';
 import 'package:questlog/domain/engine/schedule_rule.dart';
 import 'package:questlog/domain/model/models.dart';
 import 'package:questlog/ui/theme/app_theme.dart';
+import 'package:questlog/ui/theme/sigils.dart';
 import 'package:questlog/ui/theme/tokens.dart';
 import 'package:questlog/ui/widgets/checkbox_ring.dart';
 import 'package:questlog/ui/widgets/quest_row.dart';
@@ -156,5 +157,15 @@ void main() {
     expect(restoredQuests.first.title, equals('Morning Pushups'));
 
     await inMemoryDb.close();
+  });
+
+  test('SigilPaths: constructs valid non-empty paths for all 6 Calling domains', () {
+    for (final domain in CallingDomain.values) {
+      final path = SigilPaths.getPath(domain.name);
+      expect(path.computeMetrics().isNotEmpty, isTrue);
+      final bounds = path.getBounds();
+      expect(bounds.width, greaterThan(0));
+      expect(bounds.height, greaterThan(0));
+    }
   });
 }

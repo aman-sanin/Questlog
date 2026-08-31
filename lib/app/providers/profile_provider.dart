@@ -48,3 +48,6 @@ final weekStartProvider = Provider<WeekStart>((ref) {
   final ws = profileAsync.value?.weekStart ?? 1;
   return ws == 7 ? WeekStart.sunday : WeekStart.monday;
 });
+
+final soundEnabledProvider = StateProvider<bool>((ref) => false);
+

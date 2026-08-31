@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../app/providers/ceremony_provider.dart';
+import '../app/services/sound_service.dart';
 import 'ceremonies/ceremonies.dart';
 import 'sheets/quest_editor_sheet.dart';
 import 'theme/tokens.dart';
@@ -34,6 +35,7 @@ class _RootScaffoldView extends ConsumerWidget {
     ref.listen<CeremonyEvent?>(activeCeremonyProvider, (prev, next) {
       if (next != null) {
         if (next is LevelUpCeremonyEvent) {
+          SoundService.playLevelUp();
           showDialog(
             context: context,
             barrierDismissible: false,
@@ -46,6 +48,7 @@ class _RootScaffoldView extends ConsumerWidget {
             ),
           );
         } else if (next is CallingChoiceCeremonyEvent) {
+          SoundService.playUnlock();
           CallingSelectionSheet.show(context);
         }
       }

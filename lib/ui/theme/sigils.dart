@@ -1,78 +1,84 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 class SigilPaths {
-  // Returns a Path drawn on a 24x24 unit grid.
+  /// Returns a canonical Path drawn on a 24x24 unit grid based on the design construction law:
+  /// - Warrior: Shield
+  /// - Sage: Orb
+  /// - Monk: Ensō
+  /// - Bard: Three Bars
+  /// - Ranger: Peaks
+  /// - Artificer: Hex-Dot
   static Path getPath(String domain) {
     final path = Path();
     switch (domain.toLowerCase()) {
       case 'warrior':
-        // Sword / Cross / Shield
-        path.moveTo(12, 2);
-        path.lineTo(12, 22);
-        path.moveTo(6, 6);
-        path.lineTo(18, 6);
-        path.moveTo(3, 10);
-        path.lineTo(12, 2);
-        path.lineTo(21, 10);
-        break;
-      case 'sage':
-        // Diamond star / Concentric squares
-        path.moveTo(12, 2);
-        path.lineTo(22, 12);
-        path.lineTo(12, 22);
-        path.lineTo(2, 12);
+        // Shield
+        path.moveTo(4, 4);
+        path.lineTo(20, 4);
+        path.lineTo(20, 13);
+        path.quadraticBezierTo(20, 19, 12, 22);
+        path.quadraticBezierTo(4, 19, 4, 13);
         path.close();
-        path.moveTo(12, 7);
-        path.lineTo(17, 12);
-        path.lineTo(12, 17);
-        path.lineTo(7, 12);
-        path.close();
-        break;
-      case 'monk':
-        // Balance Lotus / Concentric Circles (drawn as diamonds for brutalist design)
+        // Shield vertical midline
         path.moveTo(12, 4);
-        path.lineTo(20, 12);
-        path.lineTo(12, 20);
-        path.lineTo(4, 12);
-        path.close();
-        // Inner cross
-        path.moveTo(12, 8);
-        path.lineTo(12, 16);
-        path.moveTo(8, 12);
-        path.lineTo(16, 12);
+        path.lineTo(12, 22);
         break;
+
+      case 'sage':
+        // Orb: Outer ring + inner nucleus + equator
+        path.addOval(Rect.fromCircle(center: const Offset(12, 12), radius: 9));
+        path.addOval(Rect.fromCircle(center: const Offset(12, 12), radius: 4));
+        path.moveTo(3, 12);
+        path.lineTo(21, 12);
+        break;
+
+      case 'monk':
+        // Ensō: Open circular brush arc + stillness dot
+        path.addArc(
+          Rect.fromCircle(center: const Offset(12, 12), radius: 8.5),
+          -math.pi / 2 + 0.3,
+          math.pi * 1.75,
+        );
+        path.addOval(Rect.fromCircle(center: const Offset(12, 12), radius: 2));
+        break;
+
       case 'bard':
-        // Lyre / 12-lobe/8-lobe star
-        path.moveTo(12, 2);
-        path.quadraticBezierTo(15, 9, 22, 12);
-        path.quadraticBezierTo(15, 15, 12, 22);
-        path.quadraticBezierTo(9, 15, 2, 12);
-        path.quadraticBezierTo(9, 9, 12, 2);
-        path.close();
+        // Three Bars: Left, tall center, right, connected by wave chord
+        path.moveTo(6, 8);
+        path.lineTo(6, 16);
+        path.moveTo(12, 3);
+        path.lineTo(12, 21);
+        path.moveTo(18, 8);
+        path.lineTo(18, 16);
+        path.moveTo(3, 12);
+        path.quadraticBezierTo(9, 8, 12, 12);
+        path.quadraticBezierTo(15, 16, 21, 12);
         break;
+
       case 'ranger':
-        // Chevron Arrowhead
-        path.moveTo(12, 2);
-        path.lineTo(22, 12);
-        path.lineTo(16, 12);
-        path.lineTo(16, 22);
-        path.lineTo(8, 22);
-        path.lineTo(8, 12);
-        path.lineTo(2, 12);
+        // Peaks: Double angular mountain peaks
+        path.moveTo(2, 20);
+        path.lineTo(10, 5);
+        path.lineTo(16, 15);
+        path.lineTo(19, 9);
+        path.lineTo(23, 20);
         path.close();
+        path.moveTo(10, 5);
+        path.lineTo(10, 20);
         break;
+
       case 'artificer':
       default:
-        // Gear / Hammer shape (brutalist hammer)
-        path.moveTo(6, 4);
-        path.lineTo(18, 4);
-        path.lineTo(18, 10);
-        path.lineTo(6, 10);
+        // Hex-Dot: Precise regular hexagon with central core dot
+        path.moveTo(12, 2.5);
+        path.lineTo(20.5, 7.5);
+        path.lineTo(20.5, 16.5);
+        path.lineTo(12, 21.5);
+        path.lineTo(3.5, 16.5);
+        path.lineTo(3.5, 7.5);
         path.close();
-        path.moveTo(12, 10);
-        path.lineTo(12, 22);
-        path.moveTo(9, 22);
-        path.lineTo(15, 22);
+        path.addOval(Rect.fromCircle(center: const Offset(12, 12), radius: 2.5));
         break;
     }
     return path;
@@ -102,7 +108,7 @@ class SigilPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round;
 
     final baseRawPath = SigilPaths.getPath(domain);
-    
+
     // Scale path from 24x24 to widget size
     final matrix = Matrix4.identity()
       ..scale(size.width / 24.0, size.height / 24.0);
@@ -125,39 +131,5 @@ class SigilPainter extends CustomPainter {
         oldDelegate.color != color ||
         oldDelegate.strokeWidth != strokeWidth ||
         oldDelegate.progress != progress;
-  }
-}
-
-class SigilWidget extends StatelessWidget {
-  final String domain;
-  final Color? color;
-  final double size;
-  final double strokeWidth;
-  final double progress;
-
-  const SigilWidget({
-    super.key,
-    required this.domain,
-    this.color,
-    this.size = 24.0,
-    this.strokeWidth = 2.0,
-    this.progress = 1.0,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final themeColor = color ?? Theme.of(context).colorScheme.secondary; // Ember is default
-    return SizedBox(
-      width: size,
-      height: size,
-      child: CustomPaint(
-        painter: SigilPainter(
-          domain: domain,
-          color: themeColor,
-          strokeWidth: strokeWidth,
-          progress: progress,
-        ),
-      ),
-    );
   }
 }

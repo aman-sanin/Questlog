@@ -11,6 +11,8 @@ import '../../app/providers/database_provider.dart';
 import '../../app/providers/profile_provider.dart';
 import '../../app/providers/profile_view_provider.dart';
 import '../../app/services/sound_service.dart';
+import '../../data/packs/quest_pack_service.dart';
+import 'pack_preview_screen.dart';
 import '../theme/tokens.dart';
 import '../widgets/action_button.dart';
 import '../widgets/radio_row.dart';
@@ -316,6 +318,124 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 24),
+
+          // Quest Packs
+          Text(
+            'QUEST PACKS (SHARE & AUTHOR)',
+            style: tokens.monoText(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.0,
+              color: tokens.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Packs contain quest setups only — your history stays on your device.',
+            style: tokens.body(
+              fontSize: 12,
+              color: tokens.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: ActionButton(
+                  label: 'IMPORT PACK',
+                  variant: ActionButtonVariant.primary,
+                  onPressed: () async {
+                    final files = await FilePicker.pickFiles(
+                      type: FileType.custom,
+                      allowedExtensions: ['json'],
+                    );
+                    if (files.isNotEmpty && files.first.path != null) {
+                      try {
+                        final file = File(files.first.path!);
+                        final content = await file.readAsString();
+                        final activeQuests = await ref.read(questsDaoProvider).getActiveQuests();
+                        final existingTitles = activeQuests.map((q) => q.title.trim()).toSet();
+                        final val = QuestPackService.validatePack(content, existingActiveTitles: existingTitles);
+
+                        if (!val.isValidFormat) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Invalid Quest Pack: ${val.formatError}'),
+                                backgroundColor: tokens.miss,
+                              ),
+                            );
+                          }
+                          return;
+                        }
+
+                        if (context.mounted) {
+                          PackPreviewScreen.show(context, val);
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Failed to read pack: $e'),
+                              backgroundColor: tokens.miss,
+                            ),
+                          );
+                        }
+                      }
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ActionButton(
+                  label: 'EXPORT PACK',
+                  variant: ActionButtonVariant.secondary,
+                  onPressed: () async {
+                    final activeQuests = await ref.read(questsDaoProvider).getActiveQuests();
+                    final goals = await ref.read(goalsDaoProvider).getAllGoals();
+
+                    if (activeQuests.isEmpty) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('No active quests to export.')),
+                        );
+                      }
+                      return;
+                    }
+
+                    final jsonStr = QuestPackService.exportPack(
+                      quests: activeQuests,
+                      goals: goals,
+                      packName: '${profile.name}\'s Quest Pack',
+                      description: 'Exported from QuestLog on ${DateTime.now().toString().substring(0, 10)}',
+                    );
+
+                    final tempDir = await getTemporaryDirectory();
+                    final file = File('${tempDir.path}/questlog_pack.json');
+                    await file.writeAsString(jsonStr);
+                    await Share.shareXFiles(
+                      [XFile(file.path, mimeType: 'application/json')],
+                      subject: 'QuestLog Pack',
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ActionButton(
+            label: 'GET PACK TEMPLATE',
+            variant: ActionButtonVariant.secondary,
+            onPressed: () async {
+              final sampleJson = QuestPackService.sampleTemplate();
+              final val = QuestPackService.validatePack(sampleJson);
+              if (context.mounted) {
+                PackPreviewScreen.show(context, val);
+              }
+            },
           ),
           const SizedBox(height: 32),
 

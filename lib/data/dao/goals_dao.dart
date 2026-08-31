@@ -16,6 +16,10 @@ class GoalsDao extends DatabaseAccessor<AppDatabase> with _$GoalsDaoMixin {
     return (select(goals)..where((tbl) => tbl.archivedAt.isNull())).get();
   }
 
+  Future<List<GoalData>> getAllGoals() {
+    return select(goals).get();
+  }
+
   Future<GoalData?> getGoalById(String id) {
     return (select(goals)..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
   }

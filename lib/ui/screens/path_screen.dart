@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../../app/providers/database_provider.dart';
 import '../../app/providers/profile_provider.dart';
+import '../../app/providers/profile_view_provider.dart';
 import '../../domain/engine/calling.dart';
 import '../../domain/model/models.dart';
 import '../theme/tokens.dart';
@@ -44,13 +45,15 @@ class _PathScreenState extends ConsumerState<PathScreen> {
   Widget build(BuildContext context) {
     final tokens = context.tokens;
     final profileAsync = ref.watch(profileStreamProvider);
-    final totalXpAsync = ref.watch(totalXpStreamProvider);
+    final profileViewAsync = ref.watch(profileViewStateProvider);
     final completionsDao = ref.watch(completionsDaoProvider);
     final ledgerDao = ref.watch(ledgerDaoProvider);
 
     final chosenDomain = profileAsync.value?.calling != null
         ? CallingDomain.values[profileAsync.value!.calling!]
         : CallingDomain.warrior;
+
+    final currentLevel = profileViewAsync.value?.progression.level ?? 1;
 
     return Scaffold(
       backgroundColor: tokens.bg,
@@ -72,7 +75,7 @@ class _PathScreenState extends ConsumerState<PathScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
-            child: LevelChip(level: profileAsync.value?.level ?? 1),
+            child: LevelChip(level: currentLevel),
           ),
         ],
       ),

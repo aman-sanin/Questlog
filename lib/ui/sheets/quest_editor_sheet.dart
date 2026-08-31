@@ -69,7 +69,37 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
     super.dispose();
   }
 
-  void _updateRuleForCadence(Cadence newCadence) {
+  Future<void> _updateRuleForCadence(Cadence newCadence) async {
+    final tokens = context.tokens;
+    if (widget.quest != null && widget.quest!.rule.cadence != newCadence) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: tokens.bg,
+          title: Text(
+            'RESET STREAK WARNING',
+            style: tokens.headline(fontSize: 18, color: tokens.textPrimary),
+          ),
+          content: Text(
+            'Changing cadence resets this quest\'s active streak history. Do you wish to continue?',
+            style: tokens.body(fontSize: 14, color: tokens.textSecondary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text('CANCEL', style: tokens.monoText(color: tokens.textSecondary)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text('CONFIRM', style: tokens.monoText(color: tokens.accent)),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm != true) return;
+    }
+
     setState(() {
       _cadence = newCadence;
       switch (newCadence) {
@@ -87,6 +117,27 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
           break;
       }
     });
+  }
+
+  void _toggleEssential() {
+    if (!_essential) {
+      final activeQuests = ref.read(activeQuestsStreamProvider).value ?? [];
+      final essentialCount =
+          activeQuests.where((q) => q.essential && q.id != widget.quest?.id).length;
+
+      if (essentialCount >= 5) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              '6th essential added. High daily load may dilute your focus — start this Monday instead?',
+            ),
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+    }
+
+    setState(() => _essential = !_essential);
   }
 
   Future<void> _saveQuest() async {
@@ -372,7 +423,7 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
                     ),
                     const SizedBox(height: 8),
                     GestureDetector(
-                      onTap: () => setState(() => _essential = !_essential),
+                      onTap: _toggleEssential,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(

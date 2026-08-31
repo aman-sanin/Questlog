@@ -129,6 +129,9 @@ final todayStateProvider = Provider<AsyncValue<TodayScreenState>>((ref) {
       pausedUntil: pausedUntil,
     );
 
+    final yesterdayKey = q.rule.periodKey(today.subtractDays(1), weekStart.value);
+    final hasFreezeSavedYesterday = qRepairs.contains(yesterdayKey);
+
     final evaluation = QuestEvaluation.evaluate(
       questId: q.id,
       title: q.title,
@@ -148,6 +151,7 @@ final todayStateProvider = Provider<AsyncValue<TodayScreenState>>((ref) {
       weekStart: weekStart,
       firstCompletionDate: firstDate,
       streak: streakRes.streak,
+      hasFreezeSavedYesterday: hasFreezeSavedYesterday,
     );
 
     evaluatedQuests.add(evaluation);

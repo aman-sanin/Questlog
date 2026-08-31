@@ -67,6 +67,7 @@ class QuestEvaluation {
     required WeekStart weekStart,
     LocalDate? firstCompletionDate,
     required int streak,
+    bool hasFreezeSavedYesterday = false,
   }) {
     final period = rule.periodOf(today, weekStart.value);
     final isWindow = rule.isWindowScheduled;
@@ -105,7 +106,7 @@ class QuestEvaluation {
         yesterday >= firstCompletionDate &&
         rule.isScheduledOn(yesterday, weekStart.value)) {
       final yVal = completionValues[yesterday] ?? 0;
-      if (yVal < target) {
+      if (yVal < target && !hasFreezeSavedYesterday) {
         missedYesterday = true;
       }
     }
@@ -145,7 +146,9 @@ class QuestEvaluation {
     if (streak > 0) {
       metaParts.add('$streak ${rule.cadence == Cadence.daily ? "STREAK" : "PERIODS"}');
     }
-    if (isPaused) {
+    if (hasFreezeSavedYesterday) {
+      metaParts.add('STREAK SAVED · ❄');
+    } else if (isPaused) {
       metaParts.add('PAUSED UNTIL ${pausedUntil?.formatted}');
     } else if (winInfo != null && !completed) {
       metaParts.add('${winInfo.daysLeftInPeriod} DAYS LEFT');

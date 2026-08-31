@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -204,14 +207,66 @@ class SettingsScreen extends ConsumerWidget {
               color: tokens.textSecondary,
             ),
           ),
-          const SizedBox(height: 8),
-          ActionButton(
-            label: 'EXPORT BACKUP JSON',
-            variant: ActionButtonVariant.secondary,
-            onPressed: () async {
-              final jsonStr = await ref.read(backupServiceProvider).exportBackupJson();
-              await Share.share(jsonStr, subject: 'QuestLog-Backup.json');
-            },
+          const SizedBox(height: 4),
+          Text(
+            'Your log survives reinstall on this device',
+            style: tokens.body(
+              fontSize: 12,
+              color: tokens.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: ActionButton(
+                  label: 'EXPORT BACKUP',
+                  variant: ActionButtonVariant.secondary,
+                  onPressed: () async {
+                    final jsonStr = await ref.read(backupServiceProvider).exportBackupJson();
+                    await Share.share(jsonStr, subject: 'QuestLog-Backup.json');
+                  },
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ActionButton(
+                  label: 'IMPORT BACKUP',
+                  variant: ActionButtonVariant.secondary,
+                  onPressed: () async {
+                    final files = await FilePicker.pickFiles(
+                      type: FileType.custom,
+                      allowedExtensions: ['json'],
+                    );
+                    if (files.isNotEmpty && files.first.path != null) {
+                      try {
+                        final file = File(files.first.path!);
+                        final content = await file.readAsString();
+                        final success = await ref.read(backupServiceProvider).importBackupJson(content);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                success ? 'Backup imported successfully.' : 'Failed to import backup.',
+                              ),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Import error: $e'),
+                              backgroundColor: tokens.miss,
+                            ),
+                          );
+                        }
+                      }
+                    }
+                  },
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 32),
 

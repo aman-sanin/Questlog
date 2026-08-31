@@ -1,7 +1,9 @@
+import 'package:drift/drift.dart' hide isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:questlog/data/backup/backup_service.dart';
 import 'package:questlog/data/db/database.dart';
 import 'package:questlog/domain/engine/quest_state.dart';
 import 'package:questlog/domain/engine/schedule_rule.dart';
@@ -104,6 +106,54 @@ void main() {
 
     final xpStreamValue = await inMemoryDb.ledgerDao.watchTotalXp().first;
     expect(xpStreamValue, equals(0));
+
+    await inMemoryDb.close();
+  });
+
+  test('BackupService: export -> wipe -> import preserves state; invalid JSON throws FormatException cleanly', () async {
+    final inMemoryDb = AppDatabase(NativeDatabase.memory());
+    final backupService = BackupService(inMemoryDb);
+
+    // Populate initial state
+    await inMemoryDb.profileDao.updateName('Galahad');
+    await inMemoryDb.profileDao.updateCalling(1, DateTime(2025, 1, 1));
+    await inMemoryDb.questsDao.insertQuest(
+      QuestsCompanion(
+        id: const Value('q-export-1'),
+        title: const Value('Morning Pushups'),
+        rule: const Value(DailyEveryDayRule()),
+        difficulty: const Value(1),
+        createdAt: Value(DateTime(2025, 1, 1)),
+      ),
+    );
+
+    // Export JSON
+    final jsonExport = await backupService.exportBackupJson();
+    expect(jsonExport.contains('Galahad'), isTrue);
+    expect(jsonExport.contains('Morning Pushups'), isTrue);
+
+    // Corrupted JSON test -> throws FormatException without damaging database
+    expect(
+      () => backupService.importBackupJson('{"corrupted": "json'),
+      throwsA(isA<FormatException>()),
+    );
+
+    // Wipe DB
+    await inMemoryDb.delete(inMemoryDb.quests).go();
+    final wipedQuests = await inMemoryDb.questsDao.getActiveQuests();
+    expect(wipedQuests, isEmpty);
+
+    // Import exported JSON
+    final success = await backupService.importBackupJson(jsonExport);
+    expect(success, isTrue);
+
+    final restoredProfile = await inMemoryDb.profileDao.getProfile();
+    expect(restoredProfile.name, equals('Galahad'));
+    expect(restoredProfile.calling, equals(1));
+
+    final restoredQuests = await inMemoryDb.questsDao.getActiveQuests();
+    expect(restoredQuests.length, equals(1));
+    expect(restoredQuests.first.title, equals('Morning Pushups'));
 
     await inMemoryDb.close();
   });

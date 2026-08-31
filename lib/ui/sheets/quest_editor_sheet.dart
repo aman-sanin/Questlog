@@ -45,6 +45,7 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
   CallingDomain? _selectedDomain;
   Set<int> _selectedDays = {1, 2, 3, 4, 5};
   int _timesPerPeriod = 3;
+  int _intervalDays = 2;
 
   @override
   void initState() {
@@ -54,6 +55,9 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
     _unitController = TextEditingController(text: q?.unit ?? '');
     _cadence = q?.rule.cadence ?? Cadence.daily;
     _rule = q?.rule ?? const DailyEveryDayRule();
+    if (_rule is DailyIntervalRule) {
+      _intervalDays = (_rule as DailyIntervalRule).interval ?? 2;
+    }
     _targetType = q != null ? TargetType.values[q.targetType] : TargetType.checkbox;
     _targetValue = q?.targetValue ?? 1;
     _difficulty = q != null ? Difficulty.values[q.difficulty] : Difficulty.medium;
@@ -267,14 +271,20 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
                 items: const [
                   SegmentItem(value: 0, label: 'Every Day'),
                   SegmentItem(value: 1, label: 'Weekdays'),
+                  SegmentItem(value: 2, label: 'Every N Days'),
                 ],
-                selectedValue: _rule is DailyEveryDayRule ? 0 : 1,
+                selectedValue: _rule is DailyEveryDayRule
+                    ? 0
+                    : (_rule is DailyWeekdaysRule ? 1 : 2),
                 onSelected: (val) {
                   setState(() {
                     if (val == 0) {
                       _rule = const DailyEveryDayRule();
-                    } else {
+                    } else if (val == 1) {
                       _rule = DailyWeekdaysRule(days: _selectedDays.toList());
+                    } else {
+                      final today = ref.read(effectiveLocalDateProvider);
+                      _rule = DailyIntervalRule(count: _intervalDays, anchor: today);
                     }
                   });
                 },
@@ -289,6 +299,49 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
                       _rule = DailyWeekdaysRule(days: days.toList());
                     });
                   },
+                ),
+              ] else if (_rule is DailyIntervalRule) ...[
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'REPEAT INTERVAL',
+                      style: tokens.monoText(fontSize: 12, color: tokens.textPrimary),
+                    ),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Symbols.remove),
+                          onPressed: _intervalDays > 2
+                              ? () {
+                                  setState(() {
+                                    _intervalDays--;
+                                    final today = ref.read(effectiveLocalDateProvider);
+                                    _rule = DailyIntervalRule(count: _intervalDays, anchor: today);
+                                  });
+                                }
+                              : null,
+                        ),
+                        Text(
+                          'Every $_intervalDays days',
+                          style: tokens.monoText(fontSize: 14, fontWeight: FontWeight.w600),
+                        ),
+                        IconButton(
+                          icon: const Icon(Symbols.add),
+                          onPressed: _intervalDays < 365
+                              ? () {
+                                  setState(() {
+                                    _intervalDays++;
+                                    final today = ref.read(effectiveLocalDateProvider);
+                                    _rule = DailyIntervalRule(count: _intervalDays, anchor: today);
+                                  });
+                                }
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ],
             ] else if (_cadence == Cadence.weekly) ...[
@@ -328,6 +381,82 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
                             : null,
                       ),
                     ],
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 20),
+
+            // Target Section
+            Text(
+              'TARGET & METRICS',
+              style: tokens.monoText(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: tokens.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            SegmentedControl<TargetType>(
+              items: const [
+                SegmentItem(value: TargetType.checkbox, label: '✓ Checkbox'),
+                SegmentItem(value: TargetType.counter, label: '⊕ Counter'),
+              ],
+              selectedValue: _targetType,
+              onSelected: (t) => setState(() => _targetType = t),
+            ),
+            if (_targetType == TargetType.counter) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'DAILY TARGET (N)',
+                          style: tokens.monoText(fontSize: 11, color: tokens.textSecondary),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Symbols.remove),
+                              onPressed: _targetValue > 1
+                                  ? () => setState(() => _targetValue--)
+                                  : null,
+                            ),
+                            Text(
+                              '$_targetValue',
+                              style: tokens.monoText(fontSize: 16, fontWeight: FontWeight.w700),
+                            ),
+                            IconButton(
+                              icon: const Icon(Symbols.add),
+                              onPressed: _targetValue < 99
+                                  ? () => setState(() => _targetValue++)
+                                  : null,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'UNIT (OPTIONAL)',
+                          style: tokens.monoText(fontSize: 11, color: tokens.textSecondary),
+                        ),
+                        const SizedBox(height: 6),
+                        AppInput(
+                          controller: _unitController,
+                          hintText: 'glasses, pages, km',
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

@@ -140,9 +140,12 @@ class QuestEvaluation {
       );
     }
 
-    // Compose mono meta description (e.g., "DAILY · 23 STREAK · 4 DAYS LEFT")
+    // Compose mono meta description (e.g., "DAILY · 2/3 GLASSES · 23 STREAK")
     final metaParts = <String>[];
     metaParts.add(rule.cadence.name.toUpperCase());
+    if (targetType == TargetType.counter) {
+      metaParts.add('$periodCompleted/$target ${unit != null && unit.isNotEmpty ? unit.toUpperCase() : "TODAY"}');
+    }
     if (streak > 0) {
       metaParts.add('$streak ${rule.cadence == Cadence.daily ? "STREAK" : "PERIODS"}');
     }

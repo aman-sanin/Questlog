@@ -184,6 +184,21 @@ class QuestActions {
     }
   }
 
+  /// Decrement a counter quest by removing its latest completion log entry on date
+  Future<void> decrementQuest({
+    required String questId,
+    required LocalDate date,
+    required WeekStart weekStart,
+    required DateTime now,
+  }) async {
+    final completions = await db.completionsDao.getCompletionsInDateRange(date.formatted, date.formatted);
+    final questCompletions = completions.where((c) => c.questId == questId).toList();
+    if (questCompletions.isNotEmpty) {
+      final latest = questCompletions.last;
+      await undoCompletion(latest.id, today: date, weekStart: weekStart, now: now);
+    }
+  }
+
   /// Create a new quest
   Future<String> createQuest({
     required String title,

@@ -462,4 +462,121 @@ void main() {
       expect(coachCooldown, isNull);
     });
   });
+
+  group('Group G: Counter Targets & Multi-Daily Quests (P8)', () {
+    test('Incremental-sum invariant on daily counter: Medium (15 XP) 3x/day pays 5/5/5, sum = 15', () {
+      const rule = DailyEveryDayRule();
+      const diff = Difficulty.medium;
+      const target = 3;
+
+      final xp1 = XpEngine.calculateIncrementalXp(
+        rule: rule,
+        difficulty: diff,
+        target: target,
+        previousCount: 0,
+        newCount: 1,
+        isScheduled: true,
+      );
+      final xp2 = XpEngine.calculateIncrementalXp(
+        rule: rule,
+        difficulty: diff,
+        target: target,
+        previousCount: 1,
+        newCount: 2,
+        isScheduled: true,
+      );
+      final xp3 = XpEngine.calculateIncrementalXp(
+        rule: rule,
+        difficulty: diff,
+        target: target,
+        previousCount: 2,
+        newCount: 3,
+        isScheduled: true,
+      );
+
+      expect(xp1, equals(5));
+      expect(xp2, equals(5));
+      expect(xp3, equals(5));
+      expect(xp1 + xp2 + xp3, equals(15));
+    });
+
+    test('Overachievement quarter-rate with 1.5x cap', () {
+      const rule = DailyEveryDayRule();
+      const diff = Difficulty.medium; // Base 15 XP
+      const target = 3;
+
+      // 4th increment (extra unit 1) -> 15 * 1.25 = 18.75 -> 19 total, delta = 4
+      final xp4 = XpEngine.calculateIncrementalXp(
+        rule: rule,
+        difficulty: diff,
+        target: target,
+        previousCount: 3,
+        newCount: 4,
+        isScheduled: true,
+      );
+      expect(xp4, equals(4));
+
+      // 5th increment (extra unit 2) -> 15 * 1.50 = 22.5 -> 23 total, delta = 4
+      final xp5 = XpEngine.calculateIncrementalXp(
+        rule: rule,
+        difficulty: diff,
+        target: target,
+        previousCount: 4,
+        newCount: 5,
+        isScheduled: true,
+      );
+      expect(xp5, equals(4));
+
+      // 6th increment (beyond cap) -> delta = 0
+      final xp6 = XpEngine.calculateIncrementalXp(
+        rule: rule,
+        difficulty: diff,
+        target: target,
+        previousCount: 5,
+        newCount: 6,
+        isScheduled: true,
+      );
+      expect(xp6, equals(0));
+    });
+
+    test('Partial day count < target breaks streak at day close', () {
+      const rule = DailyEveryDayRule();
+      final day1 = const LocalDate(2025, 1, 1);
+      final day2 = const LocalDate(2025, 1, 2);
+      final day3 = const LocalDate(2025, 1, 3); // today
+
+      // Day 1: 3/3 (satisfied)
+      // Day 2: 2/3 (partial miss)
+      final completions = {
+        day1: 3,
+        day2: 2,
+      };
+
+      final result = StreakEngine.calculate(
+        rule: rule,
+        targetValue: 3,
+        completionValues: completions,
+        existingRepairs: {},
+        today: day3,
+        weekStart: WeekStart.monday,
+        firstCompletionDate: day1,
+      );
+
+      // Partial Day 2 broke streak -> current streak is 0
+      expect(result.streak, equals(0));
+    });
+
+    test('Compose check: "3 glasses on weekdays" resolves properly across weekday schedule', () {
+      const rule = DailyWeekdaysRule(days: [1, 2, 3, 4, 5]);
+      final monday = const LocalDate(2025, 1, 6);
+      final saturday = const LocalDate(2025, 1, 11);
+
+      expect(rule.isScheduledOn(monday), isTrue);
+      expect(rule.isScheduledOn(saturday), isFalse);
+
+      final period = rule.periodOf(monday);
+      expect(period.startLocalDate, equals(monday));
+      expect(period.endLocalDate, equals(monday));
+    });
+  });
 }

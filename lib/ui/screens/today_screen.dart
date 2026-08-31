@@ -192,6 +192,7 @@ class TodayScreen extends ConsumerWidget {
                               },
                               onComplete: () => _handleComplete(ref, q, today, weekStart),
                               onIncrement: () => _handleComplete(ref, q, today, weekStart),
+                              onDecrement: () => _handleDecrement(ref, q, today, weekStart),
                             ),
                           );
                         },
@@ -236,6 +237,7 @@ class TodayScreen extends ConsumerWidget {
                               },
                               onComplete: () => _handleComplete(ref, q, today, weekStart),
                               onIncrement: () => _handleComplete(ref, q, today, weekStart),
+                              onDecrement: () => _handleDecrement(ref, q, today, weekStart),
                             ),
                           );
                         },
@@ -269,5 +271,15 @@ class TodayScreen extends ConsumerWidget {
             now: DateTime.now(),
           );
     }
+  }
+
+  void _handleDecrement(WidgetRef ref, QuestEvaluation q, LocalDate today, WeekStart weekStart) async {
+    HapticService.light();
+    await ref.read(questActionsProvider).decrementQuest(
+          questId: q.questId,
+          date: today,
+          weekStart: weekStart,
+          now: DateTime.now(),
+        );
   }
 }

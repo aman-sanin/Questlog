@@ -1,77 +1,26 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:questlog/domain/constants/titles.dart';
+import 'package:questlog/domain/constants/unlock_schedule.dart';
 import 'package:questlog/domain/constants/xp_constants.dart';
-import 'package:questlog/domain/engine/badges.dart';
+import 'package:questlog/domain/engine/insights.dart';
 import 'package:questlog/domain/engine/progression.dart';
-import 'package:questlog/domain/engine/quest_state.dart';
 import 'package:questlog/domain/engine/schedule_rule.dart';
+import 'package:questlog/domain/engine/settlement.dart';
 import 'package:questlog/domain/engine/streak.dart';
 import 'package:questlog/domain/engine/xp.dart';
 import 'package:questlog/domain/model/models.dart';
 
 void main() {
-  group('XP Engine Tests', () {
-    test('Calculates period XP for daily medium quest with 100% progress', () {
-      final xp = XpEngine.calculatePeriodXp(
-        cadence: Cadence.daily,
-        difficulty: Difficulty.medium,
-        progress: 1.0,
-      );
-      // Base: 10 * 1.5 * 1.0 = 15
-      expect(xp, 15);
-    });
+  group('Group B: Streak Money Tests', () {
+    test('MWF quest: complete Mon + Wed, skip Tue -> Streak = 2, Tuesday registers nothing', () {
+      final rule = const DailyWeekdaysRule(days: [1, 3, 5]); // Mon, Wed, Fri
+      final monday = const LocalDate(2025, 1, 6);
+      final wednesday = const LocalDate(2025, 1, 8);
+      final thursday = const LocalDate(2025, 1, 9); // evaluation day
 
-    test('Calculates period XP with overachievement cap', () {
-      final xp = XpEngine.calculatePeriodXp(
-        cadence: Cadence.daily,
-        difficulty: Difficulty.easy,
-        progress: 2.0,
-      );
-      // Base: 10 * 1.0 * (1 + 0.25 * 1) = 10 * 1.25 = 13 (approx)
-      expect(xp, 13);
-    });
-
-    test('Calculates incremental XP on counter increment', () {
-      final rule = const DailyEveryDayRule();
-      final incremental = XpEngine.calculateIncrementalXp(
-        rule: rule,
-        difficulty: Difficulty.hard,
-        target: 4,
-        previousCount: 0,
-        newCount: 2,
-        isScheduled: true,
-      );
-      // Hard = 2.0 * 10 = 20 max; 2/4 = 50% => 10 XP
-      expect(incremental, 10);
-    });
-  });
-
-  group('Progression Engine Tests', () {
-    test('Calculates level thresholds accurately', () {
-      expect(ProgressionEngine.levelFromXp(0), 1);
-      expect(ProgressionEngine.levelFromXp(99), 1);
-      expect(ProgressionEngine.levelFromXp(100), 2);
-      expect(ProgressionEngine.levelFromXp(250), 3);
-      expect(ProgressionEngine.levelFromXp(450), 4);
-      expect(ProgressionEngine.levelFromXp(700), 5);
-      expect(ProgressionEngine.levelFromXp(1350), 7);
-    });
-
-    test('Resolves calling titles correctly across levels', () {
-      expect(CallingTitles.titleFor(calling: CallingDomain.warrior, level: 1), 'Recruit');
-      expect(CallingTitles.titleFor(calling: CallingDomain.warrior, level: 7), 'Knight');
-      expect(CallingTitles.titleFor(calling: CallingDomain.artificer, level: 7), 'Artificer');
-    });
-  });
-
-  group('Streak Engine Tests', () {
-    test('Calculates streak backward for daily quest', () {
-      final today = LocalDate(2025, 6, 15);
-      final rule = const DailyEveryDayRule();
       final completions = {
-        LocalDate(2025, 6, 15): 1,
-        LocalDate(2025, 6, 14): 1,
-        LocalDate(2025, 6, 13): 1,
+        monday: 1,
+        wednesday: 1,
       };
 
       final result = StreakEngine.calculate(
@@ -79,57 +28,422 @@ void main() {
         targetValue: 1,
         completionValues: completions,
         existingRepairs: {},
-        today: today,
+        today: thursday,
         weekStart: WeekStart.monday,
-        firstCompletionDate: LocalDate(2025, 6, 13),
+        firstCompletionDate: monday,
       );
 
-      expect(result.streak, 3);
+      expect(result.streak, equals(2));
+      expect(result.newlyConsumedRepairs, isEmpty);
     });
 
-    test('Uses freeze repair when wallet is available', () {
-      final today = LocalDate(2025, 6, 15);
-      final rule = const DailyEveryDayRule();
-      final completions = {
-        LocalDate(2025, 6, 15): 1,
-        // Missed June 14
-        LocalDate(2025, 6, 13): 1,
-      };
+    test('New quest, 3 uncompleted days: Grace -> no miss, no red, no streak', () {
+      const rule = DailyEveryDayRule();
+      final today = const LocalDate(2025, 1, 4);
 
       final result = StreakEngine.calculate(
         rule: rule,
         targetValue: 1,
-        completionValues: completions,
+        completionValues: {},
         existingRepairs: {},
         today: today,
         weekStart: WeekStart.monday,
-        firstCompletionDate: LocalDate(2025, 6, 10),
+        firstCompletionDate: null, // never completed
+      );
+
+      expect(result.streak, equals(0));
+      expect(result.bestStreak, equals(0));
+      expect(result.newlyConsumedRepairs, isEmpty);
+    });
+
+    test('Pause spanning a full week: neutral -> streak intact, week invisible', () {
+      const rule = WeeklyTimesRule(times: 3);
+      final w1 = const LocalDate(2025, 1, 6);  // Mon week 1
+      final w2 = const LocalDate(2025, 1, 13); // Mon week 2 (paused)
+      final w3 = const LocalDate(2025, 1, 20); // Mon week 3 (today)
+
+      final completions = {
+        w1: 3,
+        w3: 3,
+      };
+
+      final result = StreakEngine.calculate(
+        rule: rule,
+        targetValue: 3,
+        completionValues: completions,
+        existingRepairs: {},
+        today: w3,
+        weekStart: WeekStart.monday,
+        firstCompletionDate: w1,
+        pausedUntil: const LocalDate(2025, 1, 19), // paused through week 2
+      );
+
+      expect(result.streak, equals(2)); // Week 1 + Week 3
+    });
+
+    test('Freeze consumed on miss, streak evaluated twice: consumed exactly once (UNIQUE constraint test)', () {
+      const rule = DailyEveryDayRule();
+      final day1 = const LocalDate(2025, 1, 1);
+      final day2 = const LocalDate(2025, 1, 2); // missed
+      final day3 = const LocalDate(2025, 1, 3); // today, completed
+
+      final completions = {
+        day1: 1,
+        day3: 1,
+      };
+
+      // Evaluation 1: with 1 freeze available in wallet
+      final eval1 = StreakEngine.calculate(
+        rule: rule,
+        targetValue: 1,
+        completionValues: completions,
+        existingRepairs: {},
+        today: day3,
+        weekStart: WeekStart.monday,
+        firstCompletionDate: day1,
         availableFreezeWallet: 1,
       );
 
-      expect(result.streak, 2);
-      expect(result.newlyConsumedRepairs.length, 1);
+      expect(eval1.streak, equals(2));
+      expect(eval1.newlyConsumedRepairs, equals(['2025-01-02']));
+
+      // Evaluation 2: rerun after repair has been recorded in database
+      final eval2 = StreakEngine.calculate(
+        rule: rule,
+        targetValue: 1,
+        completionValues: completions,
+        existingRepairs: {'2025-01-02'},
+        today: day3,
+        weekStart: WeekStart.monday,
+        firstCompletionDate: day1,
+        availableFreezeWallet: 0,
+      );
+
+      expect(eval2.streak, equals(2));
+      expect(eval2.newlyConsumedRepairs, isEmpty); // no double-consume
     });
   });
 
-  group('Badge Engine Tests', () {
-    test('Evaluates First Step and Centurion', () {
-      final badges = BadgeEngine.evaluate(
-        totalCompletions: 150,
-        maxStreak: 35,
-        perfectDaysCount: 12,
-        domainsWithCompletions: CallingDomain.values.toSet(),
-        completedGoalsCount: 1,
-        earnedBadgeKeys: {},
+  group('Group C: XP Arithmetic', () {
+    test('Gym ×3/week medium (base=35, mult=1.5): increments pay 18 / 17 / 18, sum = 53', () {
+      const rule = WeeklyTimesRule(times: 3);
+
+      final inc1 = XpEngine.calculateIncrementalXp(
+        rule: rule,
+        difficulty: Difficulty.medium,
+        target: 3,
+        previousCount: 0,
+        newCount: 1,
+        isScheduled: true,
       );
 
-      final firstStep = badges.firstWhere((b) => b.definition.key == 'first_step');
-      final centurion = badges.firstWhere((b) => b.definition.key == 'centurion');
-      final streak30 = badges.firstWhere((b) => b.definition.key == 'streak_30');
+      final inc2 = XpEngine.calculateIncrementalXp(
+        rule: rule,
+        difficulty: Difficulty.medium,
+        target: 3,
+        previousCount: 1,
+        newCount: 2,
+        isScheduled: true,
+      );
 
-      expect(firstStep.isEarned, isTrue);
-      expect(centurion.isEarned, isTrue);
-      expect(streak30.isEarned, isTrue);
+      final inc3 = XpEngine.calculateIncrementalXp(
+        rule: rule,
+        difficulty: Difficulty.medium,
+        target: 3,
+        previousCount: 2,
+        newCount: 3,
+        isScheduled: true,
+      );
+
+      expect(inc1, equals(18));
+      expect(inc2, equals(17));
+      expect(inc3, equals(18));
+      expect(inc1 + inc2 + inc3, equals(53));
+    });
+
+    test('4th increment pays +13 (quarter-rate per extra unit); cap is 2 extra units (79 XP max); 3rd extra pays 0', () {
+      const rule = WeeklyTimesRule(times: 3);
+
+      // 4th increment (1st extra unit)
+      final inc4 = XpEngine.calculateIncrementalXp(
+        rule: rule,
+        difficulty: Difficulty.medium,
+        target: 3,
+        previousCount: 3,
+        newCount: 4,
+        isScheduled: true,
+      );
+      expect(inc4, equals(13)); // 66 - 53 = 13
+
+      // 5th increment (2nd extra unit -> caps at 79)
+      final inc5 = XpEngine.calculateIncrementalXp(
+        rule: rule,
+        difficulty: Difficulty.medium,
+        target: 3,
+        previousCount: 4,
+        newCount: 5,
+        isScheduled: true,
+      );
+      expect(inc5, equals(13)); // 79 - 66 = 13
+
+      // 6th increment (3rd extra unit -> 0 XP)
+      final inc6 = XpEngine.calculateIncrementalXp(
+        rule: rule,
+        difficulty: Difficulty.medium,
+        target: 3,
+        previousCount: 5,
+        newCount: 6,
+        isScheduled: true,
+      );
+      expect(inc6, equals(0)); // capped at 79
+
+      // Cumulative for 6 completions
+      final total6 = XpEngine.calculatePeriodXp(
+        cadence: Cadence.weekly,
+        difficulty: Difficulty.medium,
+        target: 3,
+        count: 6,
+      );
+      expect(total6, equals(79));
+    });
+
+    test('Partial week: 2 of 3 sessions = 35 XP', () {
+      final total2 = XpEngine.calculatePeriodXp(
+        cadence: Cadence.weekly,
+        difficulty: Difficulty.medium,
+        target: 3,
+        count: 2,
+      );
+      expect(total2, equals(35));
+    });
+
+    test('Off-schedule completion scores 0 XP', () {
+      const rule = DailyWeekdaysRule(days: [1, 3, 5]); // Mon, Wed, Fri
+      final inc = XpEngine.calculateIncrementalXp(
+        rule: rule,
+        difficulty: Difficulty.medium,
+        target: 1,
+        previousCount: 0,
+        newCount: 1,
+        isScheduled: false, // completed on Tuesday
+      );
+      expect(inc, equals(0));
+    });
+  });
+
+  group('Group D: Settlement Engine', () {
+    test('settle() twice back-to-back: byte-identical & idempotent', () {
+      final monday = const LocalDate(2025, 1, 6);
+      final sunday = const LocalDate(2025, 1, 12);
+      final nextMon = const LocalDate(2025, 1, 13);
+
+      final questsData = [
+        {
+          'id': 'q-1',
+          'essential': true,
+          'rule': const DailyEveryDayRule(),
+          'targetValue': 1,
+        }
+      ];
+
+      final completionsByQuest = {
+        'q-1': {
+          for (int d = 6; d <= 12; d++) LocalDate(2025, 1, d): 1,
+        }
+      };
+
+      // Settlement 1
+      final res1 = SettlementEngine.settle(
+        questsData: questsData,
+        completionsByQuest: completionsByQuest,
+        profileSettledThrough: null,
+        today: nextMon,
+        weekStart: WeekStart.monday,
+        existingEventRefs: {},
+      );
+
+      expect(res1.newEvents.length, equals(8)); // 7 perfect days + 1 perfect week
+      final existingRefs = res1.newEvents.map((e) => e.ref).toSet();
+
+      // Settlement 2: rerun with existingRefs populated
+      final res2 = SettlementEngine.settle(
+        questsData: questsData,
+        completionsByQuest: completionsByQuest,
+        profileSettledThrough: sunday,
+        today: nextMon,
+        weekStart: WeekStart.monday,
+        existingEventRefs: existingRefs,
+      );
+
+      expect(res2.newEvents, isEmpty);
+    });
+
+    test('Perfect Week closes -> grants +75 XP', () {
+      final monday = const LocalDate(2025, 1, 6);
+      final nextMon = const LocalDate(2025, 1, 13);
+
+      final questsData = [
+        {
+          'id': 'q-1',
+          'essential': false,
+          'rule': const DailyEveryDayRule(),
+          'targetValue': 1,
+        }
+      ];
+
+      final completionsByQuest = {
+        'q-1': {
+          for (int d = 6; d <= 12; d++) LocalDate(2025, 1, d): 1,
+        }
+      };
+
+      final res = SettlementEngine.settle(
+        questsData: questsData,
+        completionsByQuest: completionsByQuest,
+        profileSettledThrough: null,
+        today: nextMon,
+        weekStart: WeekStart.monday,
+        existingEventRefs: {},
+      );
+
+      final perfectWeekEvent = res.newEvents.firstWhere((e) => e.type == XpEventType.perfectWeek);
+      expect(perfectWeekEvent.amount, equals(75));
+    });
+
+    test('Perfect Day with zero scheduled essentials -> no event awarded', () {
+      final day = const LocalDate(2025, 1, 6);
+      final nextDay = const LocalDate(2025, 1, 7);
+
+      final questsData = [
+        {
+          'id': 'q-1',
+          'essential': false, // non-essential
+          'rule': const DailyEveryDayRule(),
+          'targetValue': 1,
+        }
+      ];
+
+      final completionsByQuest = {
+        'q-1': {day: 1}
+      };
+
+      final res = SettlementEngine.settle(
+        questsData: questsData,
+        completionsByQuest: completionsByQuest,
+        profileSettledThrough: null,
+        today: nextDay,
+        weekStart: WeekStart.monday,
+        existingEventRefs: {},
+      );
+
+      expect(res.newEvents.where((e) => e.type == XpEventType.perfectDay), isEmpty);
+    });
+  });
+
+  group('Group E: Progression Engine', () {
+    test('Cumulative XP formula exact values: cumXP(2)=100, cumXP(6)=1,000, cumXP(10)=2,700', () {
+      expect(ProgressionEngine.cumulativeXpForLevel(1), equals(0));
+      expect(ProgressionEngine.cumulativeXpForLevel(2), equals(100));
+      expect(ProgressionEngine.cumulativeXpForLevel(6), equals(1000));
+      expect(ProgressionEngine.cumulativeXpForLevel(10), equals(2700));
+    });
+
+    test('levelFromXp thresholds', () {
+      expect(ProgressionEngine.levelFromXp(0), equals(1));
+      expect(ProgressionEngine.levelFromXp(99), equals(1));
+      expect(ProgressionEngine.levelFromXp(100), equals(2));
+      expect(ProgressionEngine.levelFromXp(999), equals(5));
+      expect(ProgressionEngine.levelFromXp(1000), equals(6));
+      expect(ProgressionEngine.levelFromXp(2700), equals(10));
+    });
+
+    test('Unlock gates at L3 (Sage), L5 (Ice), L13 (Copper)', () {
+      final l3Unlocks = UnlockSchedule.unlocksForLevel(3);
+      expect(l3Unlocks.any((u) => u.key == 'sage_accent'), isTrue);
+
+      final l5Unlocks = UnlockSchedule.unlocksForLevel(5);
+      expect(l5Unlocks.any((u) => u.key == 'ice_accent'), isTrue);
+
+      final l13Unlocks = UnlockSchedule.unlocksForLevel(13);
+      expect(l13Unlocks.any((u) => u.key == 'copper_accent'), isTrue);
+    });
+
+    test('Title bands: L7 rung and L30 generic/calling rungs', () {
+      final titleL7 = CallingTitles.titleFor(calling: CallingDomain.warrior, level: 7);
+      expect(titleL7, equals('Knight'));
+
+      final genericL30 = CallingTitles.titleFor(calling: null, level: 30);
+      expect(genericL30, equals('Legend'));
+
+      final callingL30 = CallingTitles.titleFor(calling: CallingDomain.warrior, level: 30);
+      expect(callingL30, equals('Legendary Warlord'));
+    });
+
+    test('Domain affinity percentages sum to 1.0 (100%)', () {
+      final prog = ProgressionEngine.calculate(
+        totalXp: 1500,
+        chosenCalling: CallingDomain.warrior,
+        domainXp: {
+          CallingDomain.warrior: 600,
+          CallingDomain.sage: 300,
+          CallingDomain.monk: 100,
+        },
+      );
+
+      double sum = 0.0;
+      for (final val in prog.domainAffinity.values) {
+        sum += val;
+      }
+      expect(sum, closeTo(1.0, 0.001));
+    });
+  });
+
+  group('Group F: Insights Engine', () {
+    test('Deterministic weekly insight rotation based on ISO week (same week -> same card)', () {
+      final monday1 = const LocalDate(2025, 1, 6);   // ISO week 2
+      final thursday1 = const LocalDate(2025, 1, 9); // ISO week 2
+
+      final insight1 = InsightsEngine.getWeeklyInsight(
+        completionsByDate: {},
+        today: monday1,
+        totalXp: 1000,
+      );
+      final insight2 = InsightsEngine.getWeeklyInsight(
+        completionsByDate: {},
+        today: thursday1,
+        totalXp: 1000,
+      );
+
+      expect(insight1.headline, equals(insight2.headline));
+      expect(insight1.stat, equals(insight2.stat));
+    });
+
+    test('Coach triggers at >=90% and <50% over 14 days, honors 30-day cooldown', () {
+      // High performance (>90%) with low quest count
+      final coach1 = InsightsEngine.evaluateCoachCard(
+        fourteenDayRate: 0.95,
+        activeQuestsCount: 3,
+        isCooldownActive: false,
+      );
+      expect(coach1, isNotNull);
+      expect(coach1!.title, equals('Mastery in Motion'));
+
+      // Low performance (<50%) with high quest count
+      final coach2 = InsightsEngine.evaluateCoachCard(
+        fourteenDayRate: 0.40,
+        activeQuestsCount: 6,
+        isCooldownActive: false,
+      );
+      expect(coach2, isNotNull);
+      expect(coach2!.title, equals('Focus Your Energy'));
+
+      // In cooldown -> null
+      final coachCooldown = InsightsEngine.evaluateCoachCard(
+        fourteenDayRate: 0.95,
+        activeQuestsCount: 3,
+        isCooldownActive: true,
+      );
+      expect(coachCooldown, isNull);
     });
   });
 }

@@ -1,89 +1,157 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:questlog/domain/engine/schedule_rule.dart';
 import 'package:questlog/domain/engine/recurrence.dart';
+import 'package:questlog/domain/engine/schedule_rule.dart';
 import 'package:questlog/domain/model/models.dart';
 
 void main() {
-  group('DailyRule Tests', () {
-    test('Every day rule schedules on every day', () {
-      final rule = DailyRule.everyDay();
-      expect(rule.isScheduledOn(LocalDate(2026, 8, 30), 1), isTrue);
-      expect(rule.isScheduledOn(LocalDate(2026, 8, 31), 1), isTrue);
+  group('Group A: Recurrence Properties', () {
+    test('MWF rule over a full year (2025): never yields Sat/Sun, exactly 157 days', () {
+      final rule = const DailyWeekdaysRule(days: [1, 3, 5]); // Mon, Wed, Fri
+      int scheduledCount = 0;
+      int satSunCount = 0;
+
+      LocalDate d = const LocalDate(2025, 1, 1);
+      final end = const LocalDate(2025, 12, 31);
+
+      while (d <= end) {
+        if (rule.isScheduledOn(d)) {
+          scheduledCount++;
+          final weekday = d.toDateTime().weekday;
+          if (weekday == 6 || weekday == 7) {
+            satSunCount++;
+          }
+        }
+        d = d.addDays(1);
+      }
+
+      expect(satSunCount, equals(0));
+      expect(scheduledCount, equals(157)); // 52 Mondays + 53 Wednesdays + 52 Fridays = 157
     });
 
-    test('Weekdays rule schedules only on specified days', () {
-      // 2026-08-31 is Monday (1)
-      // 2026-09-01 is Tuesday (2)
-      final rule = DailyRule.weekdays([1, 3, 5]); // Mon, Wed, Fri
-      expect(rule.isScheduledOn(LocalDate(2026, 8, 31), 1), isTrue);
-      expect(rule.isScheduledOn(LocalDate(2026, 9, 1), 1), isFalse);
+    test('every_day over a normal year (2025) yields 365, leap year (2024) yields 366', () {
+      const rule = DailyEveryDayRule();
+
+      int count2025 = 0;
+      LocalDate d2025 = const LocalDate(2025, 1, 1);
+      while (d2025 <= const LocalDate(2025, 12, 31)) {
+        if (rule.isScheduledOn(d2025)) count2025++;
+        d2025 = d2025.addDays(1);
+      }
+      expect(count2025, equals(365));
+
+      int count2024 = 0;
+      LocalDate d2024 = const LocalDate(2024, 1, 1);
+      while (d2024 <= const LocalDate(2024, 12, 31)) {
+        if (rule.isScheduledOn(d2024)) count2024++;
+        d2024 = d2024.addDays(1);
+      }
+      expect(count2024, equals(366));
     });
 
-    test('Interval rule schedules based on anchor', () {
-      // Anchor: 2026-08-30
-      final anchor = LocalDate(2026, 8, 30);
-      final rule = DailyRule.interval(3, anchor); // Every 3 days
+    test('Interval n=3, anchored at 2025-01-01: scheduled exactly every 3rd day', () {
+      final anchor = const LocalDate(2025, 1, 1);
+      final rule = DailyIntervalRule(count: 3, anchor: anchor);
 
-      expect(rule.isScheduledOn(LocalDate(2026, 8, 30), 1), isTrue);
-      expect(rule.isScheduledOn(LocalDate(2026, 8, 31), 1), isFalse);
-      expect(rule.isScheduledOn(LocalDate(2026, 9, 2), 1), isTrue); // 3 days later
-    });
-  });
-
-  group('WeeklyRule Tests', () {
-    test('Weekly times rule is window-scheduled and open on all days', () {
-      final rule = WeeklyRule.times(3);
-      expect(rule.isWindowScheduled, isTrue);
-      expect(rule.isScheduledOn(LocalDate(2026, 8, 30), 1), isTrue);
+      expect(rule.isScheduledOn(const LocalDate(2025, 1, 1)), isTrue);
+      expect(rule.isScheduledOn(const LocalDate(2025, 1, 2)), isFalse);
+      expect(rule.isScheduledOn(const LocalDate(2025, 1, 3)), isFalse);
+      expect(rule.isScheduledOn(const LocalDate(2025, 1, 4)), isTrue);
+      expect(rule.isScheduledOn(const LocalDate(2025, 1, 7)), isTrue);
+      expect(rule.isScheduledOn(const LocalDate(2025, 1, 10)), isTrue);
     });
 
-    test('Weekly periodOf calculates correct range based on weekStart', () {
-      // 2026-08-30 is Sunday
-      // If weekStart = 1 (Monday), week starts on 2026-08-24 (Monday) and ends on 2026-08-30 (Sunday)
-      final rule = WeeklyRule.times(1);
-      final range = rule.periodOf(LocalDate(2026, 8, 30), 1);
-      expect(LocalDate.fromDateTime(range.start).dateString, '2026-08-24');
-      expect(LocalDate.fromDateTime(range.end).dateString, '2026-08-30');
-    });
-  });
+    test('2nd Tuesday: exactly one day per month in every month of the year', () {
+      const rule = MonthlyNthWeekdayRule(nth: 2, weekday: 2); // 2nd Tuesday
 
-  group('MonthlyRule Tests', () {
-    test('nth_weekday works correctly', () {
-      // 2026-09-08 is second Tuesday of Sept 2026 (Sept 1 is Tuesday, Sept 8 is 2nd Tuesday)
-      final rule = MonthlyRule.nthWeekday(2, 2); // 2nd Tuesday
-      expect(rule.isScheduledOn(LocalDate(2026, 9, 8), 1), isTrue);
-      expect(rule.isScheduledOn(LocalDate(2026, 9, 1), 1), isFalse);
-      expect(rule.isScheduledOn(LocalDate(2026, 9, 15), 1), isFalse);
+      for (int month = 1; month <= 12; month++) {
+        int tuesdayCount = 0;
+        final daysInMonth = MonthlyRule.daysInMonth(2025, month);
+        for (int day = 1; day <= daysInMonth; day++) {
+          final date = LocalDate(2025, month, day);
+          if (rule.isScheduledOn(date)) {
+            tuesdayCount++;
+            expect(date.toDateTime().weekday, equals(2));
+          }
+        }
+        expect(tuesdayCount, equals(1), reason: 'Month $month should have exactly 1 2nd Tuesday');
+      }
     });
 
-    test('last_day works correctly', () {
-      final rule = MonthlyRule.lastDay();
-      expect(rule.isScheduledOn(LocalDate(2026, 8, 31), 1), isTrue);
-      expect(rule.isScheduledOn(LocalDate(2026, 8, 30), 1), isFalse);
+    test('day_of_month: 31 in June clamps to June 30 (clamped, not vanished)', () {
+      const rule = MonthlyDayOfMonthRule(day: 31);
+
+      // June has 30 days
+      expect(rule.isScheduledOn(const LocalDate(2025, 6, 30)), isTrue);
+      expect(rule.isScheduledOn(const LocalDate(2025, 6, 29)), isFalse);
+
+      // July has 31 days
+      expect(rule.isScheduledOn(const LocalDate(2025, 7, 31)), isTrue);
+      expect(rule.isScheduledOn(const LocalDate(2025, 7, 30)), isFalse);
     });
-  });
 
-  group('Recurrence.periodsBackward Tests', () {
-    test('periodsBackward returns correct list of weekly periods', () {
-      final rule = WeeklyRule.times(1);
-      final from = LocalDate(2026, 8, 30); // Sunday
-      final firstCompletion = LocalDate(2026, 8, 10); // Monday (3 weeks prior range start)
+    test('Feb 29 in non-leap year (2025) fires Feb 28; in leap year (2024) fires Feb 29', () {
+      const rule = YearlyDateRule(month: 2, day: 29);
 
-      final periods = Recurrence.periodsBackward(
-        from: from,
-        rule: rule,
-        weekStart: 1,
-        firstCompletion: firstCompletion,
-      );
+      // Non-leap year 2025
+      expect(rule.isScheduledOn(const LocalDate(2025, 2, 28)), isTrue);
+      expect(rule.isScheduledOn(const LocalDate(2025, 2, 27)), isFalse);
 
-      // Should return 3 periods:
-      // Week 1: Aug 24 - Aug 30
-      // Week 2: Aug 17 - Aug 23
-      // Week 3: Aug 10 - Aug 16
-      expect(periods.length, 3);
-      expect(LocalDate.fromDateTime(periods[0].start).dateString, '2026-08-24');
-      expect(LocalDate.fromDateTime(periods[1].start).dateString, '2026-08-17');
-      expect(LocalDate.fromDateTime(periods[2].start).dateString, '2026-08-10');
+      // Leap year 2024
+      expect(rule.isScheduledOn(const LocalDate(2024, 2, 29)), isTrue);
+      expect(rule.isScheduledOn(const LocalDate(2024, 2, 28)), isFalse);
+    });
+
+    test('last_day rule correctly identifies last day for 28, 29, 30, and 31-day months', () {
+      const rule = MonthlyLastDayRule();
+
+      expect(rule.isScheduledOn(const LocalDate(2025, 2, 28)), isTrue);
+      expect(rule.isScheduledOn(const LocalDate(2024, 2, 29)), isTrue);
+      expect(rule.isScheduledOn(const LocalDate(2025, 4, 30)), isTrue);
+      expect(rule.isScheduledOn(const LocalDate(2025, 5, 31)), isTrue);
+      expect(rule.isScheduledOn(const LocalDate(2025, 5, 30)), isFalse);
+    });
+
+    test('Week of Dec 29, 2025 – Jan 4, 2026: correct single period key for Monday and Sunday week starts', () {
+      const rule = WeeklyTimesRule(times: 3);
+
+      final dec30 = const LocalDate(2025, 12, 30); // Tuesday
+      final jan2 = const LocalDate(2026, 1, 2);   // Friday
+
+      // Monday week start (2025-12-29 to 2026-01-04)
+      final pKeyDec30Mon = rule.periodKey(dec30, 1);
+      final pKeyJan2Mon = rule.periodKey(jan2, 1);
+      expect(pKeyDec30Mon, equals('W:2025-12-29'));
+      expect(pKeyJan2Mon, equals('W:2025-12-29'));
+      expect(pKeyDec30Mon, equals(pKeyJan2Mon));
+
+      // Sunday week start
+      final pKeyDec30Sun = rule.periodKey(dec30, 7);
+      final pKeyJan2Sun = rule.periodKey(jan2, 7);
+      expect(pKeyDec30Sun, equals('W:2025-12-28'));
+      expect(pKeyJan2Sun, equals('W:2025-12-28'));
+      expect(pKeyDec30Sun, equals(pKeyJan2Sun));
+    });
+
+    test('5th-Friday rule: zero scheduled Fridays in 4-Friday months', () {
+      const rule = MonthlyNthWeekdayRule(nth: 5, weekday: 5); // 5th Friday
+
+      // February 2025 has 4 Fridays (Feb 7, 14, 21, 28)
+      int scheduledCountFeb = 0;
+      for (int d = 1; d <= 28; d++) {
+        if (rule.isScheduledOn(LocalDate(2025, 2, d))) {
+          scheduledCountFeb++;
+        }
+      }
+      expect(scheduledCountFeb, equals(0));
+
+      // May 2025 has 5 Fridays (May 2, 9, 16, 23, 30)
+      int scheduledCountMay = 0;
+      for (int d = 1; d <= 31; d++) {
+        if (rule.isScheduledOn(LocalDate(2025, 5, d))) {
+          scheduledCountMay++;
+        }
+      }
+      expect(scheduledCountMay, equals(1));
     });
   });
 }

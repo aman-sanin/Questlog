@@ -3,24 +3,28 @@ import '../model/models.dart';
 import 'schedule_rule.dart';
 
 class XpEngine {
-  /// Calculate total XP for a period given its progress ratio (completed / target)
+  /// Calculate total XP for a period given the cadence, difficulty, target, and completed count.
   static int calculatePeriodXp({
     required Cadence cadence,
     required Difficulty difficulty,
-    required double progress,
+    required int target,
+    required int count,
   }) {
-    if (progress <= 0) return 0;
+    if (count <= 0 || target <= 0) return 0;
 
     final base = XpConstants.baseForCadence(cadence);
     final diffMultiplier = XpConstants.multiplierForDifficulty(difficulty);
+    final basePeriodXp = base * diffMultiplier;
 
-    // Overachievement scale: min(progress, 1 + 0.25 * max(0, progress - 1))
-    final effectiveProgress = progress <= 1.0
-        ? progress
-        : (1.0 + 0.25 * (progress - 1.0)).clamp(1.0, 1.5);
-
-    final double total = base * diffMultiplier * effectiveProgress;
-    return total.round();
+    if (count <= target) {
+      final progress = count / target;
+      return (basePeriodXp * progress).round();
+    } else {
+      // Overachievement: quarter-rate per extra unit, capped at 2 extra units (max 1.5x)
+      final extraUnits = (count - target).clamp(0, 2);
+      final effectiveMultiplier = 1.0 + (0.25 * extraUnits);
+      return (basePeriodXp * effectiveMultiplier).round();
+    }
   }
 
   /// Calculates the incremental XP to grant for a completion event
@@ -32,23 +36,22 @@ class XpEngine {
     required int newCount,
     required bool isScheduled,
   }) {
-    if (!isScheduled || target <= 0) {
+    if (!isScheduled || target <= 0 || newCount <= previousCount) {
       return 0;
     }
-
-    final prevProgress = previousCount / target;
-    final newProgress = newCount / target;
 
     final prevXp = calculatePeriodXp(
       cadence: rule.cadence,
       difficulty: difficulty,
-      progress: prevProgress,
+      target: target,
+      count: previousCount,
     );
 
     final newXp = calculatePeriodXp(
       cadence: rule.cadence,
       difficulty: difficulty,
-      progress: newProgress,
+      target: target,
+      count: newCount,
     );
 
     final delta = newXp - prevXp;

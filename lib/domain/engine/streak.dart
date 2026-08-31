@@ -61,7 +61,7 @@ class StreakEngine {
     }
 
     for (final period in periods) {
-      // Skip current period as it was checked above
+      // Skip current period as it was evaluated above
       if (period.startLocalDate == currentPeriod.startLocalDate &&
           period.endLocalDate == currentPeriod.endLocalDate) {
         continue;
@@ -70,6 +70,12 @@ class StreakEngine {
       // Stop if before first completion ever (birth grace)
       if (period.endLocalDate < firstCompletionDate) {
         break;
+      }
+
+      // If non-window and not scheduled on this day, skip completely
+      if (!rule.isWindowScheduled &&
+          !rule.isScheduledOn(period.startLocalDate, weekStart.value)) {
+        continue;
       }
 
       // Check if paused
@@ -95,15 +101,15 @@ class StreakEngine {
           currentStreak++;
         }
       } else if (existingRepairs.contains(pKey)) {
-        // Previously consumed freeze repair
+        // Previously consumed freeze repair keeps streak alive
         continue;
       } else if (wallet > 0 && !currentStreakFinalized) {
-        // Consume available freeze from wallet
+        // Consume available freeze from wallet to preserve streak
         wallet--;
         consumedRepairs.add(pKey);
         continue;
       } else {
-        // Streak ends here
+        // Streak breaks here
         currentStreakFinalized = true;
         break;
       }

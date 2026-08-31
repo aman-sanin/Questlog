@@ -14,6 +14,8 @@ import '../sheets/goal_detail_sheet.dart';
 import '../sheets/quest_detail_sheet.dart';
 import '../sheets/quest_editor_sheet.dart';
 import '../theme/tokens.dart';
+import '../widgets/action_button.dart';
+import '../widgets/app_input.dart';
 import '../widgets/banner_widget.dart';
 import '../widgets/chips.dart';
 import '../widgets/completion_ring.dart';
@@ -199,6 +201,7 @@ class TodayScreen extends ConsumerWidget {
                                 }
                               },
                               onComplete: () => _handleComplete(ref, q, today, weekStart),
+                              onLongPressCheckbox: () => _handleLogWithNote(context, ref, q, today, weekStart),
                               onIncrement: () => _handleComplete(ref, q, today, weekStart),
                               onDecrement: () => _handleDecrement(ref, q, today, weekStart),
                             ),
@@ -251,6 +254,7 @@ class TodayScreen extends ConsumerWidget {
                                 }
                               },
                               onComplete: () => _handleComplete(ref, q, today, weekStart),
+                              onLongPressCheckbox: () => _handleLogWithNote(context, ref, q, today, weekStart),
                               onIncrement: () => _handleComplete(ref, q, today, weekStart),
                               onDecrement: () => _handleDecrement(ref, q, today, weekStart),
                             ),
@@ -285,6 +289,81 @@ class TodayScreen extends ConsumerWidget {
             weekStart: weekStart,
             now: DateTime.now(),
           );
+    }
+  }
+
+  void _handleLogWithNote(
+    BuildContext context,
+    WidgetRef ref,
+    QuestEvaluation q,
+    LocalDate today,
+    WeekStart weekStart,
+  ) async {
+    final controller = TextEditingController();
+    final tokens = context.tokens;
+
+    final note = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(ctx).viewInsets.bottom,
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: tokens.bg,
+            border: Border(top: BorderSide(color: tokens.accent, width: 2)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'LOG WITH NOTE',
+                style: tokens.headline(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: tokens.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                q.title,
+                style: tokens.body(fontSize: 13, color: tokens.textSecondary),
+              ),
+              const SizedBox(height: 16),
+              AppInput(
+                controller: controller,
+                hintText: 'Add an optional note about this session...',
+                autofocus: true,
+              ),
+              const SizedBox(height: 16),
+              ActionButton(
+                label: 'COMPLETE WITH NOTE',
+                variant: ActionButtonVariant.primary,
+                onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (note != null) {
+      HapticService.light();
+      SoundService.playCheck();
+      final questData = await ref.read(questsDaoProvider).getQuestById(q.questId);
+      if (questData != null) {
+        await ref.read(questActionsProvider).completeQuest(
+              quest: questData,
+              date: today,
+              note: note.isEmpty ? null : note,
+              weekStart: weekStart,
+              now: DateTime.now(),
+            );
+      }
     }
   }
 

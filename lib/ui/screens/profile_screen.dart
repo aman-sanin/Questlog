@@ -123,6 +123,157 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 28),
 
+                  // Lifetime Records Section
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'LIFETIME RECORDS',
+                      style: tokens.monoText(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.0,
+                        color: tokens.textSecondary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: tokens.tonal,
+                            border: Border.all(color: tokens.lineRest, width: 1),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${state.records.maxDayXp} XP',
+                                style: tokens.monoText(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: tokens.accent,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'BEST DAY XP',
+                                style: tokens.monoText(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: tokens.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: tokens.tonal,
+                            border: Border.all(color: tokens.lineRest, width: 1),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${state.records.bestStreak} DAYS',
+                                style: tokens.monoText(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: tokens.accent,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'LONGEST STREAK',
+                                style: tokens.monoText(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: tokens.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: tokens.tonal,
+                            border: Border.all(color: tokens.lineRest, width: 1),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${state.records.bestWeekXp} XP',
+                                style: tokens.monoText(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: tokens.accent,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'BEST 7-DAY WINDOW',
+                                style: tokens.monoText(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: tokens.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: tokens.tonal,
+                            border: Border.all(color: tokens.lineRest, width: 1),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${state.records.freezesUsed}',
+                                style: tokens.monoText(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: tokens.accent,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'FREEZES USED',
+                                style: tokens.monoText(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: tokens.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 28),
+
                   // Badges Grid Section
                   Align(
                     alignment: Alignment.centerLeft,

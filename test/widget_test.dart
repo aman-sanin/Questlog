@@ -252,4 +252,43 @@ void main() {
 
     await inMemoryDb.close();
   });
+
+  test('P12: Completion note round-trips cleanly through BackupService', () async {
+    final inMemoryDb = AppDatabase(NativeDatabase.memory());
+    final backupService = BackupService(inMemoryDb);
+
+    await inMemoryDb.questsDao.insertQuest(
+      QuestsCompanion(
+        id: const Value('q-note-1'),
+        title: const Value('Journal Entry'),
+        rule: const Value(DailyEveryDayRule()),
+        createdAt: Value(DateTime(2025, 1, 1)),
+      ),
+    );
+
+    await inMemoryDb.completionsDao.insertCompletion(
+      CompletionsCompanion(
+        id: const Value('c-note-1'),
+        questId: const Value('q-note-1'),
+        localDate: const Value('2025-01-01'),
+        value: const Value(1),
+        note: const Value('Felt great, read Marcus Aurelius Book 4'),
+        timezone: const Value('UTC'),
+        createdAt: Value(DateTime(2025, 1, 1)),
+      ),
+    );
+
+    final exported = await backupService.exportBackupJson();
+    expect(exported.contains('Felt great, read Marcus Aurelius Book 4'), isTrue);
+
+    // Wipe & restore
+    await inMemoryDb.delete(inMemoryDb.completions).go();
+    await backupService.importBackupJson(exported);
+
+    final restoredCompletions = await inMemoryDb.completionsDao.getCompletionsForQuest('q-note-1');
+    expect(restoredCompletions.length, equals(1));
+    expect(restoredCompletions.first.note, equals('Felt great, read Marcus Aurelius Book 4'));
+
+    await inMemoryDb.close();
+  });
 }

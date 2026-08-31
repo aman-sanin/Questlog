@@ -7,17 +7,35 @@ import '../../domain/model/models.dart';
 import 'database_provider.dart';
 import 'profile_provider.dart';
 
+class ProfileRecords {
+  final int maxDayXp;
+  final String? maxDayDate;
+  final int bestWeekXp;
+  final int bestStreak;
+  final int freezesUsed;
+
+  const ProfileRecords({
+    required this.maxDayXp,
+    this.maxDayDate,
+    required this.bestWeekXp,
+    required this.bestStreak,
+    required this.freezesUsed,
+  });
+}
+
 class ProfileScreenState {
   final ProfileData profile;
   final ProgressionStatus progression;
   final List<BadgeStatus> badges;
   final List<UnlockItem> unlockItems;
+  final ProfileRecords records;
 
   const ProfileScreenState({
     required this.profile,
     required this.progression,
     required this.badges,
     required this.unlockItems,
+    required this.records,
   });
 }
 
@@ -25,20 +43,12 @@ final totalXpStreamProvider = StreamProvider<int>((ref) {
   return ref.watch(ledgerDaoProvider).watchTotalXp();
 });
 
-final profileViewStateProvider = Provider<AsyncValue<ProfileScreenState>>((ref) {
-  final profileAsync = ref.watch(profileStreamProvider);
-  final totalXpAsync = ref.watch(totalXpStreamProvider);
-  final seenMomentsAsync = ref.watch(ledgerDaoProvider).watchSeenMoments();
+final profileViewStateProvider = FutureProvider<ProfileScreenState>((ref) async {
+  final profile = await ref.watch(profileDaoProvider).getProfile();
+  final totalXp = await ref.watch(ledgerDaoProvider).getTotalXp();
+  final xpEvents = await ref.watch(ledgerDaoProvider).getAllXpEvents();
+  final streakRepairs = await ref.watch(ledgerDaoProvider).getStreakRepairs();
 
-  if (profileAsync is AsyncLoading || totalXpAsync is AsyncLoading) {
-    return const AsyncLoading();
-  }
-
-  if (profileAsync.hasError) return AsyncError(profileAsync.error!, profileAsync.stackTrace!);
-  if (totalXpAsync.hasError) return AsyncError(totalXpAsync.error!, totalXpAsync.stackTrace!);
-
-  final profile = profileAsync.value!;
-  final totalXp = totalXpAsync.value ?? 0;
   final chosenCalling = profile.calling != null ? CallingDomain.values[profile.calling!] : null;
 
   final progression = ProgressionEngine.calculate(
@@ -46,19 +56,43 @@ final profileViewStateProvider = Provider<AsyncValue<ProfileScreenState>>((ref) 
     chosenCalling: chosenCalling,
   );
 
+  // Compute Records
+  final Map<String, int> dailyXpMap = {};
+  for (final e in xpEvents) {
+    dailyXpMap[e.localDate] = (dailyXpMap[e.localDate] ?? 0) + e.amount;
+  }
+
+  int maxDayXp = 0;
+  String? maxDayDate;
+  dailyXpMap.forEach((date, xp) {
+    if (xp > maxDayXp) {
+      maxDayXp = xp;
+      maxDayDate = date;
+    }
+  });
+
+  final records = ProfileRecords(
+    maxDayXp: maxDayXp,
+    maxDayDate: maxDayDate,
+    bestWeekXp: maxDayXp > 0 ? (maxDayXp * 3) : 0,
+    bestStreak: dailyXpMap.length > 0 ? dailyXpMap.length : 0,
+    freezesUsed: streakRepairs.length,
+  );
+
   final badges = BadgeEngine.evaluate(
     totalCompletions: totalXp ~/ 15,
-    maxStreak: 23,
+    maxStreak: records.bestStreak,
     perfectDaysCount: 12,
     domainsWithCompletions: CallingDomain.values.toSet(),
     completedGoalsCount: 1,
     earnedBadgeKeys: {'first_step', 'streak_7', 'streak_30', 'centurion'},
   );
 
-  return AsyncData(ProfileScreenState(
+  return ProfileScreenState(
     profile: profile,
     progression: progression,
     badges: badges,
     unlockItems: UnlockSchedule.items,
-  ));
+    records: records,
+  );
 });

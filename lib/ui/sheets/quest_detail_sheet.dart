@@ -293,27 +293,39 @@ class QuestDetailSheet extends ConsumerWidget {
                         color: tokens.tonal,
                         border: Border.all(color: tokens.lineRule, width: 1),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Icon(Symbols.check_circle, size: 16, color: tokens.accent),
-                              const SizedBox(width: 8),
+                              Row(
+                                children: [
+                                  Icon(Symbols.check_circle, size: 16, color: tokens.accent),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    date.formatted,
+                                    style: tokens.monoText(fontSize: 12, color: tokens.textPrimary),
+                                  ),
+                                ],
+                              ),
                               Text(
-                                date.formatted,
-                                style: tokens.monoText(fontSize: 12, color: tokens.textPrimary),
+                                '+${c.value} ${quest.unit ?? (c.value == 1 ? "time" : "times")}',
+                                style: tokens.monoText(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: tokens.accent,
+                                ),
                               ),
                             ],
                           ),
-                          Text(
-                            '+${c.value} ${quest.unit ?? (c.value == 1 ? "time" : "times")}',
-                            style: tokens.monoText(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: tokens.accent,
+                          if (c.note != null && c.note!.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              c.note!,
+                              style: tokens.body(fontSize: 12, color: tokens.textSecondary),
                             ),
-                          ),
+                          ],
                         ],
                       ),
                     );

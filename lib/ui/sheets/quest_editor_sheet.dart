@@ -13,6 +13,7 @@ import '../widgets/app_input.dart';
 import '../widgets/segmented_control.dart';
 import '../widgets/sigil_widget.dart';
 import '../widgets/weekday_toggles.dart';
+import 'template_picker_sheet.dart';
 
 class QuestEditorSheet extends ConsumerStatefulWidget {
   final QuestData? quest;
@@ -225,14 +226,53 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
               ),
             ),
             const SizedBox(height: 16),
-            Text(
-              widget.quest == null ? 'NEW QUEST' : 'EDIT QUEST',
-              style: tokens.monoText(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 1.0,
-                color: tokens.textSecondary,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  widget.quest == null ? 'NEW QUEST' : 'EDIT QUEST',
+                  style: tokens.monoText(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.0,
+                    color: tokens.textSecondary,
+                  ),
+                ),
+                if (widget.quest == null)
+                  GestureDetector(
+                    onTap: () async {
+                      final template = await TemplatePickerSheet.show(context);
+                      if (template != null && mounted) {
+                        setState(() {
+                          _titleController.text = template.title;
+                          _cadence = template.rule.cadence;
+                          _rule = template.rule;
+                          _targetType = template.targetType;
+                          _targetValue = template.targetValue;
+                          _unitController.text = template.unit ?? '';
+                          _difficulty = template.difficulty;
+                          _essential = template.essential;
+                          _selectedDomain = template.domain;
+                        });
+                      }
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Symbols.auto_stories, size: 14, color: tokens.accent),
+                        const SizedBox(width: 4),
+                        Text(
+                          'FROM TEMPLATE',
+                          style: tokens.monoText(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: tokens.accent,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 12),
             // Quest Title

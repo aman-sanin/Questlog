@@ -7,6 +7,7 @@ class CheckboxRing extends StatelessWidget {
   final bool isAtRisk;
   final bool isMissed;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
   const CheckboxRing({
     super.key,
@@ -14,6 +15,7 @@ class CheckboxRing extends StatelessWidget {
     this.isAtRisk = false,
     this.isMissed = false,
     this.onTap,
+    this.onLongPress,
   });
 
   @override
@@ -36,6 +38,7 @@ class CheckboxRing extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
+      onLongPress: onLongPress,
       child: Container(
         width: 28,
         height: 28,

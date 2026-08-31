@@ -69,6 +69,7 @@ class BackupService {
                 'quest_id': c.questId,
                 'local_date': c.localDate,
                 'value': c.value,
+                'note': c.note,
                 'timezone': c.timezone,
                 'created_at': c.createdAt.toIso8601String(),
               })
@@ -176,6 +177,7 @@ class BackupService {
         questId: Value(c['quest_id'] as String),
         localDate: Value(c['local_date'] as String),
         value: Value(c['value'] as int? ?? 1),
+        note: Value(c['note'] as String?),
         timezone: Value(c['timezone'] as String? ?? 'UTC'),
         createdAt: Value(DateTime.parse(c['created_at'] as String)),
       );

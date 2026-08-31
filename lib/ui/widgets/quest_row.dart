@@ -10,6 +10,7 @@ import 'stepper_widget.dart';
 class QuestRow extends StatelessWidget {
   final QuestEvaluation evaluation;
   final VoidCallback? onComplete;
+  final VoidCallback? onLongPressCheckbox;
   final VoidCallback? onIncrement;
   final VoidCallback? onDecrement;
   final VoidCallback? onTap;
@@ -19,6 +20,7 @@ class QuestRow extends StatelessWidget {
     super.key,
     required this.evaluation,
     this.onComplete,
+    this.onLongPressCheckbox,
     this.onIncrement,
     this.onDecrement,
     this.onTap,
@@ -53,6 +55,7 @@ class QuestRow extends StatelessWidget {
         isAtRisk: isAtRisk,
         isMissed: isMissed,
         onTap: onComplete,
+        onLongPress: onLongPressCheckbox,
       );
     }
 

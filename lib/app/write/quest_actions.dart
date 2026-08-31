@@ -18,7 +18,7 @@ class QuestActions {
     required WeekStart weekStart,
     required DateTime now,
   }) async {
-    final activeQuests = await db.questsDao.getAllActiveQuests();
+    final activeQuests = await db.questsDao.getActiveQuests();
     final profile = await db.profileDao.getProfile();
     final allEvents = await db.ledgerDao.getAllXpEvents();
     final existingEventRefs = allEvents.map((e) => e.ref).toSet();

@@ -7,7 +7,7 @@ import 'ceremonies/ceremonies.dart';
 import 'sheets/quest_editor_sheet.dart';
 import 'theme/tokens.dart';
 
-class RootScaffold extends ConsumerWidget {
+class RootScaffold extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
   const RootScaffold({

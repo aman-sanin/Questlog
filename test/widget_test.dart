@@ -1,0 +1,109 @@
+import 'package:drift/native.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:questlog/data/db/database.dart';
+import 'package:questlog/domain/engine/quest_state.dart';
+import 'package:questlog/domain/engine/schedule_rule.dart';
+import 'package:questlog/domain/model/models.dart';
+import 'package:questlog/ui/theme/app_theme.dart';
+import 'package:questlog/ui/theme/tokens.dart';
+import 'package:questlog/ui/widgets/checkbox_ring.dart';
+import 'package:questlog/ui/widgets/quest_row.dart';
+import 'package:questlog/ui/widgets/stepper_widget.dart';
+
+void main() {
+  Widget buildTestableWidget(Widget child) {
+    return MaterialApp(
+      theme: AppTheme.buildTheme(isDark: true, accentTheme: AccentTheme.frost),
+      home: Scaffold(
+        body: Center(child: child),
+      ),
+    );
+  }
+
+  testWidgets('CheckboxRing displays checkmark when completed', (tester) async {
+    await tester.pumpWidget(
+      buildTestableWidget(
+        const CheckboxRing(isCompleted: true),
+      ),
+    );
+
+    expect(find.byIcon(Icons.check), findsOneWidget);
+  });
+
+  testWidgets('StepperWidget increments count on tap', (tester) async {
+    int count = 1;
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            return StepperWidget(
+              current: count,
+              target: 5,
+              unit: 'reps',
+              onIncrement: () => setState(() => count++),
+              onDecrement: () => setState(() => count--),
+            );
+          },
+        ),
+      ),
+    );
+
+    expect(find.text('1/5 reps'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pump();
+
+    expect(find.text('2/5 reps'), findsOneWidget);
+  });
+
+  testWidgets('QuestRow renders quest title and metadata', (tester) async {
+    final evaluation = QuestEvaluation(
+      questId: 'q-1',
+      title: 'Morning Pushups',
+      rule: const DailyEveryDayRule(),
+      targetType: TargetType.checkbox,
+      targetValue: 1,
+      difficulty: Difficulty.medium,
+      essential: true,
+      isDueToday: true,
+      completedValue: 0,
+      target: 1,
+      progress: 0.0,
+      isCompleted: false,
+      streak: 7,
+      visualState: QuestVisual.pending,
+      metaDescription: 'DAILY · 7 STREAK',
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        QuestRow(evaluation: evaluation),
+      ),
+    );
+
+    expect(find.text('Morning Pushups'), findsOneWidget);
+    expect(find.text('DAILY · 7 STREAK'), findsOneWidget);
+    expect(find.byIcon(Icons.star), findsOneWidget);
+  });
+
+  test('Initial database startup initializes default profile without throwing', () async {
+    final inMemoryDb = AppDatabase(NativeDatabase.memory());
+    
+    final profile = await inMemoryDb.profileDao.getProfile();
+    expect(profile.id, equals(1));
+    expect(profile.accent, equals('frost'));
+
+    final totalXp = await inMemoryDb.ledgerDao.getTotalXp();
+    expect(totalXp, equals(0));
+
+    final profileStreamValue = await inMemoryDb.profileDao.watchProfile().first;
+    expect(profileStreamValue.id, equals(1));
+
+    final xpStreamValue = await inMemoryDb.ledgerDao.watchTotalXp().first;
+    expect(xpStreamValue, equals(0));
+
+    await inMemoryDb.close();
+  });
+}

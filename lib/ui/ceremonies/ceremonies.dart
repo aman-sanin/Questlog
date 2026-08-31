@@ -163,11 +163,10 @@ class _CallingSelectionSheetState extends ConsumerState<CallingSelectionSheet> {
           const SizedBox(height: 16),
           Text(
             'CHOOSE YOUR CALLING',
-            style: tokens.monoText(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 1.0,
-              color: tokens.hero,
+            style: tokens.headline(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: tokens.accent,
             ),
           ),
           const SizedBox(height: 6),
@@ -193,7 +192,7 @@ class _CallingSelectionSheetState extends ConsumerState<CallingSelectionSheet> {
                   decoration: BoxDecoration(
                     color: isSelected ? tokens.tonal : Colors.transparent,
                     border: Border.all(
-                      color: isSelected ? tokens.hero : tokens.lineRule,
+                      color: isSelected ? tokens.accent : tokens.lineRule,
                       width: isSelected ? 1.5 : 1.0,
                     ),
                   ),
@@ -203,7 +202,7 @@ class _CallingSelectionSheetState extends ConsumerState<CallingSelectionSheet> {
                       SigilWidget(
                         domain: d,
                         size: 28,
-                        color: isSelected ? tokens.hero : tokens.textSecondary,
+                        color: isSelected ? tokens.accent : tokens.textSecondary,
                       ),
                       const SizedBox(height: 6),
                       Text(
@@ -211,7 +210,7 @@ class _CallingSelectionSheetState extends ConsumerState<CallingSelectionSheet> {
                         style: tokens.monoText(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: isSelected ? tokens.hero : tokens.textPrimary,
+                          color: isSelected ? tokens.accent : tokens.textPrimary,
                         ),
                       ),
                     ],

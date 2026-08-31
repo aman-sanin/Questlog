@@ -44,7 +44,7 @@ class SegmentedControl<T> extends StatelessWidget {
                 duration: const Duration(milliseconds: 100),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: isSelected ? tokens.textPrimary : Colors.transparent,
+                  color: isSelected ? tokens.accent : Colors.transparent,
                 ),
                 alignment: Alignment.center,
                 child: Text(

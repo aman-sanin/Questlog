@@ -186,8 +186,8 @@ class AppTokens extends ThemeExtension<AppTokens> {
     final lineFull = textPrimary;
 
     final accent = getAccentColor(accentTheme, isDark);
-    final hero = isDark ? const Color(0xFFE0A458) : const Color(0xFFA9762B);
-    final heroText = isDark ? const Color(0xFFE0A458) : const Color(0xFF8A5A13);
+    final hero = accent; // Unified with active accent palette
+    final heroText = accent;
     final onSolid = isDark ? const Color(0xFF1A1815) : const Color(0xFFFAF7F2);
     final miss = isDark ? const Color(0xFFC25B52) : const Color(0xFFA34E46);
     final scrim = isDark ? const Color(0x33000000) : const Color(0x8C1A1815);

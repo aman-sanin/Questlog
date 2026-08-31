@@ -67,7 +67,7 @@ class LevelChip extends StatelessWidget {
               height: 6,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: tokens.hero,
+                color: tokens.accent,
               ),
             ),
             const SizedBox(width: 6),

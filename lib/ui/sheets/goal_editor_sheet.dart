@@ -145,7 +145,7 @@ class _GoalEditorSheetState extends ConsumerState<GoalEditorSheet> {
                     decoration: BoxDecoration(
                       color: isSelected ? tokens.tonal : Colors.transparent,
                       border: Border.all(
-                        color: isSelected ? tokens.hero : tokens.lineRule,
+                        color: isSelected ? tokens.accent : tokens.lineRule,
                         width: 1.5,
                       ),
                     ),

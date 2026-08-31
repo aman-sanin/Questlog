@@ -67,12 +67,13 @@ class ProfileScreen extends ConsumerWidget {
                     height: 80,
                     decoration: BoxDecoration(
                       color: tokens.tonal,
-                      border: Border.all(color: tokens.hero, width: 1.5),
+                      border: Border.all(color: tokens.accent, width: 1.5),
                     ),
                     alignment: Alignment.center,
                     child: SigilWidget(
                       domain: chosenDomain ?? CallingDomain.warrior,
                       size: 40,
+                      color: tokens.accent,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -189,7 +190,7 @@ class ProfileScreen extends ConsumerWidget {
                             decoration: BoxDecoration(
                               color: tokens.bg,
                               border: Border.all(
-                                color: item.level <= prog.level ? tokens.hero : tokens.lineRule,
+                                color: item.level <= prog.level ? tokens.accent : tokens.lineRule,
                                 width: 1,
                               ),
                             ),
@@ -199,7 +200,7 @@ class ProfileScreen extends ConsumerWidget {
                               style: tokens.monoText(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
-                                color: item.level <= prog.level ? tokens.hero : tokens.textSecondary,
+                                color: item.level <= prog.level ? tokens.accent : tokens.textSecondary,
                               ),
                             ),
                           ),

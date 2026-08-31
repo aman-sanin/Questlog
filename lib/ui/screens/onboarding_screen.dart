@@ -205,7 +205,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       decoration: BoxDecoration(
                         color: isSelected ? tokens.tonal : Colors.transparent,
                         border: Border.all(
-                          color: isSelected ? tokens.hero : tokens.lineRule,
+                          color: isSelected ? tokens.accent : tokens.lineRule,
                           width: isSelected ? 1.5 : 1.0,
                         ),
                       ),

@@ -30,8 +30,8 @@ class RadioRow<T> extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected ? tokens.tonal : Colors.transparent,
           border: Border.all(
-            color: isSelected ? tokens.lineRest : tokens.lineRule,
-            width: 1,
+            color: isSelected ? tokens.accent : tokens.lineRule,
+            width: isSelected ? 1.5 : 1.0,
           ),
         ),
         child: Row(
@@ -41,9 +41,9 @@ class RadioRow<T> extends StatelessWidget {
               width: 18,
               height: 18,
               decoration: BoxDecoration(
-                color: isSelected ? tokens.textPrimary : Colors.transparent,
+                color: isSelected ? tokens.accent : Colors.transparent,
                 border: Border.all(
-                  color: isSelected ? tokens.textPrimary : tokens.lineRest,
+                  color: isSelected ? tokens.accent : tokens.lineRest,
                   width: 1.5,
                 ),
               ),

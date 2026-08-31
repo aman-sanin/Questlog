@@ -39,10 +39,10 @@ class WeekdayToggles extends StatelessWidget {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: isSelected ? tokens.textPrimary : tokens.tonal,
+              color: isSelected ? tokens.accent : tokens.tonal,
               border: Border.all(
-                color: isSelected ? tokens.lineFull : tokens.lineRest,
-                width: 1,
+                color: isSelected ? tokens.accent : tokens.lineRest,
+                width: 1.5,
               ),
             ),
             alignment: Alignment.center,

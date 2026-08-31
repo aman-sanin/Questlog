@@ -33,7 +33,7 @@ class SigilWidget extends StatelessWidget {
     } else if (mode == SigilMode.watermark) {
       strokeColor = tokens.textPrimary.withOpacity(0.04);
     } else {
-      strokeColor = tokens.hero;
+      strokeColor = tokens.accent;
     }
 
     return SizedBox(

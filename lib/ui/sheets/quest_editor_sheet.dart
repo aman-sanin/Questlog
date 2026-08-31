@@ -356,21 +356,25 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
                     decoration: BoxDecoration(
                       color: isSelected ? tokens.tonal : Colors.transparent,
                       border: Border.all(
-                        color: isSelected ? tokens.hero : tokens.lineRule,
-                        width: 1,
+                        color: isSelected ? tokens.accent : tokens.lineRule,
+                        width: isSelected ? 1.5 : 1.0,
                       ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        SigilWidget(domain: domain, size: 16),
+                        SigilWidget(
+                          domain: domain,
+                          size: 16,
+                          color: isSelected ? tokens.accent : tokens.textSecondary,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           domain.name.toUpperCase(),
                           style: tokens.monoText(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: isSelected ? tokens.hero : tokens.textSecondary,
+                            color: isSelected ? tokens.accent : tokens.textSecondary,
                           ),
                         ),
                       ],
@@ -427,9 +431,9 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
-                          color: _essential ? tokens.hero.withOpacity(0.15) : tokens.tonal,
+                          color: _essential ? tokens.accent.withOpacity(0.15) : tokens.tonal,
                           border: Border.all(
-                            color: _essential ? tokens.hero : tokens.lineRule,
+                            color: _essential ? tokens.accent : tokens.lineRule,
                             width: 1,
                           ),
                         ),
@@ -439,7 +443,7 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
                             Icon(
                               _essential ? Symbols.star : Symbols.star_border,
                               size: 18,
-                              color: _essential ? tokens.hero : tokens.textSecondary,
+                              color: _essential ? tokens.accent : tokens.textSecondary,
                               fill: _essential ? 1.0 : 0.0,
                             ),
                             const SizedBox(width: 6),
@@ -448,7 +452,7 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
                               style: tokens.monoText(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: _essential ? tokens.hero : tokens.textSecondary,
+                                color: _essential ? tokens.accent : tokens.textSecondary,
                               ),
                             ),
                           ],

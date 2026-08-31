@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../services/notification_service.dart';
 import '../../data/backup/backup_service.dart';
 import '../../data/dao/completions_dao.dart';
 import '../../data/dao/goals_dao.dart';
@@ -50,4 +51,8 @@ final profileActionsProvider = Provider<ProfileActions>((ref) {
 
 final backupServiceProvider = Provider<BackupService>((ref) {
   return BackupService(ref.watch(databaseProvider));
+});
+
+final notificationServiceProvider = Provider<NotificationService>((ref) {
+  return NotificationService();
 });

@@ -11,6 +11,10 @@ import '../theme/tokens.dart';
 import '../widgets/chips.dart';
 import '../widgets/heatmap_grid.dart';
 import '../widgets/quest_row.dart';
+import '../widgets/segmented_control.dart';
+import '../widgets/year_heatmap_grid.dart';
+
+final _insightsViewModeProvider = StateProvider.autoDispose<int>((ref) => 0);
 
 class InsightsScreen extends ConsumerWidget {
   const InsightsScreen({super.key});
@@ -55,56 +59,110 @@ class InsightsScreen extends ConsumerWidget {
                       FreezeChip(count: state.freezeWalletCount),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
 
-                  // Month Navigation Header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Symbols.chevron_left),
-                        onPressed: () {
-                          final prev = selectedMonth.month == 1
-                              ? LocalDate(selectedMonth.year - 1, 12, 1)
-                              : LocalDate(selectedMonth.year, selectedMonth.month - 1, 1);
-                          ref.read(selectedInsightsMonthProvider.notifier).state = prev;
-                        },
-                      ),
-                      Text(
-                        monthTitle,
-                        style: tokens.monoText(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.2,
-                          color: tokens.textPrimary,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Symbols.chevron_right),
-                        onPressed: () {
-                          final next = selectedMonth.month == 12
-                              ? LocalDate(selectedMonth.year + 1, 1, 1)
-                              : LocalDate(selectedMonth.year, selectedMonth.month + 1, 1);
-                          ref.read(selectedInsightsMonthProvider.notifier).state = next;
-                        },
-                      ),
+                  // Month / Year View Toggle
+                  SegmentedControl<int>(
+                    items: const [
+                      SegmentItem(value: 0, label: 'Month View'),
+                      SegmentItem(value: 1, label: 'Year (52 Weeks)'),
                     ],
+                    selectedValue: ref.watch(_insightsViewModeProvider),
+                    onSelected: (mode) => ref.read(_insightsViewModeProvider.notifier).state = mode,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
 
-                  // Month Heatmap
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: tokens.tonal,
-                      border: Border.all(color: tokens.lineRest, width: 1),
+                  if (ref.watch(_insightsViewModeProvider) == 0) ...[
+                    // Month Navigation Header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Symbols.chevron_left),
+                          onPressed: () {
+                            final prev = selectedMonth.month == 1
+                                ? LocalDate(selectedMonth.year - 1, 12, 1)
+                                : LocalDate(selectedMonth.year, selectedMonth.month - 1, 1);
+                            ref.read(selectedInsightsMonthProvider.notifier).state = prev;
+                          },
+                        ),
+                        Text(
+                          monthTitle,
+                          style: tokens.monoText(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.2,
+                            color: tokens.textPrimary,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Symbols.chevron_right),
+                          onPressed: () {
+                            final next = selectedMonth.month == 12
+                                ? LocalDate(selectedMonth.year + 1, 1, 1)
+                                : LocalDate(selectedMonth.year, selectedMonth.month + 1, 1);
+                            ref.read(selectedInsightsMonthProvider.notifier).state = next;
+                          },
+                        ),
+                      ],
                     ),
-                    child: HeatmapGrid(
-                      days: state.heatmapDays,
-                      weekStart: weekStart,
-                      onDaySelected: (day) => DaySheet.show(context, date: day),
+                    const SizedBox(height: 12),
+
+                    // Month Heatmap
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: tokens.tonal,
+                        border: Border.all(color: tokens.lineRest, width: 1),
+                      ),
+                      child: HeatmapGrid(
+                        days: state.heatmapDays,
+                        weekStart: weekStart,
+                        onDaySelected: (day) => DaySheet.show(context, date: day),
+                      ),
                     ),
-                  ),
+                  ] else ...[
+                    // Year Heatmap
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: tokens.tonal,
+                        border: Border.all(color: tokens.lineRest, width: 1),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'PAST 52 WEEKS',
+                                style: tokens.monoText(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 1.0,
+                                  color: tokens.textSecondary,
+                                ),
+                              ),
+                              Text(
+                                '${state.yearHeatmapDays.length} DAYS RECORDED',
+                                style: tokens.monoText(
+                                  fontSize: 10,
+                                  color: tokens.accent,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          YearHeatmapGrid(
+                            days: state.yearHeatmapDays,
+                            weekStart: weekStart,
+                            onDaySelected: (day) => DaySheet.show(context, date: day),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 20),
 
                   // Monthly Recap Teaser Card

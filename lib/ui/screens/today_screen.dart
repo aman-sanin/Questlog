@@ -11,6 +11,7 @@ import '../../app/services/sound_service.dart';
 import '../../domain/engine/quest_state.dart';
 import '../../domain/model/models.dart';
 import '../sheets/goal_detail_sheet.dart';
+import '../sheets/quest_detail_sheet.dart';
 import '../sheets/quest_editor_sheet.dart';
 import '../theme/tokens.dart';
 import '../widgets/banner_widget.dart';
@@ -187,6 +188,13 @@ class TodayScreen extends ConsumerWidget {
                                 final questData =
                                     await ref.read(questsDaoProvider).getQuestById(q.questId);
                                 if (questData != null && context.mounted) {
+                                  QuestDetailSheet.show(context, quest: questData, evaluation: q);
+                                }
+                              },
+                              onLongPress: () async {
+                                final questData =
+                                    await ref.read(questsDaoProvider).getQuestById(q.questId);
+                                if (questData != null && context.mounted) {
                                   QuestEditorSheet.show(context, quest: questData);
                                 }
                               },
@@ -229,6 +237,13 @@ class TodayScreen extends ConsumerWidget {
                             child: QuestRow(
                               evaluation: q,
                               onTap: () async {
+                                final questData =
+                                    await ref.read(questsDaoProvider).getQuestById(q.questId);
+                                if (questData != null && context.mounted) {
+                                  QuestDetailSheet.show(context, quest: questData, evaluation: q);
+                                }
+                              },
+                              onLongPress: () async {
                                 final questData =
                                     await ref.read(questsDaoProvider).getQuestById(q.questId);
                                 if (questData != null && context.mounted) {

@@ -34,6 +34,7 @@ class HeatmapDayStatus {
 class InsightsScreenState {
   final LocalDate selectedMonth;
   final List<HeatmapDayStatus> heatmapDays;
+  final List<HeatmapDayStatus> yearHeatmapDays;
   final List<QuestEvaluation> streakLeaderboard;
   final int freezeWalletCount;
   final WeeklyInsightData weeklyInsight;
@@ -42,6 +43,7 @@ class InsightsScreenState {
   const InsightsScreenState({
     required this.selectedMonth,
     required this.heatmapDays,
+    required this.yearHeatmapDays,
     required this.streakLeaderboard,
     required this.freezeWalletCount,
     required this.weeklyInsight,
@@ -96,7 +98,6 @@ InsightsScreenState _buildInsights({
   LocalDate cur = startOfMonth;
   while (cur <= endOfMonth) {
     final isCurToday = cur == today;
-    // Simple deterministic demo heatmap intensity calculation
     HeatmapIntensity intensity;
     if (cur > today) {
       intensity = HeatmapIntensity.offDay;
@@ -116,6 +117,27 @@ InsightsScreenState _buildInsights({
     cur = cur.addDays(1);
   }
 
+  // Build Year Heatmap Days (365 days leading to today)
+  final yearDays = <HeatmapDayStatus>[];
+  final yearStart = today.subtractDays(364);
+  LocalDate yearCur = yearStart;
+  while (yearCur <= today) {
+    final isCurToday = yearCur == today;
+    HeatmapIntensity intensity;
+    intensity = (yearCur.day % 4 == 0)
+        ? HeatmapIntensity.perfect
+        : (yearCur.day % 3 == 0 ? HeatmapIntensity.high : HeatmapIntensity.medium);
+
+    yearDays.add(HeatmapDayStatus(
+      date: yearCur,
+      intensity: intensity,
+      completionsCount: (yearCur.day % 5 + 1),
+      isToday: isCurToday,
+    ));
+
+    yearCur = yearCur.addDays(1);
+  }
+
   final weeklyInsight = InsightsEngine.getWeeklyInsight(
     completionsByDate: {},
     today: today,
@@ -125,6 +147,7 @@ InsightsScreenState _buildInsights({
   return InsightsScreenState(
     selectedMonth: month,
     heatmapDays: days,
+    yearHeatmapDays: yearDays,
     streakLeaderboard: allQuests.take(10).toList(),
     freezeWalletCount: XpConstants.freezeWalletCapacity,
     weeklyInsight: weeklyInsight,

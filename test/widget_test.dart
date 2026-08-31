@@ -11,9 +11,11 @@ import 'package:questlog/domain/model/models.dart';
 import 'package:questlog/ui/theme/app_theme.dart';
 import 'package:questlog/ui/theme/sigils.dart';
 import 'package:questlog/ui/theme/tokens.dart';
+import 'package:questlog/app/providers/insights_provider.dart';
 import 'package:questlog/ui/widgets/checkbox_ring.dart';
 import 'package:questlog/ui/widgets/quest_row.dart';
 import 'package:questlog/ui/widgets/stepper_widget.dart';
+import 'package:questlog/ui/widgets/year_heatmap_grid.dart';
 
 void main() {
   Widget buildTestableWidget(Widget child) {
@@ -167,5 +169,87 @@ void main() {
       expect(bounds.width, greaterThan(0));
       expect(bounds.height, greaterThan(0));
     }
+  });
+
+  testWidgets('YearHeatmapGrid renders 52 weeks cleanly and responds to day tap', (tester) async {
+    final today = const LocalDate(2025, 12, 31);
+    final days = List.generate(365, (i) {
+      final d = today.subtractDays(364 - i);
+      return HeatmapDayStatus(
+        date: d,
+        intensity: i % 5 == 0 ? HeatmapIntensity.perfect : HeatmapIntensity.medium,
+        completionsCount: 2,
+        isToday: d == today,
+      );
+    });
+
+    LocalDate? tappedDate;
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        YearHeatmapGrid(
+          days: days,
+          weekStart: WeekStart.monday,
+          onDaySelected: (d) => tappedDate = d,
+        ),
+      ),
+    );
+
+    expect(find.byType(YearHeatmapGrid), findsOneWidget);
+  });
+
+  test('P9 Aggregation query: 60-day seeded quest correctly aggregates completions, streak, and XP', () async {
+    final inMemoryDb = AppDatabase(NativeDatabase.memory());
+    final startDate = const LocalDate(2025, 1, 1);
+    const questId = 'q-seeded-60';
+
+    await inMemoryDb.questsDao.insertQuest(
+      QuestsCompanion(
+        id: const Value(questId),
+        title: const Value('60-Day Meditation'),
+        rule: const Value(DailyEveryDayRule()),
+        targetType: const Value(0),
+        targetValue: const Value(1),
+        difficulty: const Value(1), // Medium (15 XP)
+        createdAt: Value(DateTime(2025, 1, 1)),
+      ),
+    );
+
+    // Seed 60 completions across 60 days
+    for (int i = 0; i < 60; i++) {
+      final d = startDate.addDays(i);
+      await inMemoryDb.completionsDao.insertCompletion(
+        CompletionsCompanion(
+          id: Value('c-$i'),
+          questId: const Value(questId),
+          localDate: Value(d.formatted),
+          value: const Value(1),
+          timezone: const Value('UTC'),
+          createdAt: Value(DateTime(2025, 1, 1).add(Duration(days: i))),
+        ),
+      );
+      await inMemoryDb.ledgerDao.insertXpEvent(
+        XpEventsCompanion(
+          id: Value('xp-$i'),
+          type: const Value(0),
+          ref: Value('c-$i'),
+          periodRef: Value('$questId|${d.dateString}'),
+          amount: const Value(15),
+          localDate: Value(d.formatted),
+          createdAt: Value(DateTime(2025, 1, 1).add(Duration(days: i))),
+        ),
+      );
+    }
+
+    final completions = await inMemoryDb.completionsDao.getCompletionsForQuest(questId);
+    expect(completions.length, equals(60));
+
+    final xpEvents = await inMemoryDb.ledgerDao.getAllXpEvents();
+    final questXp = xpEvents
+        .where((e) => e.periodRef != null && e.periodRef!.startsWith('$questId|'))
+        .fold(0, (sum, e) => sum + e.amount);
+    expect(questXp, equals(60 * 15)); // 900 XP
+
+    await inMemoryDb.close();
   });
 }

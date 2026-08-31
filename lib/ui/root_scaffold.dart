@@ -77,22 +77,35 @@ class _RootScaffoldView extends ConsumerWidget {
               onTap: () => navigationShell.goBranch(0),
             ),
 
-            // 56dp Sharp FAB Monolith
+            // Rune Add Quest Button: Rectangle inside rectangle with plus sign
             GestureDetector(
               onTap: () => QuestEditorSheet.show(context),
               child: Container(
-                width: 48,
-                height: 48,
+                width: 46,
+                height: 46,
+                padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: tokens.textPrimary,
-                  border: Border.all(color: tokens.textPrimary, width: 1),
+                  color: Colors.transparent,
+                  border: Border.all(
+                    color: tokens.textPrimary,
+                    width: 1.5,
+                  ),
                 ),
-                alignment: Alignment.center,
-                child: Icon(
-                  Symbols.add,
-                  size: 24,
-                  color: tokens.onSolid,
-                  weight: 700,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: tokens.tonal,
+                    border: Border.all(
+                      color: tokens.lineRest,
+                      width: 1,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Symbols.add,
+                    size: 20,
+                    color: tokens.textPrimary,
+                    weight: 700,
+                  ),
                 ),
               ),
             ),

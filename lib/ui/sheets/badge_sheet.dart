@@ -34,17 +34,18 @@ class BadgeSheet extends StatelessWidget {
           top: BorderSide(color: tokens.lineRest, width: 1),
         ),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              color: tokens.lineRule,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                color: tokens.lineRule,
+              ),
             ),
-          ),
           const SizedBox(height: 24),
 
           if (isSealedUnearned) ...[
@@ -259,7 +260,8 @@ class BadgeSheet extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
 

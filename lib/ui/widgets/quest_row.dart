@@ -91,6 +91,8 @@ class QuestRow extends StatelessWidget {
                         children: [
                           Text(
                             evaluation.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                             style: tokens.title(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -100,6 +102,8 @@ class QuestRow extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             evaluation.metaDescription,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                             style: tokens.monoText(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,

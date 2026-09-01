@@ -148,118 +148,120 @@ class _CallingSelectionSheetState extends ConsumerState<CallingSelectionSheet> {
           top: BorderSide(color: tokens.lineRest, width: 1),
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              color: tokens.lineRule,
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                color: tokens.lineRule,
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'CHOOSE YOUR CALLING',
-            style: tokens.headline(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: tokens.accent,
+            const SizedBox(height: 16),
+            Text(
+              'CHOOSE YOUR CALLING',
+              style: tokens.headline(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: tokens.accent,
+              ),
             ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Shapes your title ladder and crest sigil.',
-            style: tokens.body(fontSize: 14, color: tokens.textSecondary),
-          ),
-          const SizedBox(height: 20),
+            const SizedBox(height: 6),
+            Text(
+              'Shapes your title ladder and crest sigil.',
+              style: tokens.body(fontSize: 14, color: tokens.textSecondary),
+            ),
+            const SizedBox(height: 20),
 
-          // 2x3 Grid of Calling choices
-          GridView.count(
-            crossAxisCount: 3,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-            childAspectRatio: 1.1,
-            children: CallingDomain.values.map((d) {
-              final isSelected = d == _selected;
-              return GestureDetector(
-                onTap: () => setState(() => _selected = d),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isSelected ? tokens.tonal : Colors.transparent,
-                    border: Border.all(
-                      color: isSelected ? tokens.accent : tokens.lineRule,
-                      width: isSelected ? 1.5 : 1.0,
+            // 2x3 Grid of Calling choices
+            GridView.count(
+              crossAxisCount: 3,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: 1.1,
+              children: CallingDomain.values.map((d) {
+                final isSelected = d == _selected;
+                return GestureDetector(
+                  onTap: () => setState(() => _selected = d),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isSelected ? tokens.tonal : Colors.transparent,
+                      border: Border.all(
+                        color: isSelected ? tokens.accent : tokens.lineRule,
+                        width: isSelected ? 1.5 : 1.0,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SigilWidget(
+                          domain: d,
+                          size: 28,
+                          color: isSelected ? tokens.accent : tokens.textSecondary,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          d.name.toUpperCase(),
+                          style: tokens.monoText(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: isSelected ? tokens.accent : tokens.textPrimary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SigilWidget(
-                        domain: d,
-                        size: 28,
-                        color: isSelected ? tokens.accent : tokens.textSecondary,
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        d.name.toUpperCase(),
-                        style: tokens.monoText(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: isSelected ? tokens.accent : tokens.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 20),
-
-          // Calling Details Card
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: tokens.tonal,
-              border: Border.all(color: tokens.lineRest, width: 1),
+                );
+              }).toList(),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  info.tagline,
-                  style: tokens.title(
-                    fontSize: 15,
-                    fontStyle: FontStyle.italic,
-                    fontWeight: FontWeight.w600,
-                    color: tokens.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  info.description,
-                  style: tokens.body(fontSize: 13, color: tokens.textSecondary),
-                ),
-              ],
-            ),
-          ),
-          const Spacer(),
+            const SizedBox(height: 20),
 
-          // Confirm button
-          ActionButton(
-            label: 'TAKE UP THIS CALLING',
-            onPressed: () async {
-              await ref.read(profileActionsProvider).chooseCalling(
-                    _selected,
-                    DateTime.now(),
-                  );
-              if (mounted) Navigator.of(context).pop();
-            },
-          ),
-        ],
+            // Calling Details Card
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: tokens.tonal,
+                border: Border.all(color: tokens.lineRest, width: 1),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    info.tagline,
+                    style: tokens.title(
+                      fontSize: 15,
+                      fontStyle: FontStyle.italic,
+                      fontWeight: FontWeight.w600,
+                      color: tokens.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    info.description,
+                    style: tokens.body(fontSize: 13, color: tokens.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Confirm button
+            ActionButton(
+              label: 'TAKE UP THIS CALLING',
+              onPressed: () async {
+                await ref.read(profileActionsProvider).chooseCalling(
+                      _selected,
+                      DateTime.now(),
+                    );
+                if (mounted) Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

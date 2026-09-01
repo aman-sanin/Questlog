@@ -676,24 +676,26 @@ class SettingsScreen extends ConsumerWidget {
             color: tokens.textPrimary,
           ),
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'How shall the Realm and Coach address you?',
-              style: tokens.body(
-                fontSize: 13,
-                color: tokens.textSecondary,
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'How shall the Realm and Coach address you?',
+                style: tokens.body(
+                  fontSize: 13,
+                  color: tokens.textSecondary,
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            AppInput(
-              controller: controller,
-              hintText: 'Enter your name...',
-              autofocus: true,
-            ),
-          ],
+              const SizedBox(height: 12),
+              AppInput(
+                controller: controller,
+                hintText: 'Enter your name...',
+                autofocus: true,
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app/providers/database_provider.dart';
 import 'app/providers/profile_provider.dart';
@@ -8,8 +9,12 @@ import 'ui/app_router.dart';
 import 'ui/theme/app_theme.dart';
 import 'ui/theme/tokens.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   runApp(
     const ProviderScope(
       child: QuestLogApp(),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../app/providers/ceremony_provider.dart';
+import '../app/providers/profile_provider.dart';
 import '../app/services/sound_service.dart';
 import 'ceremonies/ceremonies.dart';
 import 'sheets/quest_editor_sheet.dart';
@@ -30,6 +31,13 @@ class _RootScaffoldView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = context.tokens;
+
+    // Sync sound effects setting with SoundService
+    ref.listen<AsyncValue<bool>>(soundEnabledProvider, (prev, next) {
+      if (next.hasValue) {
+        SoundService.soundEnabled = next.value!;
+      }
+    });
 
     // Listen for ceremony events
     ref.listen<CeremonyEvent?>(activeCeremonyProvider, (prev, next) {

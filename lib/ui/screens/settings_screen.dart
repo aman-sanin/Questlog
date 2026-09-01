@@ -14,6 +14,7 @@ import '../../data/packs/quest_pack_service.dart';
 import 'pack_preview_screen.dart';
 import '../theme/tokens.dart';
 import '../widgets/action_button.dart';
+import '../widgets/app_input.dart';
 import '../widgets/radio_row.dart';
 import '../widgets/segmented_control.dart';
 
@@ -63,6 +64,73 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         children: [
+          // Adventurer Identity Section
+          Text(
+            'ADVENTURER IDENTITY',
+            style: tokens.monoText(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.0,
+              color: tokens.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: tokens.tonal,
+              border: Border.all(color: tokens.lineRest),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        (profile.name != null && profile.name!.trim().isNotEmpty)
+                            ? profile.name!.trim()
+                            : 'Unnamed Adventurer',
+                        style: tokens.title(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: tokens.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Name used in oath and coaching',
+                        style: tokens.body(
+                          fontSize: 12,
+                          color: tokens.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => _showEditNameDialog(context, ref, profile.name ?? ''),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: tokens.accent),
+                    ),
+                    child: Text(
+                      'EDIT',
+                      style: tokens.monoText(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.0,
+                        color: tokens.accent,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
           // Theme Section
           Text(
             'APPEARANCE',
@@ -223,16 +291,73 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           Consumer(
             builder: (context, ref, _) {
-              final isSoundEnabled = ref.watch(soundEnabledProvider);
-              return RadioRow<bool>(
-                value: true,
-                groupValue: isSoundEnabled,
-                title: 'Tactile Sound Effects',
-                subtitle: 'Play subtle audio feedback on completions and level ups.',
-                onChanged: (val) {
-                  ref.read(soundEnabledProvider.notifier).state = val;
-                  SoundService.soundEnabled = val;
+              final soundEnabledAsync = ref.watch(soundEnabledProvider);
+              final isSoundEnabled = soundEnabledAsync.value ?? false;
+
+              return GestureDetector(
+                onTap: () {
+                  final next = !isSoundEnabled;
+                  ref.read(ledgerDaoProvider).setKv('sound_enabled', next ? 'true' : 'false');
+                  SoundService.soundEnabled = next;
                 },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isSoundEnabled ? tokens.tonal : Colors.transparent,
+                    border: Border.all(
+                      color: isSoundEnabled ? tokens.accent : tokens.lineRule,
+                      width: isSoundEnabled ? 1.5 : 1.0,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 18,
+                        height: 18,
+                        decoration: BoxDecoration(
+                          color: isSoundEnabled ? tokens.accent : Colors.transparent,
+                          border: Border.all(
+                            color: isSoundEnabled ? tokens.accent : tokens.lineRest,
+                            width: 1.5,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: isSoundEnabled
+                            ? Icon(
+                                Symbols.check,
+                                size: 12,
+                                color: tokens.onSolid,
+                                weight: 700,
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Tactile Sound Effects',
+                              style: tokens.body(
+                                fontSize: 14,
+                                fontWeight: isSoundEnabled ? FontWeight.w600 : FontWeight.w400,
+                                color: tokens.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Play subtle audio feedback on completions and level ups.',
+                              style: tokens.body(
+                                fontSize: 12,
+                                color: tokens.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               );
             },
           ),
@@ -535,5 +660,73 @@ class SettingsScreen extends ConsumerWidget {
       default:
         return const Color(0xFF4A90E2);
     }
+  }
+
+  void _showEditNameDialog(BuildContext context, WidgetRef ref, String currentName) {
+    final controller = TextEditingController(text: currentName);
+    final tokens = context.tokens;
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: tokens.bg,
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        title: Text(
+          'ADVENTURER NAME',
+          style: tokens.monoText(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.2,
+            color: tokens.textPrimary,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'How shall the Realm and Coach address you?',
+              style: tokens.body(
+                fontSize: 13,
+                color: tokens.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            AppInput(
+              controller: controller,
+              hintText: 'Enter your name...',
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: Text(
+              'CANCEL',
+              style: tokens.monoText(
+                fontSize: 12,
+                color: tokens.textSecondary,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              final newName = controller.text.trim();
+              ref.read(profileActionsProvider).setName(newName);
+              Navigator.of(dialogCtx).pop();
+            },
+            child: Text(
+              'SAVE',
+              style: tokens.monoText(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: tokens.accent,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

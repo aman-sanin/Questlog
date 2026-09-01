@@ -1,4 +1,5 @@
 import '../model/models.dart';
+export 'coach.dart';
 
 class MonthlyHeatmapDay {
   final LocalDate date;

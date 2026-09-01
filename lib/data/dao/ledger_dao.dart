@@ -77,4 +77,38 @@ class LedgerDao extends DatabaseAccessor<AppDatabase> with _$LedgerDaoMixin {
       ),
     );
   }
+
+  // KV Store
+  Future<String?> getKv(String key) async {
+    final row = await (select(kvs)..where((tbl) => tbl.key.equals(key))).getSingleOrNull();
+    return row?.value;
+  }
+
+  Stream<String?> watchKv(String key) {
+    return (select(kvs)..where((tbl) => tbl.key.equals(key)))
+        .watchSingleOrNull()
+        .map((row) => row?.value);
+  }
+
+  Future<Map<String, String>> getAllKvs() async {
+    final rows = await select(kvs).get();
+    return {for (final r in rows) r.key: r.value};
+  }
+
+  Stream<Map<String, String>> watchAllKvs() {
+    return select(kvs).watch().map((rows) => {for (final r in rows) r.key: r.value});
+  }
+
+  Future<int> setKv(String key, String value) {
+    return into(kvs).insertOnConflictUpdate(
+      KvsCompanion(
+        key: Value(key),
+        value: Value(value),
+      ),
+    );
+  }
+
+  Future<int> deleteKv(String key) {
+    return (delete(kvs)..where((tbl) => tbl.key.equals(key))).go();
+  }
 }

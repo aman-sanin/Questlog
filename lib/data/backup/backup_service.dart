@@ -101,6 +101,8 @@ class BackupService {
           .toList(),
     };
 
+    await db.ledgerDao.setKv('lastExportAt', DateTime.now().toIso8601String().substring(0, 10));
+
     return const JsonEncoder.withIndent('  ').convert(data);
   }
 

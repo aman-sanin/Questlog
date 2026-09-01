@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/db/database.dart';
 import '../../domain/model/models.dart';
+import '../services/sound_service.dart';
 import 'database_provider.dart';
 
 final profileStreamProvider = StreamProvider<ProfileData>((ref) {
@@ -49,5 +50,11 @@ final weekStartProvider = Provider<WeekStart>((ref) {
   return ws == 7 ? WeekStart.sunday : WeekStart.monday;
 });
 
-final soundEnabledProvider = StateProvider<bool>((ref) => false);
+final soundEnabledProvider = StreamProvider<bool>((ref) {
+  return ref.watch(ledgerDaoProvider).watchKv('sound_enabled').map((val) {
+    final enabled = val == 'true';
+    SoundService.soundEnabled = enabled;
+    return enabled;
+  });
+});
 

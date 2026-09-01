@@ -45,4 +45,14 @@ class QuestsDao extends DatabaseAccessor<AppDatabase> with _$QuestsDaoMixin {
     return (update(quests)..where((tbl) => tbl.id.equals(id)))
         .write(QuestsCompanion(pausedUntil: Value(pausedUntil)));
   }
+
+  Future<int> updateTargetValue(String id, int targetValue) {
+    return (update(quests)..where((tbl) => tbl.id.equals(id)))
+        .write(QuestsCompanion(targetValue: Value(targetValue)));
+  }
+
+  Future<int> updateDifficulty(String id, int difficulty) {
+    return (update(quests)..where((tbl) => tbl.id.equals(id)))
+        .write(QuestsCompanion(difficulty: Value(difficulty)));
+  }
 }

@@ -2,22 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../app/providers/coach_provider.dart';
 import '../../app/providers/database_provider.dart';
 import '../../app/providers/profile_provider.dart';
 import '../../app/providers/profile_view_provider.dart';
 import '../../app/providers/today_provider.dart';
 import '../../app/services/haptic_service.dart';
 import '../../app/services/sound_service.dart';
+import '../../domain/engine/coach.dart';
 import '../../domain/engine/quest_state.dart';
 import '../../domain/model/models.dart';
 import '../sheets/goal_detail_sheet.dart';
 import '../sheets/quest_detail_sheet.dart';
 import '../sheets/quest_editor_sheet.dart';
+import '../sheets/triage_sheet.dart';
 import '../theme/tokens.dart';
 import '../widgets/action_button.dart';
 import '../widgets/app_input.dart';
 import '../widgets/banner_widget.dart';
 import '../widgets/chips.dart';
+import '../widgets/coach_card_widget.dart';
 import '../widgets/completion_ring.dart';
 import '../widgets/quest_row.dart';
 import '../widgets/sigil_widget.dart';
@@ -30,6 +34,8 @@ class TodayScreen extends ConsumerWidget {
     final tokens = context.tokens;
     final todayStateAsync = ref.watch(todayStateProvider);
     final profileViewAsync = ref.watch(profileViewStateProvider);
+    final coachSignalAsync = ref.watch(activeCoachSignalProvider);
+    final coachSignal = coachSignalAsync.value;
     final today = ref.watch(effectiveLocalDateProvider);
     final weekStart = ref.watch(weekStartProvider);
 
@@ -88,6 +94,28 @@ class TodayScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+
+                // Top Coach Card (max one)
+                if (coachSignal != null)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 20, right: 20, bottom: 16),
+                      child: CoachCardWidget(
+                        title: coachSignal.title,
+                        message: coachSignal.message,
+                        onDismiss: () {
+                          ref.read(coachControllerProvider).dismiss(coachSignal);
+                        },
+                        actions: coachSignal.actions.map((act) {
+                          return CoachCardAction(
+                            label: act.label,
+                            isPrimary: act.type != CoachActionType.dismiss,
+                            onTap: () => _handleCoachAction(context, ref, coachSignal, act, today),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
 
                 // Perfect Day Banner
                 if (state.isPerfectDayEarned)
@@ -375,5 +403,77 @@ class TodayScreen extends ConsumerWidget {
           weekStart: weekStart,
           now: DateTime.now(),
         );
+  }
+
+  Future<void> _handleCoachAction(
+    BuildContext context,
+    WidgetRef ref,
+    CoachSignal signal,
+    CoachAction action,
+    LocalDate today,
+  ) async {
+    final controller = ref.read(coachControllerProvider);
+    final questActions = ref.read(questActionsProvider);
+
+    switch (action.type) {
+      case CoachActionType.dismiss:
+      case CoachActionType.understood:
+      case CoachActionType.continueFlow:
+        await controller.dismiss(signal);
+        break;
+
+      case CoachActionType.raiseTarget:
+        final questId = action.payload['questId'] as String;
+        final targetValue = action.payload['targetValue'] as int;
+        await questActions.updateTargetValue(questId, targetValue);
+        await controller.markAccepted(signal);
+        break;
+
+      case CoachActionType.raiseDifficulty:
+        final questId = action.payload['questId'] as String;
+        final difficulty = action.payload['difficulty'] as Difficulty;
+        await questActions.updateDifficulty(questId, difficulty);
+        await controller.markAccepted(signal);
+        break;
+
+      case CoachActionType.pause:
+        final questId = action.payload['questId'] as String;
+        final days = action.payload['days'] as int? ?? 14;
+        await questActions.pauseQuest(questId, today.addDays(days));
+        await controller.markAccepted(signal);
+        break;
+
+      case CoachActionType.archive:
+        final questId = action.payload['questId'] as String;
+        await questActions.archiveQuest(questId, today.toDateTime());
+        await controller.markAccepted(signal);
+        break;
+
+      case CoachActionType.export:
+        await controller.markAccepted(signal);
+        if (context.mounted) {
+          context.push('/settings');
+        }
+        break;
+
+      case CoachActionType.reviewLoad:
+        await controller.markAccepted(signal);
+        if (context.mounted) {
+          await TriageSheet.show(context, questIds: signal.relatedQuestIds ?? []);
+        }
+        break;
+
+      case CoachActionType.suggestCadence:
+      case CoachActionType.lowerTarget:
+        final questId = action.payload?['questId'] as String?;
+        await controller.markAccepted(signal);
+        if (questId != null && context.mounted) {
+          final questData = await ref.read(questsDaoProvider).getQuestById(questId);
+          if (questData != null && context.mounted) {
+            QuestEditorSheet.show(context, quest: questData);
+          }
+        }
+        break;
+    }
   }
 }

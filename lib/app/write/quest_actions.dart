@@ -312,4 +312,14 @@ class QuestActions {
   Future<void> archiveQuest(String questId, DateTime now) async {
     await db.questsDao.archiveQuest(questId, now);
   }
+
+  /// Update target value (safe edit)
+  Future<void> updateTargetValue(String questId, int targetValue) async {
+    await db.questsDao.updateTargetValue(questId, targetValue);
+  }
+
+  /// Update difficulty (safe edit)
+  Future<void> updateDifficulty(String questId, Difficulty difficulty) async {
+    await db.questsDao.updateDifficulty(questId, difficulty.index);
+  }
 }

@@ -77,6 +77,18 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  if (state.profile.name != null && state.profile.name!.trim().isNotEmpty) ...[
+                    Text(
+                      state.profile.name!.trim().toUpperCase(),
+                      style: tokens.monoText(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.5,
+                        color: tokens.accent,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                  ],
                   Text(
                     prog.title.toUpperCase(),
                     style: tokens.display(

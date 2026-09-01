@@ -12,8 +12,16 @@ class QuestsDao extends DatabaseAccessor<AppDatabase> with _$QuestsDaoMixin {
     return (select(quests)..where((tbl) => tbl.archivedAt.isNull())).watch();
   }
 
+  Stream<List<QuestData>> watchAllQuests() {
+    return select(quests).watch();
+  }
+
   Future<List<QuestData>> getActiveQuests() {
     return (select(quests)..where((tbl) => tbl.archivedAt.isNull())).get();
+  }
+
+  Future<List<QuestData>> getAllQuests() {
+    return select(quests).get();
   }
 
   Future<QuestData?> getQuestById(String id) {

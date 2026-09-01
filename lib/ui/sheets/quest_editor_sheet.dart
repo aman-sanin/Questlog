@@ -13,7 +13,9 @@ import '../widgets/app_input.dart';
 import '../widgets/segmented_control.dart';
 import '../widgets/sigil_widget.dart';
 import '../widgets/weekday_toggles.dart';
+import 'goal_editor_sheet.dart';
 import 'template_picker_sheet.dart';
+
 
 class QuestEditorSheet extends ConsumerStatefulWidget {
   final QuestData? quest;
@@ -604,70 +606,109 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
                 );
               }).toList(),
             ),
-            if (goals.isNotEmpty) ...[
-              const SizedBox(height: 20),
-              Text(
-                'LINKED GOAL (OPTIONAL)',
-                style: tokens.monoText(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: tokens.textSecondary,
-                ),
+
+            // ── Linked Goal ──────────────────────────────────────────────────
+            const SizedBox(height: 20),
+            Text(
+              'LINKED GOAL (OPTIONAL)',
+              style: tokens.monoText(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: tokens.textSecondary,
               ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  GestureDetector(
-                    onTap: () => setState(() => _selectedGoalId = null),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: _selectedGoalId == null ? tokens.tonal : Colors.transparent,
-                        border: Border.all(
-                          color: _selectedGoalId == null ? tokens.accent : tokens.lineRule,
-                          width: _selectedGoalId == null ? 1.5 : 1.0,
-                        ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                // NONE chip
+                GestureDetector(
+                  onTap: () => setState(() => _selectedGoalId = null),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: _selectedGoalId == null ? tokens.tonal : Colors.transparent,
+                      border: Border.all(
+                        color: _selectedGoalId == null ? tokens.accent : tokens.lineRule,
+                        width: _selectedGoalId == null ? 1.5 : 1.0,
                       ),
-                      child: Text(
-                        'NONE',
-                        style: tokens.monoText(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: _selectedGoalId == null ? tokens.accent : tokens.textSecondary,
-                        ),
+                    ),
+                    child: Text(
+                      'NONE',
+                      style: tokens.monoText(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: _selectedGoalId == null ? tokens.accent : tokens.textSecondary,
                       ),
                     ),
                   ),
-                  ...goals.map((g) {
-                    final isSelected = _selectedGoalId == g.id;
-                    return GestureDetector(
-                      onTap: () => setState(() => _selectedGoalId = g.id),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: isSelected ? tokens.tonal : Colors.transparent,
-                          border: Border.all(
-                            color: isSelected ? tokens.accent : tokens.lineRule,
-                            width: isSelected ? 1.5 : 1.0,
-                          ),
+                ),
+                // Existing goals
+                ...goals.map((g) {
+                  final isSelected = _selectedGoalId == g.id;
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedGoalId = g.id),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isSelected ? tokens.tonal : Colors.transparent,
+                        border: Border.all(
+                          color: isSelected ? tokens.accent : tokens.lineRule,
+                          width: isSelected ? 1.5 : 1.0,
                         ),
-                        child: Text(
-                          '${g.emoji} ${g.title.toUpperCase()}',
+                      ),
+                      child: Text(
+                        '${g.emoji} ${g.title.toUpperCase()}',
+                        style: tokens.monoText(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected ? tokens.accent : tokens.textSecondary,
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+                // + NEW GOAL chip
+                GestureDetector(
+                  onTap: () async {
+                    final newId = await showModalBottomSheet<String>(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (ctx) => const GoalEditorSheet(),
+                    );
+                    if (newId != null) {
+                      setState(() => _selectedGoalId = newId);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      border: Border.all(color: tokens.lineRule, width: 1.0),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Symbols.add, size: 13, color: tokens.textSecondary),
+                        const SizedBox(width: 4),
+                        Text(
+                          'NEW GOAL',
                           style: tokens.monoText(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: isSelected ? tokens.accent : tokens.textSecondary,
+                            color: tokens.textSecondary,
                           ),
                         ),
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            ],
-            const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+
 
             // Difficulty & Essential Switches
             Row(

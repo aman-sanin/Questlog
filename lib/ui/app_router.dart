@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'root_scaffold.dart';
+import 'screens/badges_screen.dart';
 import 'screens/debug_inspector_screen.dart';
 import 'screens/insights_screen.dart';
 import 'screens/onboarding_screen.dart';
@@ -25,6 +26,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/onboarding',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const OnboardingScreen(),
+      ),
+      GoRoute(
+        path: '/badges',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const BadgesScreen(),
       ),
       GoRoute(
         path: '/path',

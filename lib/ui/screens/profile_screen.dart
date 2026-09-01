@@ -274,16 +274,38 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 28),
 
-                  // Badges Grid Section
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'BADGES',
-                      style: tokens.monoText(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1.0,
-                        color: tokens.textSecondary,
+                  // Badges Grid Section (Clickable to /badges)
+                  InkWell(
+                    onTap: () => context.push('/badges'),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'BADGES · ${state.badges.where((b) => b.isEarned).length}/${state.badges.length}',
+                            style: tokens.monoText(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 1.0,
+                              color: tokens.textSecondary,
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              Text(
+                                'VIEW ALL',
+                                style: tokens.monoText(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: tokens.accent,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(Symbols.arrow_forward, size: 14, color: tokens.accent),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -297,7 +319,7 @@ class ProfileScreen extends ConsumerWidget {
                       mainAxisSpacing: 8,
                       childAspectRatio: 1.0,
                     ),
-                    itemCount: state.badges.length,
+                    itemCount: state.badges.length > 12 ? 12 : state.badges.length,
                     itemBuilder: (context, index) {
                       final badge = state.badges[index];
                       return BadgeTile(

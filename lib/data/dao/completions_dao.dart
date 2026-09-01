@@ -8,6 +8,14 @@ part 'completions_dao.g.dart';
 class CompletionsDao extends DatabaseAccessor<AppDatabase> with _$CompletionsDaoMixin {
   CompletionsDao(super.db);
 
+  Stream<List<CompletionData>> watchAllCompletions() {
+    return select(completions).watch();
+  }
+
+  Future<List<CompletionData>> getAllCompletions() {
+    return select(completions).get();
+  }
+
   Stream<List<CompletionData>> watchCompletionsForDate(String date) {
     return (select(completions)..where((tbl) => tbl.localDate.equals(date))).watch();
   }

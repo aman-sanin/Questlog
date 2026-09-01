@@ -56,12 +56,13 @@ class _GoalEditorSheetState extends ConsumerState<GoalEditorSheet> {
     final now = DateTime.now();
 
     if (widget.goal == null) {
-      await actions.createGoal(
+      final newId = await actions.createGoal(
         title: title,
         emoji: _selectedEmoji,
         note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
         now: now,
       );
+      if (mounted) Navigator.of(context).pop(newId); // return new goal id to caller
     } else {
       await actions.updateGoal(
         id: widget.goal!.id,
@@ -72,10 +73,10 @@ class _GoalEditorSheetState extends ConsumerState<GoalEditorSheet> {
         archivedAt: widget.goal!.archivedAt,
         completedAt: widget.goal!.completedAt,
       );
+      if (mounted) Navigator.of(context).pop();
     }
-
-    if (mounted) Navigator.of(context).pop();
   }
+
 
   @override
   Widget build(BuildContext context) {

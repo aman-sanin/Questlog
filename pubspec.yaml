@@ -55,3 +55,11 @@ flutter:
 dependency_overrides:
   path_provider_android: 2.2.17
   path_provider_foundation: 2.4.0
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icon/questlog.png"
+
+  # Optional: If you also made a single-color version for Android 13+
+  monochrome_icon_path: "assets/icon/questlog.png"

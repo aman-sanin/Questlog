@@ -14,3 +14,6 @@
 
 # Drift / Sqlite
 -keep class com.simonoid.sqlite3.** { *; }
+
+# Dont Warn
+-dontwarn com.google.android.play.core.**

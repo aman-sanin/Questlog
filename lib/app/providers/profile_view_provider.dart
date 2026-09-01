@@ -4,7 +4,9 @@ import '../../domain/constants/unlock_schedule.dart';
 import '../../domain/engine/badges.dart';
 import '../../domain/engine/progression.dart';
 import '../../domain/model/models.dart';
+import 'badges_provider.dart';
 import 'database_provider.dart';
+
 
 class ProfileRecords {
   final int maxDayXp;
@@ -78,14 +80,8 @@ final profileViewStateProvider = FutureProvider<ProfileScreenState>((ref) async 
     freezesUsed: streakRepairs.length,
   );
 
-  final badges = BadgeEngine.evaluate(
-    totalCompletions: totalXp ~/ 15,
-    maxStreak: records.bestStreak,
-    perfectDaysCount: 12,
-    domainsWithCompletions: CallingDomain.values.toSet(),
-    completedGoalsCount: 1,
-    earnedBadgeKeys: {'first_step', 'streak_7', 'streak_30', 'centurion'},
-  );
+  final badgesStateAsync = ref.watch(badgesStateProvider);
+  final badges = badgesStateAsync.value?.allBadges ?? [];
 
   return ProfileScreenState(
     profile: profile,

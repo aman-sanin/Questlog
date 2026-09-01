@@ -5,7 +5,6 @@ import '../app/providers/database_provider.dart';
 import '../app/providers/today_provider.dart';
 import 'root_scaffold.dart';
 import 'screens/badges_screen.dart';
-import 'screens/debug_inspector_screen.dart';
 import 'screens/insights_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/path_screen.dart';
@@ -103,11 +102,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/recap',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const MonthlyRecapScreen(),
-      ),
-      GoRoute(
-        path: '/debug',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const DebugInspectorScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

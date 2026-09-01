@@ -563,19 +563,15 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 32),
 
-          // App Meta Info & Debug Entry
+          // App Meta Info
           Center(
-            child: GestureDetector(
-              onTap: () => context.push('/debug'),
-              onLongPress: () => context.push('/debug'),
-              child: Text(
-                'QUESTLOG v1.0 · LOCAL FIRST · NO ACCOUNTS',
-                style: tokens.monoText(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 1.0,
-                  color: tokens.textSecondary.withOpacity(0.5),
-                ),
+            child: Text(
+              'QUESTLOG v1.0 · LOCAL FIRST · NO ACCOUNTS',
+              style: tokens.monoText(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 1.0,
+                color: tokens.textSecondary.withOpacity(0.5),
               ),
             ),
           ),

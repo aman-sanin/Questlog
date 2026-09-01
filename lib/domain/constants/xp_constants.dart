@@ -2,6 +2,7 @@ import '../model/models.dart';
 
 class XpConstants {
   static const int baseDaily = 10;
+  static const int baseSingle = 15;
   static const int baseWeekly = 35;
   static const int baseMonthly = 120;
   static const int baseYearly = 400;
@@ -16,6 +17,8 @@ class XpConstants {
     switch (cadence) {
       case Cadence.daily:
         return baseDaily;
+      case Cadence.single:
+        return baseSingle;
       case Cadence.weekly:
         return baseWeekly;
       case Cadence.monthly:

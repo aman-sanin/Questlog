@@ -16,15 +16,10 @@ android {
         isCoreLibraryDesugaringEnabled = true
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
-    }
+    // Removed the deprecated kotlinOptions block from here
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.questlog.questlog"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -33,10 +28,29 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
+    }
+    
+    // Updated renaming block for ABI splits
+    applicationVariants.configureEach {
+        val variant = this
+        outputs.configureEach {
+            val outputImpl = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            
+            // Get the architecture name (e.g., arm64-v8a), or default to "universal"
+            val abi = outputImpl.getFilter(com.android.build.OutputFile.ABI) ?: "universal"
+            
+            // Add the ABI to the file name to prevent collisions!
+            outputImpl.outputFileName = "questlog-v${variant.versionName}+${variant.versionCode}-${abi}-${variant.name}.apk"
+        }
+    }
+}
+
+// Added the new compilerOptions block here (outside of the android block)
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     }
 }
 

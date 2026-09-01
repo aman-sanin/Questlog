@@ -90,7 +90,7 @@ class StarterTemplates {
       domain: CallingDomain.monk,
     ),
     QuestTemplate(
-      title: 'Digital Sabbath',
+      title: 'Digital Detox',
       category: 'MIND',
       rule: WeeklyOnDaysRule(days: [7]), // Sunday
       difficulty: Difficulty.hard,

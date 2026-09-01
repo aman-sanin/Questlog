@@ -26,7 +26,7 @@ class StreakEngine {
     LocalDate? pausedUntil,
     int availableFreezeWallet = 0,
   }) {
-    if (firstCompletionDate == null) {
+    if (firstCompletionDate == null || rule is SingleRule) {
       return const StreakResult(streak: 0, bestStreak: 0);
     }
 

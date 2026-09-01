@@ -2,7 +2,8 @@ enum Cadence {
   daily,
   weekly,
   monthly,
-  yearly;
+  yearly,
+  single;
 
   String get key => name;
 }

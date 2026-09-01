@@ -51,6 +51,7 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
   bool _isWeeklyConstrained = false;
   int _timesPerPeriod = 3;
   int _intervalDays = 2;
+  LocalDate? _singleTargetDate;
 
   @override
   void initState() {
@@ -68,6 +69,9 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
         (_rule as WeeklyRule).allowedDays!.isNotEmpty) {
       _isWeeklyConstrained = true;
       _weeklyAllowedDays = (_rule as WeeklyRule).allowedDays!.toSet();
+    }
+    if (_rule is SingleRule) {
+      _singleTargetDate = (_rule as SingleRule).targetDate;
     }
     _targetType = q != null ? TargetType.values[q.targetType] : TargetType.checkbox;
     _targetValue = q?.targetValue ?? 1;
@@ -129,6 +133,9 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
           break;
         case Cadence.yearly:
           _rule = const YearlyTimesRule(times: 1);
+          break;
+        case Cadence.single:
+          _rule = SingleRule(targetDate: _singleTargetDate);
           break;
       }
     });
@@ -309,6 +316,7 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
                 SegmentItem(value: Cadence.weekly, label: 'Weekly'),
                 SegmentItem(value: Cadence.monthly, label: 'Monthly'),
                 SegmentItem(value: Cadence.yearly, label: 'Yearly'),
+                SegmentItem(value: Cadence.single, label: 'Single'),
               ],
               selectedValue: _cadence,
               onSelected: _updateRuleForCadence,
@@ -478,6 +486,150 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
                   },
                 ),
               ],
+            ] else if (_cadence == Cadence.single) ...[
+              Text(
+                'DUE DATE',
+                style: tokens.monoText(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: tokens.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Builder(
+                builder: (context) {
+                  final today = ref.read(effectiveLocalDateProvider);
+                  final tomorrow = today.addDays(1);
+                  final isToday = _singleTargetDate == today;
+                  final isTomorrow = _singleTargetDate == tomorrow;
+                  final isNone = _singleTargetDate == null;
+                  final isCustom = _singleTargetDate != null && !isToday && !isTomorrow;
+
+                  return Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      // Today
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _singleTargetDate = today;
+                            _rule = SingleRule(targetDate: today);
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: isToday ? tokens.tonal : Colors.transparent,
+                            border: Border.all(
+                              color: isToday ? tokens.accent : tokens.lineRule,
+                              width: isToday ? 1.5 : 1.0,
+                            ),
+                          ),
+                          child: Text(
+                            'TODAY',
+                            style: tokens.monoText(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: isToday ? tokens.accent : tokens.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Tomorrow
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _singleTargetDate = tomorrow;
+                            _rule = SingleRule(targetDate: tomorrow);
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: isTomorrow ? tokens.tonal : Colors.transparent,
+                            border: Border.all(
+                              color: isTomorrow ? tokens.accent : tokens.lineRule,
+                              width: isTomorrow ? 1.5 : 1.0,
+                            ),
+                          ),
+                          child: Text(
+                            'TOMORROW',
+                            style: tokens.monoText(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: isTomorrow ? tokens.accent : tokens.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Custom Date
+                      GestureDetector(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: (_singleTargetDate ?? today).toDateTime(),
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2099),
+                          );
+                          if (picked != null && mounted) {
+                            final customDate = LocalDate.fromDateTime(picked);
+                            setState(() {
+                              _singleTargetDate = customDate;
+                              _rule = SingleRule(targetDate: customDate);
+                            });
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: isCustom ? tokens.tonal : Colors.transparent,
+                            border: Border.all(
+                              color: isCustom ? tokens.accent : tokens.lineRule,
+                              width: isCustom ? 1.5 : 1.0,
+                            ),
+                          ),
+                          child: Text(
+                            isCustom ? _singleTargetDate!.formatted : 'PICK DATE',
+                            style: tokens.monoText(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: isCustom ? tokens.accent : tokens.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // No Due Date
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _singleTargetDate = null;
+                            _rule = const SingleRule();
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: isNone ? tokens.tonal : Colors.transparent,
+                            border: Border.all(
+                              color: isNone ? tokens.accent : tokens.lineRule,
+                              width: isNone ? 1.5 : 1.0,
+                            ),
+                          ),
+                          child: Text(
+                            'NO DUE DATE',
+                            style: tokens.monoText(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: isNone ? tokens.accent : tokens.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
             ],
             const SizedBox(height: 20),
 

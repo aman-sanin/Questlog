@@ -33,6 +33,8 @@ abstract class ScheduleRule {
         return MonthlyRule.fromJson(mode, json);
       case Cadence.yearly:
         return YearlyRule.fromJson(mode, json);
+      case Cadence.single:
+        return SingleRule.fromJson(json);
     }
   }
 }
@@ -402,6 +404,53 @@ class YearlyTimesRule extends YearlyRule {
   const YearlyTimesRule({required int times}) : super.times(times);
 }
 
+class SingleRule extends ScheduleRule {
+  @override
+  final Cadence cadence = Cadence.single;
+  final LocalDate? targetDate;
+
+  const SingleRule({this.targetDate});
+
+  factory SingleRule.fromJson(Map<String, dynamic> json) {
+    final dateStr = json['target_date'] as String?;
+    return SingleRule(
+      targetDate: dateStr != null ? LocalDate.parse(dateStr) : null,
+    );
+  }
+
+  @override
+  bool get isWindowScheduled => false;
+
+  @override
+  bool isScheduledOn(LocalDate d, [dynamic weekStart]) {
+    if (targetDate != null) {
+      return d == targetDate;
+    }
+    return true;
+  }
+
+  @override
+  String periodKey(LocalDate d, [dynamic weekStart]) {
+    return targetDate != null ? 'single_${targetDate!.formatted}' : 'single_any';
+  }
+
+  @override
+  DateRange periodOf(LocalDate d, [dynamic weekStart]) {
+    return DateRange(
+      DateTime(2020, 1, 1),
+      DateTime(2099, 12, 31),
+    );
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      'cadence': cadence.name,
+      if (targetDate != null) 'target_date': targetDate!.formatted,
+    };
+  }
+}
+
 class UnsupportedRule extends ScheduleRule {
   final Map<String, dynamic> raw;
 
@@ -428,3 +477,5 @@ class UnsupportedRule extends ScheduleRule {
   @override
   Map<String, dynamic> toJson() => raw;
 }
+
+

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/db/database.dart';
 import '../../domain/engine/quest_state.dart';
+import '../../domain/engine/schedule_rule.dart';
 import '../../domain/engine/streak.dart';
 import '../../domain/model/models.dart';
 import 'database_provider.dart';
@@ -208,6 +209,9 @@ final todayStateProvider = Provider<AsyncValue<TodayScreenState>>((ref) {
 
   final questsByGoalId = <String, List<QuestEvaluation>>{};
   for (final q in evaluatedQuests) {
+    if (q.rule is SingleRule && !q.isDueToday && q.isCompleted) {
+      continue;
+    }
     if (q.goalId != null) {
       questsByGoalId.putIfAbsent(q.goalId!, () => []).add(q);
     } else {

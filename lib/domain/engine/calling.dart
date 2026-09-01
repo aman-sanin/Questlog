@@ -26,7 +26,8 @@ class CallingEngine {
       domain: CallingDomain.warrior,
       name: 'Warrior',
       tagline: 'The discipline of iron and sinew.',
-      description: 'Forged through physical resilience, strength workouts, and enduring daily vitality.',
+      description:
+          'Forged through physical resilience, strength workouts, and enduring daily vitality.',
       focusAreas: ['Strength', 'Mobility', 'Conditioning', 'Discipline'],
       trialName: 'Trial of the Vanguard',
       trialDescription: 'Maintain a 30-day streak on any Warrior quest.',
@@ -35,7 +36,8 @@ class CallingEngine {
       domain: CallingDomain.sage,
       name: 'Sage',
       tagline: 'The clarity of mind and illuminated study.',
-      description: 'Dedicated to relentless reading, deep intellectual inquiry, and technical mastery.',
+      description:
+          'Dedicated to relentless reading, deep intellectual inquiry, and technical mastery.',
       focusAreas: ['Reading', 'Research', 'Languages', 'Study'],
       trialName: 'Trial of the Archon',
       trialDescription: 'Log 50 reading or learning sessions.',
@@ -44,16 +46,19 @@ class CallingEngine {
       domain: CallingDomain.monk,
       name: 'Monk',
       tagline: 'The stillness of spirit and quiet awareness.',
-      description: 'Anchored in meditation, breathwork, mindful detachment, and intentional presence.',
-      focusAreas: ['Meditation', 'Reflection', 'Gratitude', 'Sabbath'],
+      description:
+          'Anchored in meditation, breathwork, mindful detachment, and intentional presence.',
+      focusAreas: ['Meditation', 'Reflection', 'Gratitude', 'Repose'],
       trialName: 'Trial of the Lotus',
-      trialDescription: 'Complete 21 consecutive days of meditation or mindfulness.',
+      trialDescription:
+          'Complete 21 consecutive days of meditation or mindfulness.',
     ),
     CallingDomain.bard: CallingInfo(
       domain: CallingDomain.bard,
       name: 'Bard',
       tagline: 'The pulse of art, rhythm, and story.',
-      description: 'Channeling expression through music, creative writing, social connection, and performance.',
+      description:
+          'Channeling expression through music, creative writing, social connection, and performance.',
       focusAreas: ['Music', 'Writing', 'Art', 'Community'],
       trialName: 'Trial of the Skald',
       trialDescription: 'Earn 1,000 XP through creative quests.',
@@ -62,7 +67,8 @@ class CallingEngine {
       domain: CallingDomain.ranger,
       name: 'Ranger',
       tagline: 'The instinct of the open wild.',
-      description: 'Attuned to outdoor movement, trail hiking, wilderness exploration, and natural daylight.',
+      description:
+          'Attuned to outdoor movement, trail hiking, wilderness exploration, and natural daylight.',
       focusAreas: ['Hiking', 'Trail Running', 'Sunlight', 'Outdoors'],
       trialName: 'Trial of the Pathfinder',
       trialDescription: 'Log outdoor activity on 10 consecutive weekends.',
@@ -71,7 +77,8 @@ class CallingEngine {
       domain: CallingDomain.artificer,
       name: 'Artificer',
       tagline: 'The mastery of tools, logic, and craft.',
-      description: 'Building tools, shipping code, designing systems, and maintaining clean workspaces.',
+      description:
+          'Building tools, shipping code, designing systems, and maintaining clean workspaces.',
       focusAreas: ['Code', 'Engineering', 'Craft', 'Order'],
       trialName: 'Trial of the Demiurge',
       trialDescription: 'Ship 5 project milestones or craft completions.',
@@ -115,7 +122,9 @@ class CallingEngine {
       totalXp: domainXp,
       completionsCount: completionsCount,
       tier: tier,
-      tierTitle: tier == 0 ? '${domain.name.toUpperCase()} RECRUIT' : '${domain.name.toUpperCase()} ${tierRoman(tier)}',
+      tierTitle: tier == 0
+          ? '${domain.name.toUpperCase()} RECRUIT'
+          : '${domain.name.toUpperCase()} ${tierRoman(tier)}',
       progressToNext: progress,
       nextThreshold: nextThreshold,
     );

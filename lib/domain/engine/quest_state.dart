@@ -71,20 +71,22 @@ class QuestEvaluation {
   }) {
     final period = rule.periodOf(today, weekStart.value);
     final isWindow = rule.isWindowScheduled;
-    final isDue = isWindow
-        ? period.contains(today)
-        : rule.isScheduledOn(today, weekStart.value);
+    final isSingle = rule is SingleRule;
 
-    // Calculate completions in current period (honoring allowedDays if constrained)
+    // Calculate completions in current period (honoring allowedDays if constrained, or all for single)
     int periodCompleted = 0;
-    for (final entry in completionValues.entries) {
-      if (entry.key >= period.startLocalDate && entry.key <= period.endLocalDate) {
-        if (rule is WeeklyRule && rule.allowedDays != null && rule.allowedDays!.isNotEmpty) {
-          if (rule.allowedDays!.contains(entry.key.toDateTime().weekday)) {
+    if (isSingle) {
+      periodCompleted = completionValues.values.fold(0, (sum, v) => sum + v);
+    } else {
+      for (final entry in completionValues.entries) {
+        if (entry.key >= period.startLocalDate && entry.key <= period.endLocalDate) {
+          if (rule is WeeklyRule && rule.allowedDays != null && rule.allowedDays!.isNotEmpty) {
+            if (rule.allowedDays!.contains(entry.key.toDateTime().weekday)) {
+              periodCompleted += entry.value;
+            }
+          } else {
             periodCompleted += entry.value;
           }
-        } else {
-          periodCompleted += entry.value;
         }
       }
     }
@@ -98,16 +100,32 @@ class QuestEvaluation {
     final bool completed = periodCompleted >= target;
     final bool overachieved = periodCompleted > target;
 
+    bool isDue;
+    if (rule is SingleRule) {
+      if (completed) {
+        // If completed, only show on the date it was completed (e.g. today)
+        isDue = completionDates.contains(today);
+      } else {
+        final targetDate = rule.targetDate;
+        isDue = targetDate == null || today >= targetDate;
+      }
+    } else if (isWindow) {
+      isDue = period.contains(today);
+    } else {
+      isDue = rule.isScheduledOn(today, weekStart.value);
+    }
+
     // Check pause state
     final bool isPaused = pausedUntil != null && pausedUntil >= today;
 
     // Check at risk: day scheduled, open, 18h into the day
-    final bool isAtRisk = !completed && !isWindow && isDue && now.hour >= 18;
+    final bool isAtRisk = !completed && !isWindow && !isSingle && isDue && now.hour >= 18;
 
     // Check yesterday's miss for day-scheduled quests
     final yesterday = today.subtractDays(1);
     bool missedYesterday = false;
     if (!isWindow &&
+        !isSingle &&
         firstCompletionDate != null &&
         yesterday >= firstCompletionDate &&
         rule.isScheduledOn(yesterday, weekStart.value)) {
@@ -129,7 +147,7 @@ class QuestEvaluation {
       visual = QuestVisual.atRisk;
     } else if (missedYesterday && !isDue) {
       visual = essential ? QuestVisual.missedEssential : QuestVisual.missedNonEssential;
-    } else if (firstCompletionDate == null && !isDue) {
+    } else if (firstCompletionDate == null && !isDue && !isSingle) {
       visual = QuestVisual.grace;
     } else {
       visual = QuestVisual.pending;
@@ -148,11 +166,20 @@ class QuestEvaluation {
 
     // Compose mono meta description (e.g., "DAILY · 2/3 GLASSES · 23 STREAK")
     final metaParts = <String>[];
-    metaParts.add(rule.cadence.name.toUpperCase());
-    if (targetType == TargetType.counter) {
-      metaParts.add('$periodCompleted/$target ${unit != null && unit.isNotEmpty ? unit.toUpperCase() : "TODAY"}');
+    if (rule is SingleRule) {
+      metaParts.add('SINGLE');
+      final targetDate = rule.targetDate;
+      if (targetDate != null) {
+        metaParts.add('DUE ${targetDate.formatted}');
+      }
+    } else {
+      metaParts.add(rule.cadence.name.toUpperCase());
     }
-    if (streak > 0) {
+
+    if (targetType == TargetType.counter) {
+      metaParts.add('$periodCompleted/$target ${unit != null && unit.isNotEmpty ? unit.toUpperCase() : "TOTAL"}');
+    }
+    if (streak > 0 && !isSingle) {
       metaParts.add('$streak ${rule.cadence == Cadence.daily ? "STREAK" : "PERIODS"}');
     }
     if (hasFreezeSavedYesterday) {
@@ -163,9 +190,10 @@ class QuestEvaluation {
       metaParts.add('${winInfo.daysLeftInPeriod} DAYS LEFT');
     } else if (missedYesterday) {
       metaParts.add('MISSED YESTERDAY');
-    } else if (firstCompletionDate == null) {
+    } else if (firstCompletionDate == null && !isSingle) {
       metaParts.add('STARTS WITH 1ST COMPLETION');
     }
+
 
     return QuestEvaluation(
       questId: questId,

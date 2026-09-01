@@ -61,3 +61,8 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
 final widgetServiceProvider = Provider<WidgetService>((ref) {
   return WidgetService();
 });
+
+final seenMomentsStreamProvider = StreamProvider<Set<String>>((ref) {
+  return ref.watch(ledgerDaoProvider).watchSeenMoments();
+});
+

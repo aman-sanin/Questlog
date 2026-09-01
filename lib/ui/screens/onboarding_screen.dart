@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../../app/providers/database_provider.dart';
+import '../../app/providers/profile_provider.dart';
 import '../../domain/model/models.dart';
 import '../../domain/templates.dart';
 import '../theme/tokens.dart';
@@ -37,6 +38,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     final questActions = ref.read(questActionsProvider);
     final now = DateTime.now();
+    final today = ref.read(effectiveLocalDateProvider);
+    final weekStart = ref.read(weekStartProvider);
 
     for (final index in _selectedTemplateIndices) {
       final t = StarterTemplates.templates[index];
@@ -50,6 +53,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         essential: t.essential,
         domain: t.domain,
         now: now,
+        today: today,
+        weekStart: weekStart,
       );
     }
 

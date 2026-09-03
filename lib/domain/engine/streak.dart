@@ -17,6 +17,7 @@ class StreakResult {
 class StreakEngine {
   static StreakResult calculate({
     required ScheduleRule rule,
+    TargetType targetType = TargetType.checkbox,
     required int targetValue,
     required Map<LocalDate, int> completionValues,
     required Set<String> existingRepairs,
@@ -31,9 +32,11 @@ class StreakEngine {
     }
 
     int target = targetValue;
-    if (rule is WeeklyRule && rule.times != null) target = rule.times!;
-    if (rule is MonthlyRule && rule.times != null) target = rule.times!;
-    if (rule is YearlyRule && rule.times != null) target = rule.times!;
+    if (targetType == TargetType.checkbox) {
+      if (rule is WeeklyRule && rule.times != null) target = rule.times!;
+      if (rule is MonthlyRule && rule.times != null) target = rule.times!;
+      if (rule is YearlyRule && rule.times != null) target = rule.times!;
+    }
 
     final periods = Recurrence.periodsBackward(
       from: today,

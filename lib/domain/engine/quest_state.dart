@@ -92,9 +92,11 @@ class QuestEvaluation {
     }
 
     int target = targetValue;
-    if (rule is WeeklyRule && rule.times != null) target = rule.times!;
-    if (rule is MonthlyRule && rule.times != null) target = rule.times!;
-    if (rule is YearlyRule && rule.times != null) target = rule.times!;
+    if (targetType == TargetType.checkbox) {
+      if (rule is WeeklyRule && rule.times != null) target = rule.times!;
+      if (rule is MonthlyRule && rule.times != null) target = rule.times!;
+      if (rule is YearlyRule && rule.times != null) target = rule.times!;
+    }
 
     final double progress = target == 0 ? 1.0 : (periodCompleted / target).clamp(0.0, 2.0);
     final bool completed = periodCompleted >= target;

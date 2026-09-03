@@ -141,6 +141,7 @@ final todayStateProvider = Provider<AsyncValue<TodayScreenState>>((ref) {
 
     final streakRes = StreakEngine.calculate(
       rule: q.rule,
+      targetType: TargetType.values[q.targetType],
       targetValue: q.targetValue,
       completionValues: qCompletions,
       existingRepairs: qRepairs,

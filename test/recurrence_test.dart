@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:questlog/domain/engine/quest_state.dart';
 import 'package:questlog/domain/engine/schedule_rule.dart';
 import 'package:questlog/domain/model/models.dart';
 
@@ -151,6 +152,66 @@ void main() {
         }
       }
       expect(scheduledCountMay, equals(1));
+    });
+  });
+
+  group('Group B: Counter Quest Evaluation for Window Cadences', () {
+    test('Weekly Counter Quest preserves targetValue over rule.times', () {
+      const rule = WeeklyTimesRule(times: 3); // Default rule.times is 3
+      final today = const LocalDate(2026, 9, 3);
+      final now = DateTime(2026, 9, 3, 12, 0);
+
+      // Quest with Counter target = 50 pages (not 3)
+      final eval = QuestEvaluation.evaluate(
+        questId: 'q_weekly_counter',
+        title: 'Read Books',
+        rule: rule,
+        targetType: TargetType.counter,
+        targetValue: 50,
+        unit: 'pages',
+        difficulty: Difficulty.medium,
+        essential: false,
+        completionDates: [today],
+        completionValues: {today: 20},
+        today: today,
+        now: now,
+        weekStart: WeekStart.monday,
+        streak: 0,
+      );
+
+      expect(eval.target, equals(50), reason: 'Counter target should be 50, not overridden by rule.times (3)');
+      expect(eval.completedValue, equals(20));
+      expect(eval.isCompleted, isFalse);
+      expect(eval.metaDescription, contains('20/50 PAGES'));
+    });
+
+    test('Monthly Counter Quest preserves targetValue over rule.times', () {
+      const rule = MonthlyTimesRule(times: 1); // Default rule.times is 1
+      final today = const LocalDate(2026, 9, 3);
+      final now = DateTime(2026, 9, 3, 12, 0);
+
+      // Quest with Counter target = 100 km (not 1)
+      final eval = QuestEvaluation.evaluate(
+        questId: 'q_monthly_counter',
+        title: 'Run Distance',
+        rule: rule,
+        targetType: TargetType.counter,
+        targetValue: 100,
+        unit: 'km',
+        difficulty: Difficulty.hard,
+        essential: false,
+        completionDates: [today],
+        completionValues: {today: 100},
+        today: today,
+        now: now,
+        weekStart: WeekStart.monday,
+        streak: 0,
+      );
+
+      expect(eval.target, equals(100), reason: 'Counter target should be 100, not overridden by rule.times (1)');
+      expect(eval.completedValue, equals(100));
+      expect(eval.isCompleted, isTrue);
+      expect(eval.metaDescription, contains('100/100 KM'));
     });
   });
 }

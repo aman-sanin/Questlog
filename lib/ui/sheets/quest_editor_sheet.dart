@@ -64,11 +64,21 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
     if (_rule is DailyIntervalRule) {
       _intervalDays = (_rule as DailyIntervalRule).interval ?? 2;
     }
-    if (_rule is WeeklyRule &&
-        (_rule as WeeklyRule).allowedDays != null &&
-        (_rule as WeeklyRule).allowedDays!.isNotEmpty) {
-      _isWeeklyConstrained = true;
-      _weeklyAllowedDays = (_rule as WeeklyRule).allowedDays!.toSet();
+    if (_rule is WeeklyRule) {
+      final wr = _rule as WeeklyRule;
+      if (wr.times != null) _timesPerPeriod = wr.times!;
+      if (wr.allowedDays != null && wr.allowedDays!.isNotEmpty) {
+        _isWeeklyConstrained = true;
+        _weeklyAllowedDays = wr.allowedDays!.toSet();
+      }
+    }
+    if (_rule is MonthlyRule) {
+      final mr = _rule as MonthlyRule;
+      if (mr.times != null) _timesPerPeriod = mr.times!;
+    }
+    if (_rule is YearlyRule) {
+      final yr = _rule as YearlyRule;
+      if (yr.times != null) _timesPerPeriod = yr.times!;
     }
     if (_rule is SingleRule) {
       _singleTargetDate = (_rule as SingleRule).targetDate;
@@ -126,13 +136,16 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
           _rule = const DailyEveryDayRule();
           break;
         case Cadence.weekly:
+          _timesPerPeriod = (_timesPerPeriod > 7 || _timesPerPeriod < 1) ? 3 : _timesPerPeriod;
           _rule = WeeklyTimesRule(times: _timesPerPeriod);
           break;
         case Cadence.monthly:
-          _rule = const MonthlyTimesRule(times: 1);
+          _timesPerPeriod = _timesPerPeriod.clamp(1, 31);
+          _rule = MonthlyTimesRule(times: _timesPerPeriod);
           break;
         case Cadence.yearly:
-          _rule = const YearlyTimesRule(times: 1);
+          _timesPerPeriod = _timesPerPeriod.clamp(1, 365);
+          _rule = YearlyTimesRule(times: _timesPerPeriod);
           break;
         case Cadence.single:
           _rule = SingleRule(targetDate: _singleTargetDate);
@@ -486,6 +499,86 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
                   },
                 ),
               ],
+            ] else if (_cadence == Cadence.monthly && _targetType == TargetType.checkbox) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'TIMES PER MONTH',
+                    style: tokens.monoText(fontSize: 12, color: tokens.textPrimary),
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Symbols.remove),
+                        onPressed: _timesPerPeriod > 1
+                            ? () {
+                                setState(() {
+                                  _timesPerPeriod--;
+                                  _rule = MonthlyTimesRule(times: _timesPerPeriod);
+                                });
+                              }
+                            : null,
+                      ),
+                      Text(
+                        '$_timesPerPeriod×',
+                        style: tokens.monoText(fontSize: 15, fontWeight: FontWeight.w600),
+                      ),
+                      IconButton(
+                        icon: const Icon(Symbols.add),
+                        onPressed: _timesPerPeriod < 31
+                            ? () {
+                                setState(() {
+                                  _timesPerPeriod++;
+                                  _rule = MonthlyTimesRule(times: _timesPerPeriod);
+                                });
+                              }
+                            : null,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ] else if (_cadence == Cadence.yearly && _targetType == TargetType.checkbox) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'TIMES PER YEAR',
+                    style: tokens.monoText(fontSize: 12, color: tokens.textPrimary),
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Symbols.remove),
+                        onPressed: _timesPerPeriod > 1
+                            ? () {
+                                setState(() {
+                                  _timesPerPeriod--;
+                                  _rule = YearlyTimesRule(times: _timesPerPeriod);
+                                });
+                              }
+                            : null,
+                      ),
+                      Text(
+                        '$_timesPerPeriod×',
+                        style: tokens.monoText(fontSize: 15, fontWeight: FontWeight.w600),
+                      ),
+                      IconButton(
+                        icon: const Icon(Symbols.add),
+                        onPressed: _timesPerPeriod < 365
+                            ? () {
+                                setState(() {
+                                  _timesPerPeriod++;
+                                  _rule = YearlyTimesRule(times: _timesPerPeriod);
+                                });
+                              }
+                            : null,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ] else if (_cadence == Cadence.single) ...[
               Text(
                 'DUE DATE',
@@ -660,7 +753,7 @@ class _QuestEditorSheetState extends ConsumerState<QuestEditorSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'DAILY TARGET (N)',
+                          'TARGET (N)',
                           style: tokens.monoText(fontSize: 11, color: tokens.textSecondary),
                         ),
                         const SizedBox(height: 6),

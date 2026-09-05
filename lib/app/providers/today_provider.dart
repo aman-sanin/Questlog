@@ -78,6 +78,8 @@ final streakRepairsStreamProvider = StreamProvider<List<StreakRepairData>>((ref)
   return ref.watch(ledgerDaoProvider).watchStreakRepairs();
 });
 
+final todayCadenceFilterProvider = StateProvider<Cadence?>((ref) => null);
+
 final todayStateProvider = Provider<AsyncValue<TodayScreenState>>((ref) {
   final questsAsync = ref.watch(activeQuestsStreamProvider);
   final goalsAsync = ref.watch(activeGoalsStreamProvider);

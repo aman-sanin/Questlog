@@ -11,6 +11,7 @@ import 'package:questlog/domain/engine/schedule_rule.dart';
 import 'package:questlog/domain/model/models.dart';
 import 'package:questlog/ui/screens/profile_screen.dart';
 import 'package:questlog/ui/screens/settings_screen.dart';
+import 'package:questlog/ui/screens/today_screen.dart';
 import 'package:questlog/ui/theme/app_theme.dart';
 import 'package:questlog/ui/theme/tokens.dart';
 
@@ -526,6 +527,74 @@ void main() {
 
       final offVal = await db.ledgerDao.getKv('sound_enabled');
       expect(offVal, equals('false'));
+
+      await db.close();
+    });
+
+    testWidgets('TodayScreen filters quests by cadence and supports reset', (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      await db.profileDao.getProfile();
+
+      await db.questsDao.insertQuest(
+        QuestsCompanion.insert(
+          id: 'q_daily',
+          title: 'Daily Meditation',
+          rule: const DailyEveryDayRule(),
+          createdAt: DateTime.now(),
+        ),
+      );
+
+      await db.questsDao.insertQuest(
+        QuestsCompanion.insert(
+          id: 'q_weekly',
+          title: 'Weekly Review',
+          rule: const WeeklyTimesRule(times: 3),
+          createdAt: DateTime.now(),
+        ),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            databaseProvider.overrideWithValue(db),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.buildTheme(isDark: true, accentTheme: AccentTheme.frost),
+            home: const TodayScreen(),
+          ),
+        ),
+      );
+
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // Both quests visible initially under ALL
+      expect(find.text('Daily Meditation'), findsOneWidget);
+      expect(find.text('Weekly Review'), findsOneWidget);
+      expect(find.text('ALL'), findsOneWidget);
+      expect(find.text('DAILY'), findsOneWidget);
+      expect(find.text('WEEKLY'), findsOneWidget);
+
+      // Tap WEEKLY filter
+      await tester.tap(find.text('WEEKLY'));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.text('Weekly Review'), findsOneWidget);
+      expect(find.text('Daily Meditation'), findsNothing);
+
+      // Tap SINGLE filter (no single quests exist)
+      await tester.tap(find.text('SINGLE'));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.text('NO SINGLE QUESTS'), findsOneWidget);
+      expect(find.text('SHOW ALL'), findsOneWidget);
+
+      // Tap SHOW ALL
+      await tester.tap(find.text('SHOW ALL'));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.text('Daily Meditation'), findsOneWidget);
+      expect(find.text('Weekly Review'), findsOneWidget);
 
       await db.close();
     });

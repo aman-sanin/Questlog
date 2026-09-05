@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../../app/providers/coach_provider.dart';
 import '../../app/providers/database_provider.dart';
 import '../../app/providers/profile_provider.dart';
@@ -53,6 +54,27 @@ class TodayScreen extends ConsumerWidget {
           ),
           data: (state) {
             final int currentLevel = profileViewAsync.value?.progression.level ?? 1;
+            final activeFilter = ref.watch(todayCadenceFilterProvider);
+
+            // Filter goal sections
+            final filteredGoalSections = state.goalSections.map((section) {
+              if (activeFilter == null) return section;
+              final filteredQuests =
+                  section.quests.where((q) => q.rule.cadence == activeFilter).toList();
+              return GoalSectionViewModel(
+                goal: section.goal,
+                completionRate: section.completionRate,
+                quests: filteredQuests,
+              );
+            }).where((section) => section.quests.isNotEmpty).toList();
+
+            // Filter general quests
+            final filteredGeneralQuests = activeFilter == null
+                ? state.generalQuests
+                : state.generalQuests.where((q) => q.rule.cadence == activeFilter).toList();
+
+            final hasQuestsMatchingFilter =
+                filteredGoalSections.isNotEmpty || filteredGeneralQuests.isNotEmpty;
 
             return CustomScrollView(
               slivers: [
@@ -126,7 +148,16 @@ class TodayScreen extends ConsumerWidget {
                     ),
                   ),
 
-                // Empty State
+                // Cadence Filter Bar
+                if (!state.isEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _CadenceFilterBar(state: state),
+                    ),
+                  ),
+
+                // Empty State (no active quests at all)
                 if (state.isEmpty)
                   SliverFillRemaining(
                     hasScrollBody: false,
@@ -161,8 +192,52 @@ class TodayScreen extends ConsumerWidget {
                     ),
                   ),
 
+                // Empty Filtered State (quests exist, but none match current cadence filter)
+                if (!state.isEmpty && !hasQuestsMatchingFilter)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Symbols.filter_alt_off, size: 36, color: tokens.textSecondary),
+                          const SizedBox(height: 12),
+                          Text(
+                            'NO ${activeFilter!.name.toUpperCase()} QUESTS',
+                            style: tokens.monoText(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 1.0,
+                              color: tokens.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          GestureDetector(
+                            onTap: () => ref.read(todayCadenceFilterProvider.notifier).state = null,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: tokens.tonal,
+                                border: Border.all(color: tokens.lineRule, width: 1),
+                              ),
+                              child: Text(
+                                'SHOW ALL',
+                                style: tokens.monoText(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.8,
+                                  color: tokens.accent,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
                 // Goal Sections
-                for (final section in state.goalSections) ...[
+                for (final section in filteredGoalSections) ...[
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
@@ -229,7 +304,8 @@ class TodayScreen extends ConsumerWidget {
                                 }
                               },
                               onComplete: () => _handleComplete(ref, q, today, weekStart),
-                              onLongPressCheckbox: () => _handleLogWithNote(context, ref, q, today, weekStart),
+                              onLongPressCheckbox: () =>
+                                  _handleLogWithNote(context, ref, q, today, weekStart),
                               onIncrement: () => _handleComplete(ref, q, today, weekStart),
                               onDecrement: () => _handleDecrement(ref, q, today, weekStart),
                             ),
@@ -242,7 +318,7 @@ class TodayScreen extends ConsumerWidget {
                 ],
 
                 // General Quests Section
-                if (state.generalQuests.isNotEmpty) ...[
+                if (filteredGeneralQuests.isNotEmpty) ...[
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
@@ -262,7 +338,7 @@ class TodayScreen extends ConsumerWidget {
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
-                          final q = state.generalQuests[index];
+                          final q = filteredGeneralQuests[index];
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 10),
                             child: QuestRow(
@@ -282,13 +358,14 @@ class TodayScreen extends ConsumerWidget {
                                 }
                               },
                               onComplete: () => _handleComplete(ref, q, today, weekStart),
-                              onLongPressCheckbox: () => _handleLogWithNote(context, ref, q, today, weekStart),
+                              onLongPressCheckbox: () =>
+                                  _handleLogWithNote(context, ref, q, today, weekStart),
                               onIncrement: () => _handleComplete(ref, q, today, weekStart),
                               onDecrement: () => _handleDecrement(ref, q, today, weekStart),
                             ),
                           );
                         },
-                        childCount: state.generalQuests.length,
+                        childCount: filteredGeneralQuests.length,
                       ),
                     ),
                   ),
@@ -475,5 +552,116 @@ class TodayScreen extends ConsumerWidget {
         }
         break;
     }
+  }
+}
+
+class _CadenceFilterBar extends ConsumerWidget {
+  final TodayScreenState state;
+
+  const _CadenceFilterBar({required this.state});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final activeFilter = ref.watch(todayCadenceFilterProvider);
+
+    const cadences = [
+      Cadence.daily,
+      Cadence.weekly,
+      Cadence.monthly,
+      Cadence.yearly,
+      Cadence.single,
+    ];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          _FilterChipItem(
+            label: 'ALL',
+            count: state.allQuests.length,
+            isSelected: activeFilter == null,
+            onTap: () => ref.read(todayCadenceFilterProvider.notifier).state = null,
+          ),
+          for (final c in cadences) ...[
+            const SizedBox(width: 6),
+            _FilterChipItem(
+              label: c.name.toUpperCase(),
+              count: state.allQuests.where((q) => q.rule.cadence == c).length,
+              isSelected: activeFilter == c,
+              onTap: () {
+                final current = ref.read(todayCadenceFilterProvider);
+                ref.read(todayCadenceFilterProvider.notifier).state = current == c ? null : c;
+              },
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterChipItem extends StatelessWidget {
+  final String label;
+  final int count;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _FilterChipItem({
+    required this.label,
+    required this.count,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.tokens;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? tokens.accent : tokens.tonal,
+          border: Border.all(
+            color: isSelected ? tokens.accent : tokens.lineRule,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: tokens.monoText(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                letterSpacing: 0.6,
+                color: isSelected ? tokens.onSolid : tokens.textSecondary,
+              ),
+            ),
+            if (count > 0) ...[
+              const SizedBox(width: 5),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                  color: isSelected ? tokens.onSolid.withOpacity(0.2) : tokens.lineRule.withOpacity(0.4),
+                ),
+                child: Text(
+                  '$count',
+                  style: tokens.monoText(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: isSelected ? tokens.onSolid : tokens.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -12,10 +12,7 @@ import 'theme/tokens.dart';
 class RootScaffold extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
-  const RootScaffold({
-    super.key,
-    required this.navigationShell,
-  });
+  const RootScaffold({super.key, required this.navigationShell});
 
   @override
   Widget build(BuildContext context) {
@@ -67,80 +64,78 @@ class _RootScaffoldView extends ConsumerWidget {
     return Scaffold(
       backgroundColor: tokens.bg,
       body: navigationShell,
-      bottomNavigationBar: Container(
-        height: 64,
-        decoration: BoxDecoration(
-          color: tokens.bg,
-          border: Border(
-            top: BorderSide(color: tokens.lineRule, width: 1),
+      bottomNavigationBar: SafeArea(
+        // The bar rides clear of the system nav inset (gesture pill / 3-button
+        // bar); SafeArea keeps it as-is on legacy nav where the inset is 0.
+        top: false,
+        child: Container(
+          key: const ValueKey('root-bottom-nav'),
+          height: 64,
+          decoration: BoxDecoration(
+            color: tokens.bg,
+            border: Border(top: BorderSide(color: tokens.lineRule, width: 1)),
           ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            // Today Tab
-            _buildNavTab(
-              context,
-              tokens,
-              icon: Symbols.checklist,
-              label: 'TODAY',
-              isSelected: currentIndex == 0,
-              onTap: () => navigationShell.goBranch(0),
-            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              // Today Tab
+              _buildNavTab(
+                context,
+                tokens,
+                icon: Symbols.checklist,
+                label: 'TODAY',
+                isSelected: currentIndex == 0,
+                onTap: () => navigationShell.goBranch(0),
+              ),
 
-            // Rune Add Quest Button: Rectangle inside rectangle with plus sign
-            GestureDetector(
-              onTap: () => QuestEditorSheet.show(context),
-              child: Container(
-                width: 46,
-                height: 46,
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Colors.transparent,
-                  border: Border.all(
-                    color: tokens.textPrimary,
-                    width: 1.5,
-                  ),
-                ),
+              // Rune Add Quest Button: Rectangle inside rectangle with plus sign
+              GestureDetector(
+                onTap: () => QuestEditorSheet.show(context),
                 child: Container(
+                  width: 46,
+                  height: 46,
+                  padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: tokens.tonal,
-                    border: Border.all(
-                      color: tokens.lineRest,
-                      width: 1,
-                    ),
+                    color: Colors.transparent,
+                    border: Border.all(color: tokens.textPrimary, width: 1.5),
                   ),
-                  alignment: Alignment.center,
-                  child: Icon(
-                    Symbols.add,
-                    size: 20,
-                    color: tokens.textPrimary,
-                    weight: 700,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: tokens.tonal,
+                      border: Border.all(color: tokens.lineRest, width: 1),
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Symbols.add,
+                      size: 20,
+                      color: tokens.textPrimary,
+                      weight: 700,
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            // Insights Tab
-            _buildNavTab(
-              context,
-              tokens,
-              icon: Symbols.grid_view,
-              label: 'INSIGHTS',
-              isSelected: currentIndex == 1,
-              onTap: () => navigationShell.goBranch(1),
-            ),
+              // Insights Tab
+              _buildNavTab(
+                context,
+                tokens,
+                icon: Symbols.grid_view,
+                label: 'INSIGHTS',
+                isSelected: currentIndex == 1,
+                onTap: () => navigationShell.goBranch(1),
+              ),
 
-            // Profile Tab
-            _buildNavTab(
-              context,
-              tokens,
-              icon: Symbols.person,
-              label: 'PROFILE',
-              isSelected: currentIndex == 2,
-              onTap: () => navigationShell.goBranch(2),
-            ),
-          ],
+              // Profile Tab
+              _buildNavTab(
+                context,
+                tokens,
+                icon: Symbols.person,
+                label: 'PROFILE',
+                isSelected: currentIndex == 2,
+                onTap: () => navigationShell.goBranch(2),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -164,7 +159,9 @@ class _RootScaffoldView extends ConsumerWidget {
             Icon(
               icon,
               size: 20,
-              color: isSelected ? tokens.textPrimary : tokens.textSecondary.withOpacity(0.5),
+              color: isSelected
+                  ? tokens.textPrimary
+                  : tokens.textSecondary.withOpacity(0.5),
               fill: isSelected ? 1.0 : 0.0,
             ),
             const SizedBox(height: 4),
@@ -174,7 +171,9 @@ class _RootScaffoldView extends ConsumerWidget {
                 fontSize: 10,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 letterSpacing: 0.8,
-                color: isSelected ? tokens.textPrimary : tokens.textSecondary.withOpacity(0.5),
+                color: isSelected
+                    ? tokens.textPrimary
+                    : tokens.textSecondary.withOpacity(0.5),
               ),
             ),
           ],

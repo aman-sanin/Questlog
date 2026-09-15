@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import '../../app/providers/keeper_provider.dart';
 import '../../app/providers/profile_view_provider.dart';
 import '../../domain/model/models.dart';
 import '../ceremonies/ceremonies.dart';
 import '../sheets/badge_sheet.dart';
+import '../sheets/keeper_sheet.dart';
 import '../theme/tokens.dart';
 import '../widgets/action_button.dart';
 import '../widgets/badge_tile.dart';
+import '../widgets/keeper_widget.dart';
 import '../widgets/progress_bar.dart';
-import '../widgets/sigil_widget.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -61,19 +63,28 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // Crest Sigil Hero Container
+                  // The Keeper — a summoned witness, or a 20% silhouette
+                  // awaiting the calling ceremony (§8/§9).
+                  // The Keeper — a summoned witness, or a 20% silhouette
+                  // awaiting the calling ceremony (§8/§9). It owns its own
+                  // boop/stroke/long-press gestures.
                   Container(
-                    width: 80,
-                    height: 80,
+                    width: 110,
+                    height: 110,
                     decoration: BoxDecoration(
                       color: tokens.tonal,
-                      border: Border.all(color: tokens.accent, width: 1.5),
+                      border: Border.all(color: tokens.lineRest, width: 1),
                     ),
                     alignment: Alignment.center,
-                    child: SigilWidget(
-                      domain: chosenDomain ?? CallingDomain.warrior,
-                      size: 40,
-                      color: tokens.accent,
+                    child: KeeperWidget(
+                      mood: ref.watch(keeperUiStateProvider).mood,
+                      anticipation:
+                          ref.watch(keeperUiStateProvider).anticipation,
+                      stage: ref.watch(keeperUiStateProvider).stage,
+                      calling: chosenDomain,
+                      bus: ref.read(keeperEventBusProvider),
+                      size: 100,
+                      onLongPress: () => KeeperSheet.show(context),
                     ),
                   ),
                   const SizedBox(height: 16),

@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kiko — Interactive Digital Companion</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            oled: '#050507',
+            matrix: '#0a0a0f',
+            glow: '#ffffff',
+            cyanGlow: '#38bdf8',
+          },
+          keyframes: {
+            breathe: {
+              '0%, 100%': { transform: 'scale(1) translateY(0px)' },
+              '50%': { transform: 'scale(1.025, 0.985) translateY(2.5px)' },
+            },
+            blinkQuick: {
+              '0%, 88%, 100%': { transform: 'scaleY(1)' },
+              '94%': { transform: 'scaleY(0.08)' },
+            },
+            glitch: {
+              '0%, 100%': { transform: 'none', opacity: '1' },
+              '92%': { transform: 'none', opacity: '1' },
+              '93%': { transform: 'skewX(8deg)', opacity: '0.9' },
+              '94%': { transform: 'skewX(-6deg)', opacity: '0.85' },
+              '95%': { transform: 'none', opacity: '1' },
+            },
+            floatSlow: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-6px)' }
+            },
+            subtleScan: {
+              '0%': { transform: 'translateY(-100%)' },
+              '100%': { transform: 'translateY(1000%)' },
+            },
+            floatZzz: {
+              '0%': { transform: 'translate(0, 0) scale(0.6)', opacity: '0' },
+              '30%': { opacity: '0.9' },
+              '80%': { opacity: '0.8' },
+              '100%': { transform: 'translate(18px, -42px) scale(1.1)', opacity: '0' }
+            },
+            heartPop: {
+              '0%': { transform: 'translate(0, 0) scale(0.4)', opacity: '0' },
+              '40%': { opacity: '0.95', transform: 'translate(8px, -20px) scale(1.1)' },
+              '100%': { transform: 'translate(16px, -45px) scale(1.2)', opacity: '0' }
+            },
+            shiver: {
+              '0%, 100%': { transform: 'translate(0, 0)' },
+              '20%': { transform: 'translate(-1.5px, 1.5px)' },
+              '40%': { transform: 'translate(1.5px, -1.5px)' },
+              '60%': { transform: 'translate(-1.5px, -1.5px)' },
+              '80%': { transform: 'translate(1.5px, 1.5px)' }
+            }
+          },
+          animation: {
+            breathe: 'breathe 4s ease-in-out infinite',
+            blinkQuick: 'blinkQuick 4.2s ease-in-out infinite',
+            floatSlow: 'floatSlow 6s ease-in-out infinite',
+            subtleScan: 'subtleScan 8s linear infinite',
+            shiver: 'shiver 0.12s linear infinite',
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    /* CRT Scanline and OLED Pixel grid simulation */
+    .oled-screen {
+      background: radial-gradient(circle at 50% 45%, #0e1019 0%, #030306 88%);
+      box-shadow: inset 0 0 65px rgba(0,0,0,0.95), 0 0 40px rgba(255,255,255,0.03);
+    }
+    
+    .pixel-grid {
+      background-size: 4px 4px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.032) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.032) 1px, transparent 1px);
+    }
+
+    .crt-bloom {
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.85)) drop-shadow(0 0 28px rgba(255, 255, 255, 0.4));
+    }
+
+    .crt-bloom-pink {
+      filter: drop-shadow(0 0 10px rgba(251, 113, 133, 0.9)) drop-shadow(0 0 28px rgba(244, 63, 94, 0.45));
+    }
+
+    .face-element {
+      transition: transform 0.12s cubic-bezier(0.2, 0.8, 0.4, 1), opacity 0.2s ease;
+    }
+    
+    .touch-ripple {
+      animation: ripple 0.65s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+    }
+    @keyframes ripple {
+      0% { transform: scale(0.15); opacity: 0.85; }
+      100% { transform: scale(3.8); opacity: 0; }
+    }
+
+    .particle-zzz {
+      animation: floatZzz 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+    .particle-heart {
+      animation: heartPop 2.2s ease-out infinite;
+    }
+
+    /* Range slider custom styling */
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 16px;
+      width: 16px;
+      border-radius: 9999px;
+      background: #ffffff;
+      cursor: pointer;
+      box-shadow: 0 0 12px rgba(255,255,255,0.85);
+      border: 2px solid #171717;
+    }
+
+    /* Scrollbar hide for emotion rail if needed on mobile */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="h-full bg-neutral-950 text-neutral-100 font-sans antialiased select-none overflow-x-hidden flex flex-col justify-between">
+<!-- Top App Navigation / Status Bar -->
+<header class="w-full px-5 pt-3.5 pb-2.5 flex items-center justify-between z-30 border-b border-neutral-900/80 bg-neutral-950/70 backdrop-blur-md">
+<div class="flex items-center space-x-2.5">
+<div class="relative flex h-2.5 w-2.5">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+</div>
+<div>
+<span class="font-bold text-sm tracking-tight text-white flex items-center gap-1.5">
+          KIKO
+          <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-neutral-900 border border-neutral-800 text-neutral-400 font-mono">v2.5 EXPRESSIVE</span>
+</span>
+</div>
+</div>
+<!-- Live Status Badges -->
+<div class="flex items-center gap-2.5 font-mono text-xs text-neutral-400">
+<div class="hidden sm:flex items-center gap-1.5 bg-neutral-900/90 px-2 py-0.5 rounded-full border border-neutral-800/80 text-[10px] text-cyan-400" id="touchStateBadge">
+<span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+<span id="gazeModeLabel">GAZE TRACK: ACTIVE</span>
+</div>
+<div class="flex items-center gap-1.5 bg-neutral-900/90 px-2.5 py-1 rounded-full border border-neutral-800/80 text-[11px]">
+<svg class="w-3.5 h-3.5 text-neutral-300" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span id="syncStatus">CONNECTED</span>
+</div>
+<div class="flex items-center gap-1 bg-neutral-900/90 px-2 py-1 rounded-full border border-neutral-800/80 text-emerald-400 font-medium text-[11px]">
+<span>98%</span>
+</div>
+</div>
+</header>
+<!-- Main Device Canvas Viewport -->
+<main class="relative flex-1 flex flex-col items-center justify-center p-3 sm:p-4" id="viewportContainer">
+<!-- Ambient back-glow reacting to current emotion -->
+<div class="absolute w-80 h-80 rounded-full bg-white/[0.04] blur-3xl pointer-events-none transition-all duration-700" id="ambientGlow"></div>
+<!-- Speech / Thought Bubble (Autonomous personality pop-ups) -->
+<div class="relative mb-2 px-3.5 py-1.5 rounded-full bg-neutral-900/90 border border-neutral-700/60 shadow-lg text-xs font-mono text-neutral-200 flex items-center gap-2 opacity-0 transform translate-y-1 transition-all duration-300 z-30 pointer-events-none" id="thoughtBubble">
+<span class="text-neutral-400 text-[11px] font-sans italic" id="thoughtPrefix">💭 Kiko thinks:</span>
+<span class="font-medium text-white" id="thoughtText">"Looking right at ya!"</span>
+<span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
+</div>
+<!-- Hardware Chassis / OLED Bezel Frame -->
+<div class="w-full max-w-[390px] rounded-[38px] p-3.5 bg-gradient-to-b from-neutral-800/95 via-neutral-900 to-black shadow-2xl border border-neutral-800/90 relative transition-transform duration-200" id="deviceFrame">
+<!-- Top Bezel Accents: Screws & Camera/Sensor Pinhole -->
+<div class="absolute top-2.5 left-7 w-1.5 h-1.5 rounded-full bg-neutral-700/70 shadow-inner"></div>
+<div class="absolute top-2.5 right-7 w-1.5 h-1.5 rounded-full bg-neutral-700/70 shadow-inner"></div>
+<div class="absolute top-2.5 left-1/2 -translate-x-1/2 flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-cyan-900 border border-cyan-700/50 shadow-sm" title="Optical sensor"></div>
+<div class="w-7 h-1 rounded-full bg-neutral-800"></div>
+</div>
+<!-- OLED Display Screen -->
+<div class="oled-screen relative w-full h-[310px] rounded-[28px] overflow-hidden flex flex-col items-center justify-center cursor-crosshair border border-neutral-900 group touch-none select-none" id="screenPad">
+<!-- CRT scanline & subtle pixel raster -->
+<div class="pixel-grid absolute inset-0 pointer-events-none opacity-35"></div>
+<div class="absolute inset-0 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent h-24 w-full animate-subtleScan pointer-events-none"></div>
+<!-- Glass reflection diagonal gleam -->
+<div class="absolute -inset-x-20 -top-20 h-40 bg-gradient-to-b from-white/[0.04] to-transparent transform -rotate-12 pointer-events-none"></div>
+<!-- Touch cursor follower / target indicator -->
+<div class="absolute w-7 h-7 rounded-full border border-cyan-400/40 bg-cyan-400/10 pointer-events-none transform -translate-x-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-200 z-20 flex items-center justify-center" id="touchTarget">
+<div class="w-1.5 h-1.5 rounded-full bg-cyan-300"></div>
+</div>
+<!-- Touch ripples container -->
+<div class="absolute inset-0 pointer-events-none overflow-hidden z-20" id="rippleContainer"></div>
+<!-- Floating Particles Layer (Hearts for In Love, Zzz for Sleepy) -->
+<div class="absolute inset-0 pointer-events-none overflow-hidden z-15" id="particleLayer"></div>
+<!-- Cheek Glow Elements for blush / love expressions -->
+<div class="absolute w-6 h-3 rounded-full bg-rose-500/0 blur-sm pointer-events-none transition-all duration-500 z-10" id="leftCheek" style="top: 58%; left: 24%;"></div>
+<div class="absolute w-6 h-3 rounded-full bg-rose-500/0 blur-sm pointer-events-none transition-all duration-500 z-10" id="rightCheek" style="top: 58%; right: 24%;"></div>
+<!-- Gesture Hint Overlay (Fades after first touches) -->
+<div class="absolute top-3 inset-x-0 mx-auto w-max px-3 py-1 rounded-full bg-neutral-950/85 border border-neutral-800/80 text-[10px] text-neutral-300 font-mono flex items-center gap-1.5 backdrop-blur-sm z-25 transition-opacity duration-500 shadow-lg" id="gestureNotice">
+<svg class="w-3 h-3 text-cyan-400 animate-pulse" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+          Move cursor or touch screen to lead Kiko's gaze
+        </div>
+<!-- PET FACE CONTAINER (Anchors eye gaze and breathing movement) -->
+<div class="relative z-10 flex flex-col items-center justify-center crt-bloom animate-breathe w-full h-full transform transition-transform duration-75" id="petFaceRoot">
+<!-- Eyes Row with Gaze Tracking Sub-container -->
+<div class="flex items-center justify-center gap-16 mb-4 animate-blinkQuick transition-all duration-300" id="eyesRow">
+<!-- Left Eye Container -->
+<div class="face-element relative flex items-center justify-center origin-center" id="leftEyeWrapper">
+<svg class="w-16 h-16 transition-all duration-200 overflow-visible" fill="white" id="svgLeftEye" viewbox="0 0 64 64">
+<!-- Default Happy Capsule -->
+<rect fill="#ffffff" height="44" rx="14" width="28" x="18" y="10"></rect>
+</svg>
+</div>
+<!-- Right Eye Container -->
+<div class="face-element relative flex items-center justify-center origin-center" id="rightEyeWrapper">
+<svg class="w-16 h-16 transition-all duration-200 overflow-visible" fill="white" id="svgRightEye" viewbox="0 0 64 64">
+<rect fill="#ffffff" height="44" rx="14" width="28" x="18" y="10"></rect>
+</svg>
+</div>
+</div>
+<!-- Mouth Container -->
+<div class="face-element relative flex items-center justify-center origin-center" id="mouthWrapper">
+<svg class="w-16 h-10 transition-all duration-200 overflow-visible" fill="white" id="svgMouth" viewbox="0 0 64 40">
+<!-- Default Open Smile -->
+<path d="M22 14 C22 14, 24 28, 32 28 C40 28, 42 14, 42 14 Z" fill="#ffffff"></path>
+</svg>
+</div>
+<!-- Emotion reaction pop-up symbol -->
+<div class="absolute -top-1.5 right-12 opacity-0 transform scale-50 transition-all duration-300 pointer-events-none text-rose-400" id="reactionBadge">
+<svg class="w-7 h-7 drop-shadow-[0_0_10px_rgba(244,63,94,0.85)]" fill="currentColor" viewbox="0 0 24 24">
+<path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+</svg>
+</div>
+</div>
+<!-- Bottom OLED Status Info & Dynamic Audio Wave -->
+<div class="absolute bottom-3 inset-x-5 flex items-center justify-between text-[10px] font-mono text-neutral-500 pointer-events-none">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" id="moodDot"></span>
+<span class="tracking-wide" id="moodLabel">HAPPY // CURIOUS</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="w-1 h-2 bg-neutral-600 transition-all duration-150" id="wave1"></span>
+<span class="w-1 h-3.5 bg-neutral-600 transition-all duration-150" id="wave2"></span>
+<span class="w-1 h-2 bg-neutral-600 transition-all duration-150" id="wave3"></span>
+</div>
+</div>
+</div>
+<!-- Speaker grille holes -->
+<div class="flex justify-center gap-1.5 mt-3 mb-1">
+<div class="w-1 h-1 rounded-full bg-neutral-700"></div>
+<div class="w-1 h-1 rounded-full bg-neutral-700"></div>
+<div class="w-1 h-1 rounded-full bg-neutral-700"></div>
+<div class="w-1 h-1 rounded-full bg-neutral-700"></div>
+<div class="w-1 h-1 rounded-full bg-neutral-700"></div>
+</div>
+</div>
+<!-- Emotion Selector Section with Expanded Palette -->
+<div class="w-full max-w-[390px] mt-4">
+<div class="flex items-center justify-between mb-2 px-1">
+<div class="flex items-center gap-1.5">
+<span class="text-xs font-semibold tracking-wider text-neutral-300 uppercase font-mono">Expressions</span>
+<span class="text-[10px] px-1.5 py-0.5 rounded bg-neutral-900 border border-neutral-800 text-neutral-400 font-mono">9 Modes</span>
+</div>
+<span class="text-[11px] text-neutral-500 font-mono" id="interactionCounter">0 INTERACTIONS</span>
+</div>
+<!-- 9-Grid of Expressive States -->
+<div class="grid grid-cols-3 gap-2">
+<!-- Preset 1: Happy -->
+<button class="emotion-btn flex flex-col items-center justify-center p-2 rounded-2xl bg-neutral-900 border border-neutral-500 hover:bg-neutral-850 active:scale-95 transition-all text-center group" id="btn-happy" onclick="setEmotion('happy')">
+<div class="w-6 h-4 flex items-center justify-center gap-1 mb-1">
+<div class="w-1.5 h-3 bg-white rounded-full"></div>
+<div class="w-1 h-1.5 bg-white rounded-b-sm"></div>
+<div class="w-1.5 h-3 bg-white rounded-full"></div>
+</div>
+<span class="text-[11px] font-semibold text-white">Happy</span>
+<span class="text-[9px] text-neutral-400 font-mono">Curious</span>
+</button>
+<!-- Preset 2: Lovey-Dovey -->
+<button class="emotion-btn flex flex-col items-center justify-center p-2 rounded-2xl bg-neutral-900/60 border border-neutral-800/80 hover:border-neutral-600 hover:bg-neutral-850 active:scale-95 transition-all text-center group" id="btn-love" onclick="setEmotion('love')">
+<div class="w-6 h-4 flex items-center justify-center gap-1 text-rose-400 text-xs mb-1">
+<span>♥</span>
+<span class="text-[9px] text-white">◡</span>
+<span>♥</span>
+</div>
+<span class="text-[11px] font-semibold text-neutral-400 group-hover:text-white">In Love</span>
+<span class="text-[9px] text-neutral-500 font-mono">Hearts &amp; Blush</span>
+</button>
+<!-- Preset 3: Cheeky / Winking -->
+<button class="emotion-btn flex flex-col items-center justify-center p-2 rounded-2xl bg-neutral-900/60 border border-neutral-800/80 hover:border-neutral-600 hover:bg-neutral-850 active:scale-95 transition-all text-center group" id="btn-cheeky" onclick="setEmotion('cheeky')">
+<div class="w-6 h-4 flex items-center justify-center gap-1 mb-1 text-white">
+<span class="text-[10px] font-bold">^</span>
+<div class="w-1.5 h-2.5 bg-white rounded-full"></div>
+<span class="text-[10px] text-rose-300 font-mono">:P</span>
+</div>
+<span class="text-[11px] font-semibold text-neutral-400 group-hover:text-white">Cheeky</span>
+<span class="text-[9px] text-neutral-500 font-mono">Wink &amp; Smirk</span>
+</button>
+<!-- Preset 4: Ecstatic -->
+<button class="emotion-btn flex flex-col items-center justify-center p-2 rounded-2xl bg-neutral-900/60 border border-neutral-800/80 hover:border-neutral-600 hover:bg-neutral-850 active:scale-95 transition-all text-center group" id="btn-ecstatic" onclick="setEmotion('ecstatic')">
+<div class="w-6 h-4 flex flex-col items-center justify-center mb-1 text-white">
+<div class="flex justify-between w-full px-1 text-[10px] font-bold leading-none">
+<span>⌒</span>
+<span>⌒</span>
+</div>
+<div class="w-2 h-1 bg-white rounded-b-full mt-0.5"></div>
+</div>
+<span class="text-[11px] font-semibold text-neutral-400 group-hover:text-white">Ecstatic</span>
+<span class="text-[9px] text-neutral-500 font-mono">Joy Purr</span>
+</button>
+<!-- Preset 5: Suspicious / Skeptical -->
+<button class="emotion-btn flex flex-col items-center justify-center p-2 rounded-2xl bg-neutral-900/60 border border-neutral-800/80 hover:border-neutral-600 hover:bg-neutral-850 active:scale-95 transition-all text-center group" id="btn-suspicious" onclick="setEmotion('suspicious')">
+<div class="w-6 h-4 flex flex-col items-center justify-center mb-1 text-white">
+<div class="flex justify-between w-full px-1 text-[9px] font-mono leading-none">
+<span class="transform -translate-y-0.5">¬</span>
+<span>_</span>
+</div>
+<span class="text-[8px] leading-none">~</span>
+</div>
+<span class="text-[11px] font-semibold text-neutral-400 group-hover:text-white">Skeptical</span>
+<span class="text-[9px] text-neutral-500 font-mono">Squint</span>
+</button>
+<!-- Preset 6: Shocked -->
+<button class="emotion-btn flex flex-col items-center justify-center p-2 rounded-2xl bg-neutral-900/60 border border-neutral-800/80 hover:border-neutral-600 hover:bg-neutral-850 active:scale-95 transition-all text-center group" id="btn-shocked" onclick="setEmotion('shocked')">
+<div class="w-6 h-4 flex items-center justify-center gap-1 mb-1 text-white">
+<div class="w-2.5 h-2.5 rounded-full border-2 border-white"></div>
+<div class="w-1.5 h-1.5 rounded-full bg-white"></div>
+<div class="w-2.5 h-2.5 rounded-full border-2 border-white"></div>
+</div>
+<span class="text-[11px] font-semibold text-neutral-400 group-hover:text-white">Shocked</span>
+<span class="text-[9px] text-neutral-500 font-mono">Wide Dilated</span>
+</button>
+<!-- Preset 7: Sad -->
+<button class="emotion-btn flex flex-col items-center justify-center p-2 rounded-2xl bg-neutral-900/60 border border-neutral-800/80 hover:border-neutral-600 hover:bg-neutral-850 active:scale-95 transition-all text-center group" id="btn-sad" onclick="setEmotion('sad')">
+<div class="w-6 h-4 flex flex-col items-center justify-center mb-1 text-white">
+<div class="flex justify-between w-full px-1 text-[9px] leading-none">
+<span>◥</span>
+<span>◤</span>
+</div>
+<span class="text-[8px] leading-none mt-0.5">⌒</span>
+</div>
+<span class="text-[11px] font-semibold text-neutral-400 group-hover:text-white">Sad</span>
+<span class="text-[9px] text-neutral-500 font-mono">Downcast</span>
+</button>
+<!-- Preset 8: Grumpy -->
+<button class="emotion-btn flex flex-col items-center justify-center p-2 rounded-2xl bg-neutral-900/60 border border-neutral-800/80 hover:border-neutral-600 hover:bg-neutral-850 active:scale-95 transition-all text-center group" id="btn-grumpy" onclick="setEmotion('grumpy')">
+<div class="w-6 h-4 flex flex-col items-center justify-center mb-1 text-white">
+<div class="flex justify-between w-full px-1 text-[8px] font-bold leading-none">
+<span>◓</span>
+<span>◓</span>
+</div>
+<span class="text-[9px] font-bold leading-none">^</span>
+</div>
+<span class="text-[11px] font-semibold text-neutral-400 group-hover:text-white">Grumpy</span>
+<span class="text-[9px] text-neutral-500 font-mono">Pouty</span>
+</button>
+<!-- Preset 9: Sleepy / Drowsy -->
+<button class="emotion-btn flex flex-col items-center justify-center p-2 rounded-2xl bg-neutral-900/60 border border-neutral-800/80 hover:border-neutral-600 hover:bg-neutral-850 active:scale-95 transition-all text-center group" id="btn-sleepy" onclick="setEmotion('sleepy')">
+<div class="w-6 h-4 flex items-center justify-center gap-1 mb-1 text-white">
+<span class="text-[9px] font-bold">--</span>
+<span class="text-[9px] text-cyan-300 font-mono italic">z</span>
+<span class="text-[9px] font-bold">--</span>
+</div>
+<span class="text-[11px] font-semibold text-neutral-400 group-hover:text-white">Sleepy</span>
+<span class="text-[9px] text-neutral-500 font-mono">Drowsy Zzz</span>
+</button>
+</div>
+</div>
+<!-- Real-Time Gesture Simulator Card -->
+<div class="w-full max-w-[390px] mt-3 bg-neutral-900/60 border border-neutral-800/80 rounded-2xl p-3">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-semibold text-neutral-300 flex items-center gap-1.5">
+<svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+          Tactile Gestures
+        </span>
+<span class="text-[10px] font-mono text-neutral-500">PHYSICS ACTIVE</span>
+</div>
+<div class="grid grid-cols-3 gap-2">
+<button class="py-2 px-2 rounded-xl bg-neutral-800/70 hover:bg-neutral-800 active:scale-95 border border-neutral-700/50 flex flex-col items-center text-center transition group" onclick="triggerGesture('pet')">
+<span class="text-xs font-medium text-neutral-200 group-hover:text-white">👋 Pet Head</span>
+<span class="text-[9px] text-neutral-400 mt-0.5">Loving Purr</span>
+</button>
+<button class="py-2 px-2 rounded-xl bg-neutral-800/70 hover:bg-neutral-800 active:scale-95 border border-neutral-700/50 flex flex-col items-center text-center transition group" onclick="triggerGesture('poke')">
+<span class="text-xs font-medium text-neutral-200 group-hover:text-white">👉 Boop Nose</span>
+<span class="text-[9px] text-neutral-400 mt-0.5">Blink &amp; Recoil</span>
+</button>
+<button class="py-2 px-2 rounded-xl bg-neutral-800/70 hover:bg-neutral-800 active:scale-95 border border-neutral-700/50 flex flex-col items-center text-center transition group" onclick="triggerGesture('shake')">
+<span class="text-xs font-medium text-neutral-200 group-hover:text-white">🌀 Tickle</span>
+<span class="text-[9px] text-neutral-400 mt-0.5">Wiggle Giggle</span>
+</button>
+</div>
+<!-- Energy / Pupil Scale Slider -->
+<div class="mt-2.5 pt-2 border-t border-neutral-800/70 flex items-center justify-between text-xs text-neutral-400">
+<span class="font-mono text-[10px] flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+          PUPIL FOCUS: <span class="text-neutral-200 font-bold" id="focusVal">100%</span>
+</span>
+<input class="w-28 h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-white" id="pupilSlider" max="135" min="65" oninput="adjustPupilScale(this.value)" type="range" value="100"/>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation / Modes Footer -->
+<footer class="w-full px-6 py-2.5 border-t border-neutral-900 bg-neutral-950/80 backdrop-blur-md flex items-center justify-around text-xs text-neutral-400 z-20">
+<button class="flex flex-col items-center gap-1 text-white font-medium hover:text-cyan-400 transition" onclick="sayRandomThought()">
+<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span>Talk to Kiko</span>
+</button>
+<button class="flex flex-col items-center gap-1 hover:text-neutral-200 transition" onclick="toggleAudio()">
+<svg class="w-5 h-5 text-neutral-300" fill="none" id="audioIcon" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span id="audioLabel">Chirps ON</span>
+</button>
+<button class="flex flex-col items-center gap-1 hover:text-neutral-200 transition" onclick="toggleSleep()">
+<svg class="w-5 h-5" fill="none" id="sleepNavIcon" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span id="sleepNavLabel">Sleep</span>
+</button>
+</footer>
+<script>
+    // State
+    let currentEmotion = 'happy';
+    let interactionCount = 0;
+    let isSleeping = false;
+    let audioEnabled = true;
+    let idleTimer = null;
+    let pupilScale = 1;
+    let particleInterval = null;
+
+    // Gaze tracking physics state
+    let targetGazeX = 0;
+    let targetGazeY = 0;
+    let currentGazeX = 0;
+    let currentGazeY = 0;
+    let isDragging = false;
+    let lastThoughtTime = 0;
+
+    // DOM References
+    const petFaceRoot = document.getElementById('petFaceRoot');
+    const svgLeftEye = document.getElementById('svgLeftEye');
+    const svgRightEye = document.getElementById('svgRightEye');
+    const leftEyeWrapper = document.getElementById('leftEyeWrapper');
+    const rightEyeWrapper = document.getElementById('rightEyeWrapper');
+    const svgMouth = document.getElementById('svgMouth');
+    const mouthWrapper = document.getElementById('mouthWrapper');
+    const eyesRow = document.getElementById('eyesRow');
+    const moodLabel = document.getElementById('moodLabel');
+    const moodDot = document.getElementById('moodDot');
+    const screenPad = document.getElementById('screenPad');
+    const rippleContainer = document.getElementById('rippleContainer');
+    const particleLayer = document.getElementById('particleLayer');
+    const leftCheek = document.getElementById('leftCheek');
+    const rightCheek = document.getElementById('rightCheek');
+    const interactionCounter = document.getElementById('interactionCounter');
+    const gestureNotice = document.getElementById('gestureNotice');
+    const reactionBadge = document.getElementById('reactionBadge');
+    const ambientGlow = document.getElementById('ambientGlow');
+    const thoughtBubble = document.getElementById('thoughtBubble');
+    const thoughtText = document.getElementById('thoughtText');
+    const touchTarget = document.getElementById('touchTarget');
+
+    // High quality emotion SVGs and definitions
+    const EMOTIONS = {
+      happy: {
+        label: 'HAPPY // CURIOUS',
+        quote: '"I see you! Let\'s hang out!"',
+        glowColor: 'rgba(255, 255, 255, 0.05)',
+        dotColor: 'bg-emerald-400',
+        cheeks: false,
+        particles: null,
+        breatheSpeed: '4s',
+        leftEyeSvg: '<rect x="18" y="10" width="28" height="44" rx="14" fill="#ffffff" />',
+        rightEyeSvg: '<rect x="18" y="10" width="28" height="44" rx="14" fill="#ffffff" />',
+        mouthSvg: '<path d="M22 14 C22 14, 24 28, 32 28 C40 28, 42 14, 42 14 Z" fill="#ffffff" />',
+        eyesGap: 'gap-16'
+      },
+      love: {
+        label: 'LOVEY-DOVEY // SMITTEN',
+        quote: '"You make my circuits flutter! ♥"',
+        glowColor: 'rgba(244, 63, 94, 0.15)',
+        dotColor: 'bg-rose-400',
+        cheeks: true,
+        particles: 'hearts',
+        breatheSpeed: '3.2s',
+        leftEyeSvg: '<path d="M32 46 C32 46 16 34 16 22 C16 16 21 12 26 12 C29 12 31 14 32 16 C33 14 35 12 38 12 C43 12 48 16 48 22 C48 34 32 46 32 46 Z" fill="#fb7185" />',
+        rightEyeSvg: '<path d="M32 46 C32 46 16 34 16 22 C16 16 21 12 26 12 C29 12 31 14 32 16 C33 14 35 12 38 12 C43 12 48 16 48 22 C48 34 32 46 32 46 Z" fill="#fb7185" />',
+        mouthSvg: '<path d="M22 18 C26 27 38 27 42 18" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" />',
+        eyesGap: 'gap-16'
+      },
+      cheeky: {
+        label: 'CHEEKY // PLAYFUL',
+        quote: '"Bleh! You can\'t catch me! :P"',
+        glowColor: 'rgba(251, 191, 36, 0.08)',
+        dotColor: 'bg-amber-400',
+        cheeks: true,
+        particles: null,
+        breatheSpeed: '2.8s',
+        // Left eye closed wink crescent, right eye wide open capsule
+        leftEyeSvg: '<path d="M16 32 Q32 20 48 32" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" />',
+        rightEyeSvg: '<rect x="18" y="10" width="28" height="44" rx="14" fill="#ffffff" />',
+        // Playful smirk mouth with little pink tongue sticking out
+        mouthSvg: '<g><path d="M20 18 Q32 24 44 16" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" /><path d="M28 20 C28 20 28 32 34 32 C40 32 40 20 40 20 Z" fill="#fb7185" /></g>',
+        eyesGap: 'gap-16'
+      },
+      ecstatic: {
+        label: 'ECSTATIC // PUMPED',
+        quote: '"WOOHOO! Best day EVER!"',
+        glowColor: 'rgba(250, 204, 21, 0.1)',
+        dotColor: 'bg-yellow-400',
+        cheeks: true,
+        particles: null,
+        breatheSpeed: '2s',
+        leftEyeSvg: '<g><path d="M12 30 C18 16, 44 16, 52 30 C44 22, 20 22, 12 30 Z" fill="#ffffff" /><ellipse cx="16" cy="37" rx="8" ry="3.5" fill="rgba(255,255,255,0.4)" /></g>',
+        rightEyeSvg: '<g><path d="M12 30 C20 16, 46 16, 52 30 C44 22, 20 22, 12 30 Z" fill="#ffffff" /><ellipse cx="48" cy="37" rx="8" ry="3.5" fill="rgba(255,255,255,0.4)" /></g>',
+        mouthSvg: '<path d="M18 10 C18 10, 14 34, 32 34 C50 34, 46 10, 46 10 Z" fill="#ffffff" />',
+        eyesGap: 'gap-16'
+      },
+      suspicious: {
+        label: 'SKEPTICAL // SUSPICIOUS',
+        quote: '"Hmm... what are you planning over there?"',
+        glowColor: 'rgba(168, 85, 247, 0.08)',
+        dotColor: 'bg-purple-400',
+        cheeks: false,
+        particles: null,
+        breatheSpeed: '3.6s',
+        // Slanted squint slits (one raised higher)
+        leftEyeSvg: '<rect x="12" y="24" width="40" height="12" rx="6" fill="#ffffff" transform="rotate(-6 32 30)" />',
+        rightEyeSvg: '<rect x="12" y="30" width="40" height="12" rx="6" fill="#ffffff" transform="rotate(4 32 36)" />',
+        // Flat squiggly dubious mouth
+        mouthSvg: '<path d="M22 24 Q28 20 33 25 Q38 30 44 22" fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" />',
+        eyesGap: 'gap-14'
+      },
+      shocked: {
+        label: 'SHOCKED // GASP',
+        quote: '"NO WAY! Did that really just happen?!"',
+        glowColor: 'rgba(56, 189, 248, 0.12)',
+        dotColor: 'bg-cyan-400',
+        cheeks: false,
+        particles: null,
+        breatheSpeed: '1.2s',
+        // Large dilated circles with small inner pupils
+        leftEyeSvg: '<g><circle cx="32" cy="32" r="24" fill="none" stroke="#ffffff" stroke-width="5" /><circle cx="32" cy="32" r="10" fill="#ffffff" /></g>',
+        rightEyeSvg: '<g><circle cx="32" cy="32" r="24" fill="none" stroke="#ffffff" stroke-width="5" /><circle cx="32" cy="32" r="10" fill="#ffffff" /></g>',
+        // Big round "O" mouth
+        mouthSvg: '<circle cx="32" cy="22" r="12" fill="none" stroke="#ffffff" stroke-width="4" />',
+        eyesGap: 'gap-14'
+      },
+      sad: {
+        label: 'SAD // LONELY',
+        quote: '"Could really use a gentle head pet right now..."',
+        glowColor: 'rgba(96, 165, 250, 0.08)',
+        dotColor: 'bg-blue-400',
+        cheeks: false,
+        particles: null,
+        breatheSpeed: '5.5s',
+        leftEyeSvg: '<polygon points="8,34 46,18 46,46" fill="#ffffff" />',
+        rightEyeSvg: '<polygon points="56,34 18,18 18,46" fill="#ffffff" />',
+        mouthSvg: '<path d="M20 26 Q32 14 44 26 Q32 20 20 26 Z" fill="#ffffff" />',
+        eyesGap: 'gap-20'
+      },
+      grumpy: {
+        label: 'GRUMPY // POUTY',
+        quote: '"Hmph. Do not disturb my zone."',
+        glowColor: 'rgba(239, 68, 68, 0.09)',
+        dotColor: 'bg-rose-500',
+        cheeks: false,
+        particles: null,
+        breatheSpeed: '2.4s',
+        leftEyeSvg: '<path d="M12 40 C12 24, 26 12, 44 22 L48 38 C42 50, 16 52, 12 40 Z" fill="#ffffff" />',
+        rightEyeSvg: '<path d="M52 40 C52 24, 38 12, 20 22 L16 38 C22 50, 48 52, 52 40 Z" fill="#ffffff" />',
+        mouthSvg: '<path d="M22 28 L32 16 L42 28 L39 30 L32 21 L25 30 Z" fill="#ffffff" />',
+        eyesGap: 'gap-14'
+      },
+      sleepy: {
+        label: 'SLEEPY // DROWSY',
+        quote: '"Zzz... 5 more minutes please..."',
+        glowColor: 'rgba(148, 163, 184, 0.06)',
+        dotColor: 'bg-slate-400',
+        cheeks: false,
+        particles: 'zzz',
+        breatheSpeed: '5s',
+        // Droopy half-lidded eyes
+        leftEyeSvg: '<g><path d="M14 32 Q32 18 50 32" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" /><path d="M16 32 C16 38 48 38 48 32 Z" fill="rgba(255,255,255,0.4)" /></g>',
+        rightEyeSvg: '<g><path d="M14 32 Q32 18 50 32" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" /><path d="M16 32 C16 38 48 38 48 32 Z" fill="rgba(255,255,255,0.4)" /></g>',
+        mouthSvg: '<ellipse cx="32" cy="22" rx="4.5" ry="3.5" fill="#ffffff" />',
+        eyesGap: 'gap-16'
+      },
+      surprised: {
+        label: 'ALERT // SURPRISED',
+        quote: '"Whoa!!"',
+        glowColor: 'rgba(255, 255, 255, 0.1)',
+        dotColor: 'bg-white',
+        cheeks: false,
+        particles: null,
+        breatheSpeed: '1.2s',
+        leftEyeSvg: '<circle cx="32" cy="32" r="18" fill="#ffffff" />',
+        rightEyeSvg: '<circle cx="32" cy="32" r="18" fill="#ffffff" />',
+        mouthSvg: '<circle cx="32" cy="24" r="7" fill="#ffffff" />',
+        eyesGap: 'gap-16'
+      }
+    };
+
+    // Autonomous random thoughts dictionary
+    const RANDOM_THOUGHTS = [
+      "Did you bring microchip snacks?",
+      "Following your every move...",
+      "Purr... warmth detected.",
+      "Calculating cuteness coefficients: 99.8%",
+      "*Sniffs finger curiously*",
+      "Tap my nose! Go on, boop it!",
+      "I love exploring this OLED matrix with you!",
+      "Breathe in... breathe out..."
+    ];
+
+    // Web Audio Synthesizer
+    const audioCtx = (window.AudioContext || window.webkitAudioContext) ? new (window.AudioContext || window.webkitAudioContext)() : null;
+
+    function playTone(freq, duration = 0.08, type = 'square', gainLevel = 0.04) {
+      if (!audioEnabled || !audioCtx) return;
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(gainLevel, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    function soundHappy() {
+      playTone(523.25, 0.08, 'sine');
+      setTimeout(() => playTone(659.25, 0.09, 'sine'), 70);
+      setTimeout(() => playTone(783.99, 0.12, 'sine'), 140);
+    }
+    function soundLove() {
+      playTone(440, 0.1, 'sine');
+      setTimeout(() => playTone(554.37, 0.1, 'sine'), 80);
+      setTimeout(() => playTone(659.25, 0.18, 'triangle'), 160);
+    }
+    function soundCheeky() {
+      playTone(700, 0.06, 'square', 0.025);
+      setTimeout(() => playTone(950, 0.09, 'sine'), 60);
+      setTimeout(() => playTone(600, 0.11, 'sawtooth', 0.02), 120);
+    }
+    function soundShocked() {
+      playTone(880, 0.05, 'triangle');
+      setTimeout(() => playTone(440, 0.15, 'sawtooth', 0.04), 50);
+    }
+    function soundPurr() {
+      for(let i=0; i<4; i++) {
+        setTimeout(() => playTone(480 + (i*35), 0.05, 'sine', 0.035), i*65);
+      }
+    }
+    function soundPoke() {
+      playTone(392, 0.06, 'triangle');
+      setTimeout(() => playTone(820, 0.08, 'sine'), 60);
+    }
+    function soundGrumpy() {
+      playTone(210, 0.12, 'sawtooth', 0.03);
+      setTimeout(() => playTone(165, 0.16, 'sawtooth', 0.03), 100);
+    }
+    function soundSleepy() {
+      playTone(330, 0.25, 'sine', 0.02);
+      setTimeout(() => playTone(260, 0.35, 'sine', 0.015), 200);
+    }
+
+    // Set Emotion Logic
+    function setEmotion(name, temporary = false) {
+      if (!EMOTIONS[name]) return;
+      const config = EMOTIONS[name];
+
+      // Visual SVGs
+      svgLeftEye.innerHTML = config.leftEyeSvg;
+      svgRightEye.innerHTML = config.rightEyeSvg;
+      svgMouth.innerHTML = config.mouthSvg;
+      moodLabel.textContent = config.label;
+      petFaceRoot.style.animationDuration = config.breatheSpeed;
+
+      // Adjust eyes row gap if specified
+      eyesRow.className = `flex items-center justify-center ${config.eyesGap || 'gap-16'} mb-4 animate-blinkQuick transition-all duration-300`;
+
+      // Ambient glow
+      ambientGlow.style.backgroundColor = config.glowColor;
+
+      // Mood status dot color
+      moodDot.className = `w-1.5 h-1.5 rounded-full ${config.dotColor || 'bg-emerald-400'} animate-pulse`;
+
+      // Cheeks blush
+      if (config.cheeks) {
+        leftCheek.style.backgroundColor = 'rgba(251, 113, 133, 0.45)';
+        rightCheek.style.backgroundColor = 'rgba(251, 113, 133, 0.45)';
+      } else {
+        leftCheek.style.backgroundColor = 'rgba(251, 113, 133, 0)';
+        rightCheek.style.backgroundColor = 'rgba(251, 113, 133, 0)';
+      }
+
+      // Shivering effect for shocked
+      if (name === 'shocked') {
+        petFaceRoot.classList.add('animate-shiver');
+      } else {
+        petFaceRoot.classList.remove('animate-shiver');
+      }
+
+      // Manage particles
+      setupParticles(config.particles);
+
+      // Sound & Thought trigger
+      if (!temporary) {
+        currentEmotion = name;
+        isSleeping = (name === 'sleepy');
+        
+        // Show thought bubble quote
+        showThought(config.quote);
+
+        // Highlight Active Button
+        document.querySelectorAll('.emotion-btn').forEach(btn => {
+          btn.classList.remove('border-neutral-500', 'bg-neutral-900', 'shadow-[0_0_15px_rgba(255,255,255,0.12)]');
+          btn.classList.add('bg-neutral-900/60', 'border-neutral-800/80');
+          const title = btn.querySelector('span:first-of-type');
+          if (title) title.classList.replace('text-white', 'text-neutral-400');
+        });
+        const activeBtn = document.getElementById(`btn-${name}`);
+        if (activeBtn) {
+          activeBtn.classList.remove('bg-neutral-900/60', 'border-neutral-800/80');
+          activeBtn.classList.add('border-neutral-500', 'bg-neutral-900', 'shadow-[0_0_15px_rgba(255,255,255,0.12)]');
+          const title = activeBtn.querySelector('span:first-of-type');
+          if (title) title.classList.replace('text-neutral-400', 'text-white');
+        }
+
+        // Sound reaction
+        if (name === 'happy') soundHappy();
+        else if (name === 'love') soundLove();
+        else if (name === 'cheeky') soundCheeky();
+        else if (name === 'ecstatic') soundPurr();
+        else if (name === 'shocked') soundShocked();
+        else if (name === 'grumpy') soundGrumpy();
+        else if (name === 'sleepy') soundSleepy();
+        else playTone(350, 0.08, 'sine');
+      }
+
+      resetIdleBehavior();
+    }
+
+    // Particle Generator (Zzz & Hearts)
+    function setupParticles(type) {
+      if (particleInterval) clearInterval(particleInterval);
+      particleLayer.innerHTML = '';
+
+      if (!type) return;
+
+      particleInterval = setInterval(() => {
+        const p = document.createElement('div');
+        const startX = 55 + Math.random() * 25; // near right side
+        const startY = 45 + Math.random() * 15;
+
+        if (type === 'hearts') {
+          p.className = 'particle-heart absolute text-rose-400 select-none text-xs';
+          p.innerHTML = '♥';
+          p.style.left = `${startX}%`;
+          p.style.top = `${startY}%`;
+          p.style.filter = 'drop-shadow(0 0 4px rgba(244,63,94,0.8))';
+        } else if (type === 'zzz') {
+          p.className = 'particle-zzz absolute text-cyan-300 select-none font-mono font-bold text-xs';
+          p.textContent = Math.random() > 0.5 ? 'z' : 'Z';
+          p.style.left = `${startX}%`;
+          p.style.top = `${startY}%`;
+        }
+        particleLayer.appendChild(p);
+        setTimeout(() => p.remove(), 2600);
+      }, 1200);
+    }
+
+    // Interactive Thought Bubble
+    function showThought(msg) {
+      thoughtText.textContent = msg;
+      thoughtBubble.classList.remove('opacity-0', 'translate-y-1');
+      thoughtBubble.classList.add('opacity-100', 'translate-y-0');
+      
+      clearTimeout(window.thoughtTimeout);
+      window.thoughtTimeout = setTimeout(() => {
+        thoughtBubble.classList.add('opacity-0', 'translate-y-1');
+        thoughtBubble.classList.remove('opacity-100', 'translate-y-0');
+      }, 4200);
+    }
+
+    function sayRandomThought() {
+      incrementInteractions();
+      const randomMsg = RANDOM_THOUGHTS[Math.floor(Math.random() * RANDOM_THOUGHTS.length)];
+      showThought(`"${randomMsg}"`);
+      soundHappy();
+    }
+
+    // SMOOTH GAZE DAMPING PHYSICS (Lerp Loop)
+    function updateGazeLoop() {
+      // Smooth lerp: current += (target - current) * factor
+      const lerpSpeed = isDragging ? 0.28 : 0.12;
+      currentGazeX += (targetGazeX - currentGazeX) * lerpSpeed;
+      currentGazeY += (targetGazeY - currentGazeY) * lerpSpeed;
+
+      // Apply gaze translation to eyes and slightly lesser to mouth for 3D parallax depth
+      const eyeX = currentGazeX * 16;
+      const eyeY = currentGazeY * 12;
+      const mouthX = currentGazeX * 8;
+      const mouthY = currentGazeY * 6;
+
+      leftEyeWrapper.style.transform = `translate(${eyeX}px, ${eyeY}px) scale(${pupilScale})`;
+      rightEyeWrapper.style.transform = `translate(${eyeX}px, ${eyeY}px) scale(${pupilScale})`;
+      mouthWrapper.style.transform = `translate(${mouthX}px, ${mouthY}px)`;
+
+      // Subtle hardware reaction bar animation
+      const absGaze = Math.min(1, Math.hypot(currentGazeX, currentGazeY) * 2);
+      document.getElementById('wave1').style.height = `${8 + absGaze * 12}px`;
+      document.getElementById('wave2').style.height = `${14 + absGaze * 8}px`;
+      document.getElementById('wave3').style.height = `${8 + absGaze * 10}px`;
+
+      requestAnimationFrame(updateGazeLoop);
+    }
+    requestAnimationFrame(updateGazeLoop);
+
+    // Direct Touch & Pointer Gaze Coordinates Handling
+    function handlePointerCoord(clientX, clientY) {
+      const rect = screenPad.getBoundingClientRect();
+      // Normalized between -1 and +1 from center of OLED screen
+      const nx = ((clientX - rect.left) / rect.width) * 2 - 1;
+      const ny = ((clientY - rect.top) / rect.height) * 2 - 1;
+
+      // Clamped
+      targetGazeX = Math.max(-1, Math.min(1, nx));
+      targetGazeY = Math.max(-1, Math.min(1, ny));
+
+      // Show follower reticle
+      touchTarget.style.opacity = '1';
+      touchTarget.style.left = `${clientX - rect.left}px`;
+      touchTarget.style.top = `${clientY - rect.top}px`;
+    }
+
+    // Screen Touch / Mouse Listeners
+    screenPad.addEventListener('pointerdown', (e) => {
+      isDragging = true;
+      incrementInteractions();
+      handlePointerCoord(e.clientX, e.clientY);
+
+      // Ripple effect
+      const rect = screenPad.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      const ripple = document.createElement('div');
+      ripple.className = 'absolute rounded-full bg-cyan-400/25 touch-ripple pointer-events-none w-10 h-10 -ml-5 -mt-5';
+      ripple.style.left = `${clickX}px`;
+      ripple.style.top = `${clickY}px`;
+      rippleContainer.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 700);
+
+      // Quick poke bounce
+      soundPoke();
+      petFaceRoot.style.transform = 'scale(0.94)';
+      setTimeout(() => {
+        petFaceRoot.style.transform = 'scale(1.04)';
+        setTimeout(() => petFaceRoot.style.transform = 'none', 180);
+      }, 120);
+
+      screenPad.setPointerCapture(e.pointerId);
+    });
+
+    screenPad.addEventListener('pointermove', (e) => {
+      handlePointerCoord(e.clientX, e.clientY);
+    });
+
+    screenPad.addEventListener('pointerup', (e) => {
+      isDragging = false;
+      touchTarget.style.opacity = '0';
+      // Return gaze slowly to forward center
+      setTimeout(() => {
+        if (!isDragging) {
+          targetGazeX = 0;
+          targetGazeY = 0;
+        }
+      }, 400);
+    });
+
+    screenPad.addEventListener('pointerleave', () => {
+      touchTarget.style.opacity = '0';
+      if (!isDragging) {
+        targetGazeX = 0;
+        targetGazeY = 0;
+      }
+    });
+
+    // Also track viewport pointer moves gently for natural life
+    window.addEventListener('pointermove', (e) => {
+      if (isDragging) return;
+      const rect = screenPad.getBoundingClientRect();
+      const insideScreen = (
+        e.clientX >= rect.left && e.clientX <= rect.right &&
+        e.clientY >= rect.top && e.clientY <= rect.bottom
+      );
+      if (!insideScreen) {
+        // Subtle curiosity gaze towards cursor across page
+        const nx = ((e.clientX - (rect.left + rect.width / 2)) / window.innerWidth) * 0.7;
+        const ny = ((e.clientY - (rect.top + rect.height / 2)) / window.innerHeight) * 0.7;
+        targetGazeX = Math.max(-0.7, Math.min(0.7, nx));
+        targetGazeY = Math.max(-0.7, Math.min(0.7, ny));
+      }
+    });
+
+    // Gestures Simulation Handlers
+    function triggerGesture(type) {
+      incrementInteractions();
+
+      if (type === 'pet') {
+        soundLove();
+        setEmotion('love', true);
+        showHeartBubble();
+        showThought('"Ooh yes, right between the ears!"');
+        
+        // Gentle purring bounce
+        petFaceRoot.style.transform = 'translateY(10px) scale(1.06, 0.95)';
+        setTimeout(() => {
+          petFaceRoot.style.transform = 'translateY(-6px) scale(0.97, 1.04)';
+          setTimeout(() => {
+            petFaceRoot.style.transform = 'none';
+            setEmotion(currentEmotion);
+          }, 1100);
+        }, 280);
+      } 
+      else if (type === 'poke') {
+        soundPoke();
+        setEmotion('shocked', true);
+        showThought('"BEEP! Nose booped!"');
+        
+        petFaceRoot.style.transform = 'scale(0.82) rotate(-5deg)';
+        setTimeout(() => {
+          petFaceRoot.style.transform = 'scale(1.08) rotate(3deg)';
+          setTimeout(() => {
+            petFaceRoot.style.transform = 'none';
+            setEmotion(currentEmotion);
+          }, 750);
+        }, 160);
+      }
+      else if (type === 'shake') {
+        soundCheeky();
+        setEmotion('cheeky', true);
+        showThought('"Hehehe, that tickles!"');
+        
+        let shakes = 0;
+        const interval = setInterval(() => {
+          const x = (shakes % 2 === 0 ? 14 : -14);
+          petFaceRoot.style.transform = `translateX(${x}px) rotate(${x > 0 ? 7 : -7}deg)`;
+          shakes++;
+          if (shakes > 7) {
+            clearInterval(interval);
+            petFaceRoot.style.transform = 'none';
+            setEmotion(currentEmotion);
+          }
+        }, 65);
+      }
+    }
+
+    function showHeartBubble() {
+      reactionBadge.style.opacity = '1';
+      reactionBadge.style.transform = 'scale(1.2) translateY(-16px)';
+      setTimeout(() => {
+        reactionBadge.style.opacity = '0';
+        reactionBadge.style.transform = 'scale(0.5) translateY(0px)';
+      }, 1500);
+    }
+
+    function incrementInteractions() {
+      interactionCount++;
+      interactionCounter.textContent = `${interactionCount} INTERACTIONS`;
+      if (gestureNotice) {
+        gestureNotice.style.opacity = '0';
+      }
+    }
+
+    function toggleSleep() {
+      if (isSleeping) {
+        setEmotion('happy');
+        document.getElementById('sleepNavLabel').textContent = 'Sleep';
+      } else {
+        setEmotion('sleepy');
+        document.getElementById('sleepNavLabel').textContent = 'Wake Up';
+      }
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      document.getElementById('audioLabel').textContent = audioEnabled ? 'Chirps ON' : 'Chirps OFF';
+      document.getElementById('audioIcon').classList.toggle('text-neutral-500', !audioEnabled);
+      document.getElementById('audioIcon').classList.toggle('text-neutral-300', audioEnabled);
+      if (audioEnabled) soundHappy();
+    }
+
+    function adjustPupilScale(val) {
+      pupilScale = val / 100;
+      document.getElementById('focusVal').textContent = `${val}%`;
+    }
+
+    // AUTONOMOUS IDLE PERSONALITY & SACCADIC EYE DARTS
+    function resetIdleBehavior() {
+      if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        triggerAutonomousIdleAction();
+      }, 3500 + Math.random() * 4500);
+    }
+
+    function triggerAutonomousIdleAction() {
+      if (isSleeping) {
+        // Sleep snore pulse
+        soundSleepy();
+        resetIdleBehavior();
+        return;
+      }
+
+      // Random autonomous actions
+      const actions = [
+        'dartLeft', 'dartRight', 'lookUpCurious', 'doubleBlink', 
+        'yawnWhimsy', 'happyWiggle', 'spontaneousThought'
+      ];
+      const action = actions[Math.floor(Math.random() * actions.length)];
+
+      if (action === 'dartLeft') {
+        targetGazeX = -0.75;
+        targetGazeY = -0.15;
+        setTimeout(() => { targetGazeX = 0; targetGazeY = 0; }, 1100);
+      } else if (action === 'dartRight') {
+        targetGazeX = 0.75;
+        targetGazeY = 0.2;
+        setTimeout(() => { targetGazeX = 0; targetGazeY = 0; }, 1000);
+      } else if (action === 'lookUpCurious') {
+        targetGazeX = 0.1;
+        targetGazeY = -0.85;
+        setTimeout(() => { targetGazeX = 0; targetGazeY = 0; }, 1200);
+      } else if (action === 'doubleBlink') {
+        svgLeftEye.style.transform = 'scaleY(0.08)';
+        svgRightEye.style.transform = 'scaleY(0.08)';
+        setTimeout(() => {
+          svgLeftEye.style.transform = `scale(${pupilScale})`;
+          svgRightEye.style.transform = `scale(${pupilScale})`;
+          setTimeout(() => {
+            svgLeftEye.style.transform = 'scaleY(0.08)';
+            svgRightEye.style.transform = 'scaleY(0.08)';
+            setTimeout(() => {
+              svgLeftEye.style.transform = `scale(${pupilScale})`;
+              svgRightEye.style.transform = `scale(${pupilScale})`;
+            }, 100);
+          }, 120);
+        }, 100);
+      } else if (action === 'happyWiggle') {
+        petFaceRoot.style.transform = 'translateY(-4px) rotate(2deg)';
+        setTimeout(() => {
+          petFaceRoot.style.transform = 'translateY(2px) rotate(-2deg)';
+          setTimeout(() => petFaceRoot.style.transform = 'none', 300);
+        }, 250);
+      } else if (action === 'spontaneousThought') {
+        const now = Date.now();
+        if (now - lastThoughtTime > 12000) {
+          lastThoughtTime = now;
+          sayRandomThought();
+        }
+      }
+
+      resetIdleBehavior();
+    }
+
+    // Initialize Default State
+    setEmotion('happy');
+    resetIdleBehavior();
+  </script>
+</body></html>

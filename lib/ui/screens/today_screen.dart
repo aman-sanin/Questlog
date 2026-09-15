@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../../app/providers/coach_provider.dart';
 import '../../app/providers/database_provider.dart';
+import '../../app/providers/keeper_provider.dart';
 import '../../app/providers/profile_provider.dart';
 import '../../app/providers/profile_view_provider.dart';
 import '../../app/providers/today_provider.dart';
@@ -12,8 +13,10 @@ import '../../app/services/haptic_service.dart';
 import '../../app/services/sound_service.dart';
 import '../../domain/engine/coach.dart';
 import '../../domain/engine/quest_state.dart';
+import '../../domain/keeper/expressions.dart';
 import '../../domain/model/models.dart';
 import '../sheets/goal_detail_sheet.dart';
+import '../sheets/keeper_sheet.dart';
 import '../sheets/quest_detail_sheet.dart';
 import '../sheets/quest_editor_sheet.dart';
 import '../sheets/triage_sheet.dart';
@@ -24,14 +27,31 @@ import '../widgets/banner_widget.dart';
 import '../widgets/chips.dart';
 import '../widgets/coach_card_widget.dart';
 import '../widgets/completion_ring.dart';
+import '../widgets/keeper_widget.dart';
 import '../widgets/quest_row.dart';
 import '../widgets/sigil_widget.dart';
+import '../widgets/thought_bubble.dart';
 
-class TodayScreen extends ConsumerWidget {
+class TodayScreen extends ConsumerStatefulWidget {
   const TodayScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TodayScreen> createState() => _TodayScreenState();
+}
+
+class _TodayScreenState extends ConsumerState<TodayScreen> {
+  KeeperExpression? _face;
+
+  void _onFaceExpression(KeeperExpression e) {
+    if (e == _face) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || e == _face) return;
+      setState(() => _face = e);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final tokens = context.tokens;
     final todayStateAsync = ref.watch(todayStateProvider);
     final profileViewAsync = ref.watch(profileViewStateProvider);
@@ -40,48 +60,65 @@ class TodayScreen extends ConsumerWidget {
     final today = ref.watch(effectiveLocalDateProvider);
     final weekStart = ref.watch(weekStartProvider);
 
-    final String dateHeader = DateFormat('EEEE, MMM d').format(today.toDateTime()).toUpperCase();
+    final String dateHeader = DateFormat(
+      'EEEE, MMM d',
+    ).format(today.toDateTime()).toUpperCase();
+    final now = ref.watch(currentDateTimeProvider);
 
     return Scaffold(
       backgroundColor: tokens.bg,
       body: SafeArea(
         child: todayStateAsync.when(
-          loading: () => Center(
-            child: CircularProgressIndicator(color: tokens.accent),
-          ),
+          loading: () =>
+              Center(child: CircularProgressIndicator(color: tokens.accent)),
           error: (err, stack) => Center(
-            child: Text('Error: $err', style: tokens.monoText(color: tokens.miss)),
+            child: Text(
+              'Error: $err',
+              style: tokens.monoText(color: tokens.miss),
+            ),
           ),
           data: (state) {
-            final int currentLevel = profileViewAsync.value?.progression.level ?? 1;
+            final int currentLevel =
+                profileViewAsync.value?.progression.level ?? 1;
+            final keeper = ref.watch(keeperUiStateProvider);
             final activeFilter = ref.watch(todayCadenceFilterProvider);
 
             // Filter goal sections
-            final filteredGoalSections = state.goalSections.map((section) {
-              if (activeFilter == null) return section;
-              final filteredQuests =
-                  section.quests.where((q) => q.rule.cadence == activeFilter).toList();
-              return GoalSectionViewModel(
-                goal: section.goal,
-                completionRate: section.completionRate,
-                quests: filteredQuests,
-              );
-            }).where((section) => section.quests.isNotEmpty).toList();
+            final filteredGoalSections = state.goalSections
+                .map((section) {
+                  if (activeFilter == null) return section;
+                  final filteredQuests = section.quests
+                      .where((q) => q.rule.cadence == activeFilter)
+                      .toList();
+                  return GoalSectionViewModel(
+                    goal: section.goal,
+                    completionRate: section.completionRate,
+                    quests: filteredQuests,
+                  );
+                })
+                .where((section) => section.quests.isNotEmpty)
+                .toList();
 
             // Filter general quests
             final filteredGeneralQuests = activeFilter == null
                 ? state.generalQuests
-                : state.generalQuests.where((q) => q.rule.cadence == activeFilter).toList();
+                : state.generalQuests
+                      .where((q) => q.rule.cadence == activeFilter)
+                      .toList();
 
             final hasQuestsMatchingFilter =
-                filteredGoalSections.isNotEmpty || filteredGeneralQuests.isNotEmpty;
+                filteredGoalSections.isNotEmpty ||
+                filteredGeneralQuests.isNotEmpty;
 
             return CustomScrollView(
               slivers: [
                 // Top App Bar
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -117,22 +154,116 @@ class TodayScreen extends ConsumerWidget {
                   ),
                 ),
 
+                // The Keeper — companion panel: face left, greeting right
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 20,
+                      ),
+                      decoration: BoxDecoration(
+                        color: tokens.tonal,
+                        border: Border.all(color: tokens.lineRest, width: 1),
+                      ),
+                      child: Row(
+                        children: [
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              KeeperThoughtCarousel(
+                                expression:
+                                    _face ??
+                                    resolveKeeperExpression(
+                                      poses: const {},
+                                      mood: keeper.mood,
+                                    ),
+                                maxWidth: 132,
+                              ),
+                              const SizedBox(height: 6),
+                              KeeperWidget(
+                                mood: keeper.mood,
+                                anticipation: keeper.anticipation,
+                                stage: keeper.stage,
+                                calling: keeper.calling,
+                                bus: ref.read(keeperEventBusProvider),
+                                size: 92,
+                                onLongPress: () => KeeperSheet.show(context),
+                                onExpressionChanged: _onFaceExpression,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(width: 20),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _greetingForHour(now.hour),
+                                  style: tokens.monoText(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 1.2,
+                                    color: tokens.textSecondary,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _greetingName(
+                                    profileViewAsync.value?.profile.name,
+                                  ),
+                                  style: tokens.headline(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w600,
+                                    color: tokens.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  _dayStatusLine(state),
+                                  style: tokens.body(
+                                    fontSize: 13,
+                                    color: tokens.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
                 // Top Coach Card (max one)
                 if (coachSignal != null)
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 20, right: 20, bottom: 16),
+                      padding: const EdgeInsets.only(
+                        left: 20,
+                        right: 20,
+                        bottom: 16,
+                      ),
                       child: CoachCardWidget(
                         title: coachSignal.title,
                         message: coachSignal.message,
                         onDismiss: () {
-                          ref.read(coachControllerProvider).dismiss(coachSignal);
+                          ref
+                              .read(coachControllerProvider)
+                              .dismiss(coachSignal);
                         },
                         actions: coachSignal.actions.map((act) {
                           return CoachCardAction(
                             label: act.label,
                             isPrimary: act.type != CoachActionType.dismiss,
-                            onTap: () => _handleCoachAction(context, ref, coachSignal, act, today),
+                            onTap: () => _handleCoachAction(
+                              context,
+                              ref,
+                              coachSignal,
+                              act,
+                              today,
+                            ),
                           );
                         }).toList(),
                       ),
@@ -200,7 +331,11 @@ class TodayScreen extends ConsumerWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Symbols.filter_alt_off, size: 36, color: tokens.textSecondary),
+                          Icon(
+                            Symbols.filter_alt_off,
+                            size: 36,
+                            color: tokens.textSecondary,
+                          ),
                           const SizedBox(height: 12),
                           Text(
                             'NO ${activeFilter!.name.toUpperCase()} QUESTS',
@@ -213,12 +348,24 @@ class TodayScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 14),
                           GestureDetector(
-                            onTap: () => ref.read(todayCadenceFilterProvider.notifier).state = null,
+                            onTap: () =>
+                                ref
+                                        .read(
+                                          todayCadenceFilterProvider.notifier,
+                                        )
+                                        .state =
+                                    null,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
                               decoration: BoxDecoration(
                                 color: tokens.tonal,
-                                border: Border.all(color: tokens.lineRule, width: 1),
+                                border: Border.all(
+                                  color: tokens.lineRule,
+                                  width: 1,
+                                ),
                               ),
                               child: Text(
                                 'SHOW ALL',
@@ -282,37 +429,51 @@ class TodayScreen extends ConsumerWidget {
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final q = section.quests[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: QuestRow(
-                              evaluation: q,
-                              onTap: () async {
-                                final questData =
-                                    await ref.read(questsDaoProvider).getQuestById(q.questId);
-                                if (questData != null && context.mounted) {
-                                  QuestDetailSheet.show(context, quest: questData, evaluation: q);
-                                }
-                              },
-                              onLongPress: () async {
-                                final questData =
-                                    await ref.read(questsDaoProvider).getQuestById(q.questId);
-                                if (questData != null && context.mounted) {
-                                  QuestEditorSheet.show(context, quest: questData);
-                                }
-                              },
-                              onComplete: () => _handleComplete(ref, q, today, weekStart),
-                              onLongPressCheckbox: () =>
-                                  _handleLogWithNote(context, ref, q, today, weekStart),
-                              onIncrement: () => _handleComplete(ref, q, today, weekStart),
-                              onDecrement: () => _handleDecrement(ref, q, today, weekStart),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final q = section.quests[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: QuestRow(
+                            evaluation: q,
+                            onTap: () async {
+                              final questData = await ref
+                                  .read(questsDaoProvider)
+                                  .getQuestById(q.questId);
+                              if (questData != null && context.mounted) {
+                                QuestDetailSheet.show(
+                                  context,
+                                  quest: questData,
+                                  evaluation: q,
+                                );
+                              }
+                            },
+                            onLongPress: () async {
+                              final questData = await ref
+                                  .read(questsDaoProvider)
+                                  .getQuestById(q.questId);
+                              if (questData != null && context.mounted) {
+                                QuestEditorSheet.show(
+                                  context,
+                                  quest: questData,
+                                );
+                              }
+                            },
+                            onComplete: () =>
+                                _handleComplete(ref, q, today, weekStart),
+                            onLongPressCheckbox: () => _handleLogWithNote(
+                              context,
+                              ref,
+                              q,
+                              today,
+                              weekStart,
                             ),
-                          );
-                        },
-                        childCount: section.quests.length,
-                      ),
+                            onIncrement: () =>
+                                _handleComplete(ref, q, today, weekStart),
+                            onDecrement: () =>
+                                _handleDecrement(ref, q, today, weekStart),
+                          ),
+                        );
+                      }, childCount: section.quests.length),
                     ),
                   ),
                 ],
@@ -336,43 +497,59 @@ class TodayScreen extends ConsumerWidget {
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final q = filteredGeneralQuests[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: QuestRow(
-                              evaluation: q,
-                              onTap: () async {
-                                final questData =
-                                    await ref.read(questsDaoProvider).getQuestById(q.questId);
-                                if (questData != null && context.mounted) {
-                                  QuestDetailSheet.show(context, quest: questData, evaluation: q);
-                                }
-                              },
-                              onLongPress: () async {
-                                final questData =
-                                    await ref.read(questsDaoProvider).getQuestById(q.questId);
-                                if (questData != null && context.mounted) {
-                                  QuestEditorSheet.show(context, quest: questData);
-                                }
-                              },
-                              onComplete: () => _handleComplete(ref, q, today, weekStart),
-                              onLongPressCheckbox: () =>
-                                  _handleLogWithNote(context, ref, q, today, weekStart),
-                              onIncrement: () => _handleComplete(ref, q, today, weekStart),
-                              onDecrement: () => _handleDecrement(ref, q, today, weekStart),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final q = filteredGeneralQuests[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: QuestRow(
+                            evaluation: q,
+                            onTap: () async {
+                              final questData = await ref
+                                  .read(questsDaoProvider)
+                                  .getQuestById(q.questId);
+                              if (questData != null && context.mounted) {
+                                QuestDetailSheet.show(
+                                  context,
+                                  quest: questData,
+                                  evaluation: q,
+                                );
+                              }
+                            },
+                            onLongPress: () async {
+                              final questData = await ref
+                                  .read(questsDaoProvider)
+                                  .getQuestById(q.questId);
+                              if (questData != null && context.mounted) {
+                                QuestEditorSheet.show(
+                                  context,
+                                  quest: questData,
+                                );
+                              }
+                            },
+                            onComplete: () =>
+                                _handleComplete(ref, q, today, weekStart),
+                            onLongPressCheckbox: () => _handleLogWithNote(
+                              context,
+                              ref,
+                              q,
+                              today,
+                              weekStart,
                             ),
-                          );
-                        },
-                        childCount: filteredGeneralQuests.length,
-                      ),
+                            onIncrement: () =>
+                                _handleComplete(ref, q, today, weekStart),
+                            onDecrement: () =>
+                                _handleDecrement(ref, q, today, weekStart),
+                          ),
+                        );
+                      }, childCount: filteredGeneralQuests.length),
                     ),
                   ),
                 ],
 
                 const SliverToBoxAdapter(
-                  child: SizedBox(height: 100), // Bottom padding for FAB monolith
+                  child: SizedBox(
+                    height: 100,
+                  ), // Bottom padding for FAB monolith
                 ),
               ],
             );
@@ -382,18 +559,47 @@ class TodayScreen extends ConsumerWidget {
     );
   }
 
-  void _handleComplete(WidgetRef ref, QuestEvaluation q, LocalDate today, WeekStart weekStart) async {
+  void _handleComplete(
+    WidgetRef ref,
+    QuestEvaluation q,
+    LocalDate today,
+    WeekStart weekStart,
+  ) async {
     HapticService.light();
     SoundService.playCheck();
 
     final questData = await ref.read(questsDaoProvider).getQuestById(q.questId);
     if (questData != null) {
-      await ref.read(questActionsProvider).completeQuest(
+      await ref
+          .read(questActionsProvider)
+          .completeQuest(
             quest: questData,
             date: today,
             weekStart: weekStart,
             now: DateTime.now(),
           );
+      _postCompleteEvents(ref, q);
+    }
+  }
+
+  /// Keeper plumbing (§5): complement the write with a glance/chirp and the
+  /// gold flash when the last essential falls.
+  void _postCompleteEvents(WidgetRef ref, QuestEvaluation q) {
+    final state = ref.read(todayStateProvider).value;
+    final bus = ref.read(keeperEventBusProvider);
+    final wasLastEssential = q.essential &&
+        state != null &&
+        state.allQuests
+                .where((x) => x.essential && x.isDueToday && !x.isCompleted)
+                .length ==
+            1;
+    bus.post(
+      kind: KeeperEventKind.complete,
+      cadence: q.rule.cadence,
+      at: const Offset(0, 80),
+    );
+    if (wasLastEssential) {
+      bus.post(kind: KeeperEventKind.perfectDay);
     }
   }
 
@@ -412,9 +618,7 @@ class TodayScreen extends ConsumerWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-        ),
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -459,27 +663,43 @@ class TodayScreen extends ConsumerWidget {
     if (note != null) {
       HapticService.light();
       SoundService.playCheck();
-      final questData = await ref.read(questsDaoProvider).getQuestById(q.questId);
+      final questData = await ref
+          .read(questsDaoProvider)
+          .getQuestById(q.questId);
       if (questData != null) {
-        await ref.read(questActionsProvider).completeQuest(
+        await ref
+            .read(questActionsProvider)
+            .completeQuest(
               quest: questData,
               date: today,
               note: note.isEmpty ? null : note,
               weekStart: weekStart,
               now: DateTime.now(),
             );
+        _postCompleteEvents(ref, q);
       }
     }
   }
 
-  void _handleDecrement(WidgetRef ref, QuestEvaluation q, LocalDate today, WeekStart weekStart) async {
+  void _handleDecrement(
+    WidgetRef ref,
+    QuestEvaluation q,
+    LocalDate today,
+    WeekStart weekStart,
+  ) async {
     HapticService.light();
-    await ref.read(questActionsProvider).decrementQuest(
+    await ref
+        .read(questActionsProvider)
+        .decrementQuest(
           questId: q.questId,
           date: today,
           weekStart: weekStart,
           now: DateTime.now(),
         );
+    // Counter change: a quick downward glance, no sound (§5).
+    ref
+        .read(keeperEventBusProvider)
+        .post(kind: KeeperEventKind.complete, at: const Offset(0, 80));
   }
 
   Future<void> _handleCoachAction(
@@ -536,7 +756,10 @@ class TodayScreen extends ConsumerWidget {
       case CoachActionType.reviewLoad:
         await controller.markAccepted(signal);
         if (context.mounted) {
-          await TriageSheet.show(context, questIds: signal.relatedQuestIds ?? []);
+          await TriageSheet.show(
+            context,
+            questIds: signal.relatedQuestIds ?? [],
+          );
         }
         break;
 
@@ -545,7 +768,9 @@ class TodayScreen extends ConsumerWidget {
         final questId = action.payload?['questId'] as String?;
         await controller.markAccepted(signal);
         if (questId != null && context.mounted) {
-          final questData = await ref.read(questsDaoProvider).getQuestById(questId);
+          final questData = await ref
+              .read(questsDaoProvider)
+              .getQuestById(questId);
           if (questData != null && context.mounted) {
             QuestEditorSheet.show(context, quest: questData);
           }
@@ -581,7 +806,8 @@ class _CadenceFilterBar extends ConsumerWidget {
             label: 'ALL',
             count: state.allQuests.length,
             isSelected: activeFilter == null,
-            onTap: () => ref.read(todayCadenceFilterProvider.notifier).state = null,
+            onTap: () =>
+                ref.read(todayCadenceFilterProvider.notifier).state = null,
           ),
           for (final c in cadences) ...[
             const SizedBox(width: 6),
@@ -591,7 +817,8 @@ class _CadenceFilterBar extends ConsumerWidget {
               isSelected: activeFilter == c,
               onTap: () {
                 final current = ref.read(todayCadenceFilterProvider);
-                ref.read(todayCadenceFilterProvider.notifier).state = current == c ? null : c;
+                ref.read(todayCadenceFilterProvider.notifier).state =
+                    current == c ? null : c;
               },
             ),
           ],
@@ -647,7 +874,9 @@ class _FilterChipItem extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                 decoration: BoxDecoration(
-                  color: isSelected ? tokens.onSolid.withOpacity(0.2) : tokens.lineRule.withOpacity(0.4),
+                  color: isSelected
+                      ? tokens.onSolid.withOpacity(0.2)
+                      : tokens.lineRule.withOpacity(0.4),
                 ),
                 child: Text(
                   '$count',
@@ -664,4 +893,27 @@ class _FilterChipItem extends StatelessWidget {
       ),
     );
   }
+}
+
+String _greetingForHour(int hour) {
+  if (hour < 5) return 'STILL UP LATE';
+  if (hour < 12) return 'GOOD MORNING';
+  if (hour < 17) return 'GOOD AFTERNOON';
+  if (hour < 21) return 'GOOD EVENING';
+  return 'GOOD NIGHT';
+}
+
+String _greetingName(String? name) {
+  final trimmed = name?.trim();
+  return (trimmed == null || trimmed.isEmpty) ? 'Kept' : trimmed;
+}
+
+String _dayStatusLine(TodayScreenState state) {
+  if (state.isEmpty) return 'Your day is unwritten. Author a quest to begin.';
+  if (state.isPerfectDayEarned) {
+    return 'Perfect day held — everything essential is done.';
+  }
+  final remaining = state.totalDueCount - state.completedDueCount;
+  if (remaining <= 0) return 'All ${state.totalDueCount} quests done.';
+  return '${state.completedDueCount} of ${state.totalDueCount} done — $remaining to go.';
 }

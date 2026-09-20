@@ -1,6 +1,6 @@
 # QuestLog — Badge Registry
 
-**badges.md · v1 · 50 badges · feeds P9b (badge screen) and P10 (The Path trials)**
+**badges.md · v2 · 100 badges · feeds P9b (badge screen) and P10 (The Path trials)**
 
 Couplings: the 12 CALLING trials are the single shared registry consumed by both
 the badge screen and The Path. The Scribe requires P12 (completion notes) — it
@@ -45,12 +45,18 @@ class BadgeDef {
 ```
 
 Screen order: **JOURNEY · STREAKS · PERFECTION · GOALS · ECONOMY ·
-RARITIES · CALLING · SEALED** (fixed; sections are the filter, no
+RARITIES · CALLING · KEEPER · SEALED** (fixed; sections are the filter, no
 filter controls). Tiles: earned = `lineRest` + Ember icon · locked =
 `lineRule` + 40% icon + mini lock · sealed = `lineRest` + `?`.
-Header: `BADGES · 14/50` + thin Frost bar.
+Header: `BADGES · n/100` + thin Frost bar.
 
-Sealed behavior: tiles show as `?` with count ("7 SEALED"); tap → one static
+Within each section grid, **unearned badges render first** (current pursuits
+on top), earned sink to the bottom; catalog order is kept within each group.
+Quest lists follow the same law on Today and in goal sheets: incomplete
+quests on top, completed sink to the bottom (essentials, rare cadences, then
+title within each group).
+
+Sealed behavior: tiles show as `?` with count ("12 SEALED"); tap → one static
 line for all: _"Sealed by the Keeper. Keep questing."_ On earn: tile migrates
 to its home category; reveal toast via moment queue, 3.5s, "SEALED BADGE —
 REVEALED" + icon draw-in. Not a ceremony (the three stay three). After
@@ -111,13 +117,23 @@ for counts, peak for runs.
 | polymath    | Polymath    | psychology   | 5 goals completed  | Five chapters closed.       |
 | decathlon   | Decathlon   | sports_score | 10 goals completed | A shelf of finished things. |
 
-## 7 · ECONOMY — the freeze economy (3)
+## 7 · ECONOMY — the freeze economy (8)
 
-| key          | name         | icon               | criteria                                                               | flavor                       |
-| ------------ | ------------ | ------------------ | ---------------------------------------------------------------------- | ---------------------------- |
-| first_freeze | First Freeze | ac_unit            | ≥ 1 perfect-week grant exists (ledger)                                 | You banked your first mercy. |
-| full_pantry  | Full Pantry  | inventory_2        | wallet timeline replay (grants +1, repairs −1, ordered) ever reaches 2 | Two mercies in reserve.      |
-| grace_thrice | Grace Thrice | volunteer_activism | COUNT(streak_repairs) ≥ 3                                              | Rescued, and rescued again.  |
+Grants derive from the log via `FreezeEngine` (see §16): 2 per perfect
+daily/weekly week, 1 per essentials-only week; wallet capped at 5, repairs
+spend automatically (essentials first). Ledger perfect-week events are
+XP-only and not counted here.
+
+| key            | name           | icon               | criteria                                                                | flavor                       |
+| -------------- | -------------- | ------------------ | ----------------------------------------------------------------------- | ---------------------------- |
+| first_freeze   | First Freeze   | ac_unit            | ≥ 1 freeze granted                                                      | You banked your first mercy. |
+| full_pantry    | Full Pantry    | inventory_2        | wallet replay ever reaches 2 (grants +, repairs −, ordered, cap 5)      | Two mercies in reserve.      |
+| grace_thrice   | Grace Thrice   | volunteer_activism | COUNT(streak_repairs) ≥ 3                                               | Rescued, and rescued again.  |
+| first_grace    | First Grace    | handshake          | COUNT(streak_repairs) ≥ 1                                               | The first rescue.            |
+| grace_fivefold | Grace Fivefold | diversity_3        | COUNT(streak_repairs) ≥ 5                                               | Five streaks preserved.      |
+| grace_tenfold  | Grace Tenfold  | volunteer_activism | COUNT(streak_repairs) ≥ 10                                              | Ten times spared.            |
+| mercy_five     | Five Mercies   | ac_unit            | ≥ 5 freeze grants                                                       | Five mercies banked.         |
+| mercy_ten      | Ten Mercies    | inventory          | ≥ 10 freeze grants                                                      | A full winter of mercy.      |
 
 ## 8 · RARITIES — calendar events (6)
 
@@ -169,9 +185,9 @@ positive or whimsical. Progress: **none displayed** — that's the point.
 | curator       | The Curator   | museum         | ≥ 5 quests archived with ≥ 90% completion at archive          | Kept what mattered, retired the rest. |
 | marathon_day  | Marathon Day  | directions_run | ≥ 12 completions on a single local_date                       | One very full page.                   |
 
-**Count check:** 6 + 7 + 6 + 3 + 3 + 6 + 12 + 7 = **50**.
-Header math uses 50; while The Scribe is dormant (pre-P12) it still counts
-toward 50 (the SEALED count reads 7 either way).
+**Count check:** 11 + 12 + 11 + 8 + 8 + 11 + 17 + 10 + 12 = **100**.
+Header math uses 100; while The Scribe is dormant (pre-P12) it still counts
+toward 100 (the SEALED count reads 12 either way).
 
 ---
 
@@ -184,9 +200,11 @@ toward 50 (the SEALED count reads 7 either way).
 - `perfect_month`: iterate calendar months; eligible day = has ≥ 1 scheduled
   essential day-unit; month qualifies when all eligible days satisfied and
   eligible ≥ 20 (excludes sparse early months).
-- `full_pantry`: replay wallet timeline — events ordered by date, grants +1
-  (perfect_week ledger refs), repairs −1 (`streak_repairs`) — badge on first
-  time balance = 2. Derived, not stored.
+- `full_pantry`: replay wallet timeline — per-week grants from `FreezeEngine`
+  (+2 / +1 / 0, closed weeks only), repairs −1 (`streak_repairs` by appliedAt,
+  ties toward grants) — badge on first time balance = 2, cap 5. Derived, not
+  stored.
+- `first_perfect_week`: closed weeks granting exactly 2 (derived, same helper).
 - `unbroken_year`: scan distinct completion local_dates; longest run of
   consecutive days; badge when ≥ 365. Log-based (any completion counts,
   including off-schedule) — it is a logging badge, not a scoring one.
@@ -206,8 +224,8 @@ carry seen flags — **no re-reveals after import** (tested).
 
 ## 13 · Test table (mutation-checked)
 
-- Registry integrity: 50 entries, unique keys, all fields present, category
-  set matches section list, sealed count = 7
+- Registry integrity: 100 entries, unique keys, all fields present, category
+  set matches section list, sealed count = 12
 - One hand-seeded fixture per criterion (the suite is mostly COUNT
   assertions over seeded logs)
 - Sealed: pre-earn, criteria never exposed by any API/surface the UI can
@@ -225,11 +243,110 @@ carry seen flags — **no re-reveals after import** (tested).
 
 Every icon name above is a best-guess against Material Symbols Outlined —
 verify each in the symbol browser (fonts.google.com/icons) and substitute
-where the name differs. No icon may be duplicated within the registry, and
-none may be a UI-grammar icon already carrying meaning elsewhere (check,
-star, snowflake) — the assignments above already avoid those.
+where the name differs. Icons may repeat across sections (a few do), but none
+may be a UI-grammar icon already carrying meaning elsewhere (check,
+star, snowflake).
 
 _The Keeper keeps the sealed shelf. The ledger is never touched._
+
+---
+
+## 15 · v2 additions (50 badges: +5 per section, +10 KEEPER)
+
+Sections are now JOURNEY 11 · STREAKS 12 · PERFECTION 11 · GOALS 8 ·
+ECONOMY 8 · RARITIES 11 · CALLING 17 · **KEEPER 10** · SEALED 12 = **100**.
+All icons verified against `material_symbols_icons-4.2960.0`; a few repeat
+across sections (allowed since v2).
+
+| key | name | icon | criteria | flavor |
+| --- | ---- | ---- | -------- | ------ |
+| twenty_five | Twenty-Five | tag | COUNT(completions) ≥ 25 | A quarter of a hundred. |
+| quarter_thousand | Quarter Thousand | layers | ≥ 250 | Two hundred fifty, kept. |
+| half_thousand | Half Thousand | library_books | ≥ 500 | A small library of days. |
+| two_thousand | Two Thousand | menu_book | ≥ 2,000 | Volumes, plural. |
+| ten_thousand | Ten Thousand | castle | ≥ 10,000 | A fortress of entries. |
+| fortnight_fire | Fortnight Fire | bolt | any streak ≥ 14 | Fourteen, burning. |
+| fifty_stack | Fifty Stack | inventory | any streak ≥ 50 | Fifty high. |
+| double_century | Double Century | shield | any streak ≥ 200 | Two hundred deep. |
+| twelve_weeks | Twelve Weeks | calendar_view_week | weekly streak ≥ 12 | A quarter of weeks. |
+| half_year_moons | Half-Year Moons | nightlight | monthly streak ≥ 6 | Six moons honored. |
+| perfect_silver | Perfect Silver | thumb_up | ≥ 25 perfect days | Twenty-five clean pages. |
+| perfect_two_hundred | Perfect Two Hundred | hotel_class | ≥ 200 perfect days | Two hundred flawless. |
+| perfect_year | Perfect Year | stars | ≥ 365 perfect days | A year of clean pages. |
+| flawless_week | Flawless Week | task_alt | 7 consecutive perfect days | Seven in a row, perfect. |
+| flawless_season | Flawless Season | spa | 30 consecutive perfect days | Thirty days, no asterisks. |
+| second_chapter | Second Chapter | book | 2 goals completed | Two chapters closed. |
+| trilogy | Trilogy | library_books | 3 goals completed | Three, beginning to end. |
+| lucky_seven_goals | Lucky Seven | casino | 7 goals completed | Seven ventures finished. |
+| fifteen_halls | Fifteen Halls | corporate_fare | 15 goals completed | Fifteen halls walked. |
+| silver_library | Silver Library | local_library | 25 goals completed | Twenty-five chapters. |
+| first_grace | First Grace | handshake | COUNT(streak_repairs) ≥ 1 | The first rescue. |
+| grace_fivefold | Grace Fivefold | diversity_3 | ≥ 5 repairs | Five streaks preserved. |
+| grace_tenfold | Grace Tenfold | volunteer_activism | ≥ 10 repairs | Ten times spared. |
+| mercy_five | Five Mercies | ac_unit | ≥ 5 freeze grants | Five mercies banked. |
+| mercy_ten | Ten Mercies | inventory | ≥ 10 freeze grants | A full winter of mercy. |
+| spring_equinox | Spring Equinox | eco | completion dated Mar 20 | Day and night, balanced. |
+| autumn_equinox | Autumn Equinox | forest | completion dated Sep 22 | The light turns. |
+| hallows | Hallows | skull | completion dated Oct 31 | Kept on the thin night. |
+| yule | Yule | redeem | completion dated Dec 25 | A gift to the log. |
+| hearts_day | Hearts' Day | favorite | completion dated Feb 14 | Kept with love. |
+| first_tribute | First Tribute | swords | ≥ 1 pledged-calling completion (pledge required) | The first offering. |
+| oathkeeper | Oathkeeper | gavel | ≥ 25 pledged-calling completions | Twenty-five, in your colors. |
+| paragon | Paragon | anchor | ≥ 250 pledged-calling completions | Two hundred fifty, unwavering. |
+| unbending | Unbending | account_balance | streak ≥ 60 on pledged-calling quest | Sixty periods, unbroken. |
+| full_circle | Full Circle | all_inclusive | completions in all six callings | Every road, walked once. |
+| keeper_first_day | First Day Together | pets | ≥ 1 distinct active day | It watched its first day happen. |
+| keeper_first_watch | First Watch | visibility | ≥ 1 perfect day | The first perfect day, witnessed. |
+| keeper_waking | Waking | alarm | ≥ 10 perfect days (= growthWaking) | Ten perfect days. It stirs. |
+| keeper_adorned | Adorned | candle | ≥ 30 perfect days (= growthAdorned) | Thirty. It shines a little. |
+| keeper_trimmed | Trimmed | bolt | ≥ 100 perfect days (= growthTrimmed) | A hundred. Ember at the edges. |
+| keeper_company_week | A Week of Company | groups | ≥ 7 distinct active days | Seven days kept company. |
+| keeper_company_season | A Season of Company | calendar_month | ≥ 30 distinct active days | Thirty days together. |
+| keeper_company_year | A Year of Company | public | ≥ 365 distinct active days | A full year, side by side. |
+| keeper_level_ten | Level Ten | trending_up | player level ≥ 10 | Double digits. It stands taller. |
+| keeper_legend | Legend | hotel_class | player level ≥ 30 (= gildLevel) | Level thirty. The golden face. |
+| nightcap | Nightcap | moon_stars | completion hour ∈ [22, 24) · sealed | One last entry before sleep. |
+| high_noon | High Noon | light_mode | completion hour = 12 · sealed | Kept at midday. |
+| century_backfill | Century Backfill | update | ≥ 100 backfilled completions · sealed | A hundred honest corrections. |
+| annalist | Annalist | border_color | ≥ 250 completion notes · sealed | Two hundred fifty entries with words. |
+| grand_marathon | Grand Marathon | rocket_launch | ≥ 25 completions on one date · sealed | Twenty-five in a single day. |
+
+Implementation notes:
+
+- `BadgeEngine.evaluate` takes an optional `playerLevel` (default 1, keeps
+  old call sites compiling); `badgesStateProvider` threads the live level
+  from `totalXpStreamProvider` via `ProgressionEngine.levelFromXp`.
+- The KEEPER screen section sits between CALLING and SEALED; calling trials
+  header renamed to `CALLING · THE TRIALS` (17 now, not 12).
+- Ordering law (§2): badge grids sort unearned-first (stable,
+  `orderBadgesForDisplay` in `badges_screen.dart`); quest lists sort
+  incomplete-first (`sortQuestsForToday` in `today_provider.dart`, reused by
+  goal sheets).
+- Live wiring: grants derive from completions+quests, repairs stream from
+  the ledger — the full 100 evaluate live, no ledger event reads.
+
+---
+
+## 16 · Freeze rules v2 (streaks + wallet now live)
+
+- **Perfect week = daily + weekly only.** Monthly/yearly/single quests never
+  block one (settlement + `FreezeEngine` share the scope). XP unchanged (+75).
+- **Grants (exclusive, no stacking):** perfect daily/weekly week → 2 freezes;
+  otherwise an essentials-clean week (≥1 scheduled essential, all satisfied)
+  → 1 freeze. Only closed weeks grant. Single source: `FreezeEngine`,
+  derived at read time from the log — full history, uniform scope.
+- **Wallet cap 5.** Replay is chronological (grants +, repairs −, ties toward
+  grants), clamped 0..5.
+- **Spending is automatic:** `consumeFreezes` runs on every completion write,
+  essentials first then oldest quest, persisting repairs backdated by
+  periodKey (conflict-update = no double-spend). Read path needs no wallet —
+  persisted repairs display through the existing `existingRepairs` channel.
+  A miss with no later write consumes on the next write.
+- **`bestStreak` is the true historical max** (survives breaks); `streak`
+  stays the current run. Streaks remain derived, never stored.
+- Live surfaces: `FreezeChip` count ← `freezeWalletProvider`; Profile
+  "FREEZES USED" ← `streak_repairs` length; economy badges + First Perfect
+  Week evaluate off the helper (no ledger reads).
 
 ```
 

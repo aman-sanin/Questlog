@@ -104,6 +104,10 @@ class SettlementEngine {
           final String qId = q['id'] as String;
           final qCompletions = completionsByQuest[qId] ?? {};
 
+          // Perfect weeks only weigh daily + weekly quests (keeper freeze
+          // rules) — monthly/yearly/single quests never block one.
+          if (rule is! DailyRule && rule is! WeeklyRule) continue;
+
           int target = q['targetValue'] as int? ?? 1;
           if (rule is WeeklyRule && rule.times != null) target = rule.times!;
 

@@ -14,7 +14,7 @@ abstract final class KeeperTunables {
   static const double doubleBlinkP = 0.10;
   static const int gazeMinMs = 3000;
   static const int gazeMaxMs = 8000;
-  static const double gazeAmpU = 0.8; // idle pupil drift ±0.8u
+  static const double gazeAmpU = 0.8; // idle gaze drift ±0.8u
   // Idle saccade amplitude scales per mood (§2/§5): attentive watches
   // furthest (×1.1 under anticipation), content drifts softly, resting
   // barely moves, quiescent wanders slowly.
@@ -26,9 +26,6 @@ abstract final class KeeperTunables {
   static const int glanceHoldMs = 500;
   static const double glanceClampU = 0.8; // glance clamp ±0.8u (x)
   static const double glanceClampVDU = 0.6; // glance clamp ±0.6u (y)
-  static const double dilate = 1.4;
-  static const double pinpoint = 0.5;
-  static const double dilateAnticipation = 1.15;
   static const double wide = 1.12;
 
   // Light menu & poses (§4, §6).
@@ -87,7 +84,7 @@ abstract final class KeeperTunables {
 
   // Pointer gaze spring (§7)
   static const double gazeSpringK = 0.15;
-  static const double gazeFollowU = 0.8; // pupil tracks the pointer up to ±0.8u
+  static const double gazeFollowU = 0.8; // gaze tracks the pointer up to ±0.8u
   static const int skepticalHoverMs = 1500;
   static const int strokePurrMinMs = 350;
 }

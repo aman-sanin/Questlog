@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../../app/providers/insights_provider.dart';
 import '../../app/providers/profile_provider.dart';
+import '../../app/providers/today_provider.dart';
 import '../../domain/model/models.dart';
 import '../sheets/day_sheet.dart';
 import '../theme/tokens.dart';
@@ -23,6 +24,7 @@ class InsightsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = context.tokens;
     final insightsAsync = ref.watch(insightsStateProvider);
+    final walletAsync = ref.watch(freezeWalletProvider);
     final selectedMonth = ref.watch(selectedInsightsMonthProvider);
     final weekStart = ref.watch(weekStartProvider);
 
@@ -56,7 +58,7 @@ class InsightsScreen extends ConsumerWidget {
                           color: tokens.textPrimary,
                         ),
                       ),
-                      FreezeChip(count: state.freezeWalletCount),
+                      FreezeChip(count: walletAsync.value ?? 0),
                     ],
                   ),
                   const SizedBox(height: 16),

@@ -7,6 +7,17 @@ import '../sheets/badge_sheet.dart';
 import '../theme/tokens.dart';
 import '../widgets/badge_tile.dart';
 
+/// Display order inside a section grid: unearned badges first (the current
+/// pursuits on top), earned sink to the bottom. Stable — catalog order is
+/// kept within each group.
+List<BadgeStatus> orderBadgesForDisplay(List<BadgeStatus> badges) {
+  final ordered = List<BadgeStatus>.of(badges);
+  ordered.sort(
+    (a, b) => (a.isEarned ? 1 : 0).compareTo(b.isEarned ? 1 : 0),
+  );
+  return ordered;
+}
+
 class BadgesScreen extends ConsumerWidget {
   const BadgesScreen({super.key});
 
@@ -138,9 +149,17 @@ class BadgesScreen extends ConsumerWidget {
                       const SizedBox(height: 24),
                       _buildCategorySection(
                         context,
-                        title: 'CALLING · THE 12 TRIALS',
+                        title: 'CALLING · THE TRIALS',
                         category: BadgeCategory.calling,
                         badges: state.groupedByCategory[BadgeCategory.calling] ?? [],
+                        tokens: tokens,
+                      ),
+                      const SizedBox(height: 24),
+                      _buildCategorySection(
+                        context,
+                        title: 'KEEPER',
+                        category: BadgeCategory.keeper,
+                        badges: state.groupedByCategory[BadgeCategory.keeper] ?? [],
                         tokens: tokens,
                       ),
                       const SizedBox(height: 24),
@@ -173,6 +192,7 @@ class BadgesScreen extends ConsumerWidget {
     if (badges.isEmpty) return const SizedBox.shrink();
 
     final earnedCount = badges.where((b) => b.isEarned).length;
+    final ordered = orderBadgesForDisplay(badges);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,9 +229,9 @@ class BadgesScreen extends ConsumerWidget {
             mainAxisSpacing: 10,
             childAspectRatio: 1.0,
           ),
-          itemCount: badges.length,
+          itemCount: ordered.length,
           itemBuilder: (context, index) {
-            final badge = badges[index];
+            final badge = ordered[index];
             return BadgeTile(
               badge: badge,
               onTap: () => BadgeSheet.show(context, badge: badge),

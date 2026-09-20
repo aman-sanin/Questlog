@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/db/database.dart';
+import '../../domain/engine/freezes.dart';
 import '../../domain/engine/quest_state.dart';
 import '../../domain/engine/schedule_rule.dart';
 import '../../domain/engine/streak.dart';
@@ -44,6 +45,23 @@ class TodayScreenState {
       ];
 }
 
+/// Quest display order for Today (and goal sheets, which reuse these lists):
+/// current quests on top, completed sink to the bottom. Within each group:
+/// essentials first, rare cadences first, then title.
+int sortQuestsForToday(QuestEvaluation a, QuestEvaluation b) {
+  if (a.isCompleted != b.isCompleted) {
+    return a.isCompleted ? 1 : -1;
+  }
+  if (a.essential != b.essential) {
+    return a.essential ? -1 : 1;
+  }
+  // Yearly (3) > Monthly (2) > Weekly (1) > Daily (0)
+  if (a.rule.cadence.index != b.rule.cadence.index) {
+    return b.rule.cadence.index.compareTo(a.rule.cadence.index);
+  }
+  return a.title.compareTo(b.title);
+}
+
 final activeQuestsStreamProvider = StreamProvider<List<QuestData>>((ref) {
   return ref.watch(questsDaoProvider).watchActiveQuests();
 });
@@ -76,6 +94,59 @@ final monthCompletionsProvider = StreamProvider.family<List<CompletionData>, Loc
 
 final streakRepairsStreamProvider = StreamProvider<List<StreakRepairData>>((ref) {
   return ref.watch(ledgerDaoProvider).watchStreakRepairs();
+});
+
+/// Full-history streams for the freeze wallet (grants derive from the whole
+/// log, not the recent window). Kept local to avoid a provider import cycle
+/// via badges/profile_view.
+final _allQuestsForWalletProvider = StreamProvider<List<QuestData>>((ref) {
+  return ref.watch(questsDaoProvider).watchAllQuests();
+});
+
+final _allCompletionsForWalletProvider =
+    StreamProvider<List<CompletionData>>((ref) {
+  return ref.watch(completionsDaoProvider).watchAllCompletions();
+});
+
+/// Live freeze wallet balance: grant replay minus persisted repairs,
+/// capped at [XpConstants.freezeWalletCapacity].
+final freezeWalletProvider = Provider<AsyncValue<int>>((ref) {
+  final questsAsync = ref.watch(_allQuestsForWalletProvider);
+  final completionsAsync = ref.watch(_allCompletionsForWalletProvider);
+  final repairsAsync = ref.watch(streakRepairsStreamProvider);
+  final today = ref.watch(effectiveLocalDateProvider);
+  final weekStart = ref.watch(weekStartProvider);
+
+  if (questsAsync is AsyncLoading ||
+      completionsAsync is AsyncLoading ||
+      repairsAsync is AsyncLoading) {
+    return const AsyncLoading();
+  }
+  if (questsAsync.hasError) {
+    return AsyncError(questsAsync.error!, questsAsync.stackTrace!);
+  }
+  if (completionsAsync.hasError) {
+    return AsyncError(completionsAsync.error!, completionsAsync.stackTrace!);
+  }
+  if (repairsAsync.hasError) {
+    return AsyncError(repairsAsync.error!, repairsAsync.stackTrace!);
+  }
+
+  final completionsByQuest = <String, Map<LocalDate, int>>{};
+  for (final c in completionsAsync.value ?? <CompletionData>[]) {
+    final d = LocalDate.parse(c.localDate);
+    final perQuest =
+        completionsByQuest.putIfAbsent(c.questId, () => <LocalDate, int>{});
+    perQuest[d] = (perQuest[d] ?? 0) + c.value;
+  }
+
+  return AsyncData(FreezeEngine.walletBalance(
+    quests: questsAsync.value ?? [],
+    completionsByQuest: completionsByQuest,
+    repairs: repairsAsync.value ?? [],
+    weekStart: weekStart,
+    today: today,
+  ));
 });
 
 final todayCadenceFilterProvider = StateProvider<Cadence?>((ref) => null);
@@ -194,18 +265,6 @@ final todayStateProvider = Provider<AsyncValue<TodayScreenState>>((ref) {
     }
   }
 
-  // Sort function: essentials first, rare cadences first, then title
-  int sortQuests(QuestEvaluation a, QuestEvaluation b) {
-    if (a.essential != b.essential) {
-      return a.essential ? -1 : 1;
-    }
-    // Yearly (3) > Monthly (2) > Weekly (1) > Daily (0)
-    if (a.rule.cadence.index != b.rule.cadence.index) {
-      return b.rule.cadence.index.compareTo(a.rule.cadence.index);
-    }
-    return a.title.compareTo(b.title);
-  }
-
   // Group quests by goal
   final goalSections = <GoalSectionViewModel>[];
   final generalQuests = <QuestEvaluation>[];
@@ -225,7 +284,7 @@ final todayStateProvider = Provider<AsyncValue<TodayScreenState>>((ref) {
   for (final goal in goals) {
     final gQuests = questsByGoalId[goal.id] ?? [];
     if (gQuests.isNotEmpty) {
-      gQuests.sort(sortQuests);
+      gQuests.sort(sortQuestsForToday);
       int doneCount = gQuests.where((q) => q.isCompleted).length;
       double rate = doneCount / gQuests.length;
 
@@ -237,7 +296,7 @@ final todayStateProvider = Provider<AsyncValue<TodayScreenState>>((ref) {
     }
   }
 
-  generalQuests.sort(sortQuests);
+  generalQuests.sort(sortQuestsForToday);
 
   final isPerfectDay = essentialDue > 0 && essentialDue == essentialCompleted;
 

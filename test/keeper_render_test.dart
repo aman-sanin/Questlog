@@ -158,7 +158,6 @@ void main() {
                 breathY: 1.0,
                 gaze: Offset(8, 8),
                 blink: 1.0,
-                pupilDilate: 1.0,
                 eyeWide: 1.0,
                 pingProgress: -1,
                 gildProgress: -1,
@@ -297,7 +296,6 @@ void main() {
               breathY: 1.0,
               gaze: Offset.zero,
               blink: 1.0,
-              pupilDilate: 1.0,
               eyeWide: 1.0,
               pingProgress: -1,
               gildProgress: 0.5,
@@ -321,7 +319,6 @@ void main() {
           breathY: 1.0,
           gaze: Offset.zero,
           blink: 1.0,
-          pupilDilate: 1.0,
           eyeWide: 1.0,
           pingProgress: -1,
           gildProgress: -1,
@@ -424,7 +421,6 @@ void main() {
                 breathY: 1.0,
                 gaze: Offset.zero,
                 blink: 0.08,
-                pupilDilate: 1.0,
                 eyeWide: 1.0,
                 pingProgress: -1,
                 gildProgress: -1,
@@ -455,7 +451,6 @@ void main() {
               breathY: 1.0,
               gaze: Offset.zero,
               blink: 1.0,
-              pupilDilate: 1.0,
               eyeWide: 1.0,
               pingProgress: -1,
               gildProgress: -1,
@@ -606,7 +601,7 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
 
-    testWidgets('hover gaze: the pupil follows the pointer, then drifts back', (
+    testWidgets('hover gaze: the eyes follow the pointer, then drift back', (
       tester,
     ) async {
       await pumpFace(tester);
@@ -620,7 +615,7 @@ void main() {
       expect(
         _motionOf(tester).gaze.dx,
         greaterThan(0),
-        reason: 'the pupil should track the hovering pointer',
+        reason: 'the gaze should track the hovering pointer',
       );
       await mouse.moveTo(center + const Offset(400, 0));
       for (var i = 0; i < 12; i++) {
@@ -836,7 +831,6 @@ void main() {
                 breathY: 1.0,
                 gaze: Offset.zero,
                 blink: 1.0,
-                pupilDilate: 1.0,
                 eyeWide: 1.0,
                 pingProgress: -1,
                 gildProgress: -1,
@@ -864,7 +858,6 @@ void main() {
                 breathY: 1.0,
                 gaze: Offset.zero,
                 blink: 1.0,
-                pupilDilate: 1.0,
                 eyeWide: 1.0,
                 pingProgress: -1,
                 gildProgress: -1,
@@ -930,11 +923,11 @@ void main() {
 
         // And the wake must be real: an open eye is the 28x44 design capsule
         // (44k ≈ 19px tall), while the sleeping lid is a 0.15u line. Scan a
-        // column inside the capsule but outside the pupil (s=84 → k=0.4375,
-        // eye spread 0.92 → right eye centre = 42 + 64k*0.92 ≈ 67.8, capsule
-        // spans 61.6..73.9, the attentive pupil hovers around 64.3..71.3).
+        // column inside the capsule (s=84 → k=0.4375, eye spread 0.92 →
+        // right eye centre = 42 + 64k*0.92 ≈ 67.8, capsule spans 61.6..73.9;
+        // the robo face has no pupils — the whole capsule is solid).
         const stride = 84;
-        const colX = 63; // inside capsule, left of the pupil
+        const colX = 63; // inside the solid capsule
         expect(
           fgRowSpan(asleep, colX, stride),
           lessThanOrEqualTo(5),

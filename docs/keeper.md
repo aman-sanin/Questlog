@@ -44,7 +44,7 @@ reference aesthetic (white shapes on black) is literally the Onyx theme.
 | Part            | Spec                                                                                                                                                                     | Channels                                                                                                                                                        |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Eye**         | Two filled sharp rectangles, **3.2u × 4u**, centers at ±2.2u x, −1.5u y (~63% of face width — big, per the references)                                                   | blink = block squashes to 0.15u line (120ms) · half-lid = bg block slides over top 45% (150ms) · wide = ×1.12 · eye-smile = block morphs to a ∪ arc (2dp, 3.2u) |
-| **Pupil**       | bg-colored square, 1.6u, default low-center                                                                                                                              | gaze = slides ±0.8u · dilate ×1.4 · pinpoint ×0.5 — this is where "watching" lives                                                                              |
+| **Gaze (no pupils)** | the whole eye capsule slides — solid robo eyes, no cutouts, exactly like the reference capsules | idle drift ±0.8u (mood-scaled) · hover follow ±0.8u · glance overlay ±0.8u/±0.6u — this is where "watching" lives |
 | **Mouth**       | 2dp round-cap strokes, ~3.5u, centered at +2.5u y                                                                                                                        | five shapes (§3) · mouth-sync (§4)                                                                                                                              |
 | **Class glyph** | 2dp-stroke mark floating 2.5u above the eye-top, offset-phase bob: Sage 4-point star · Warrior chevron · Monk open ring · Bard three bars · Ranger peaks · Artificer hex | opacity follows mood                                                                                                                                            |
 | **Z-motes**     | Mono `z` ~10dp, one per 2.5s, rising 6dp and fading, phase-offset                                                                                                        | asleep, ≥64dp only                                                                                                                                              |
@@ -75,20 +75,20 @@ chevron for skeptical / sad / grumpy.
 constitution filters the reference sheet; the face's range is
 positive/neutral only.
 
-| Expression                | Eyes                       | Pupils                       | Mouth                       | Renders when                                              |
+| Expression                | Eyes                       | Gaze                         | Mouth                       | Renders when                                              |
 | ------------------------- | -------------------------- | ---------------------------- | --------------------------- | --------------------------------------------------------- |
 | **asleep**                | closed lines + z-motes     | —                            | tiny dot                    | dormant (quests due, zero completions)                    |
-| **waking**                | lines → open, double-blink | pinpoint                     | design smile              | app open, 250ms                                           |
-| **attentive** _(default)_ | open                       | low-center, gaze drift ±0.8u | design smile               | day in progress                                           |
-| **anticipating**          | ×1.12                      | ×1.15                        | design smile               | one essential left — brightens, never points              |
+| **waking**                | lines → open, double-blink | centred                      | design smile              | app open, 250ms                                           |
+| **attentive** _(default)_ | open                       | whole-eye drift ±0.8u        | design smile               | day in progress                                           |
+| **anticipating**          | ×1.12                      | —                            | design smile               | one essential left — brightens, never points              |
 | **content**               | ∪∪                         | —                            | `‿`                         | essentials done                                           |
 | **resting**               | half-lid                   | —                            | `‿`                         | dayFraction > 0.75, held day                              |
-| **gilded** ⭐             | ∪∪ + sparkle               | ×1.4                         | **`D`** + Ember flash 600ms | Perfect Day (hold 4s)                                     |
-| **surprised**             | ×1.15                      | pinpoint ×0.5                | `o` + ring ping             | yearly quest completion, rare events                      |
-| **celebrating**           | ∪∪ + corner sparkles       | ×1.4                         | `D`                         | level-up, 4s                                              |
-| **petted**                | ∪∪                         | ×1.4                         | `D` + wiggle ±3°            | tap on Profile                                            |
-| **glance**                | (overlay)                  | → (dx,dy) clamp ±0.8u/±0.6u  | unchanged                   | any completion: 300ms travel, 500ms hold, blink on return |
-| **quiescent**             | open, slight-side          | offset x                     | `〜`                        | zero active quests / nothing due — the empty-state face   |
+| **gilded** ⭐             | ∪∪ + sparkle               | —                            | **`D`** + Ember flash 600ms | Perfect Day (hold 4s)                                     |
+| **surprised**             | ×1.15                      | —                            | `o` + ring ping             | yearly quest completion, rare events                      |
+| **celebrating**           | ∪∪ + corner sparkles       | —                            | `D`                         | level-up, 4s                                              |
+| **petted**                | ∪∪                         | —                            | `D` + wiggle ±3°            | tap on Profile                                            |
+| **glance**                | (overlay)                  | whole-eye → (dx,dy) ±0.8u/±0.6u | unchanged                | any completion: 300ms travel, 500ms hold, blink on return |
+| **quiescent**             | open                       | slow drift                   | `〜`                        | zero active quests / nothing due — the empty-state face   |
 
 ## 4 · Mouth-sync (the liveliness multiplier)
 
@@ -126,11 +126,11 @@ KeeperMood keeperMoodFor({
 ```
 
 **Modifier — anticipation** (exactly one essential remains, derived):
-attentive + wide ×1.12 + pupils ×1.15 + pulse quickens 2.5s.
+attentive + wide ×1.12 + pulse quickens 2.5s.
 
 **Pose resolver:** transient expressions overlay the mood base —
 `gilded` (600ms flash + 4s hold) · `celebrating` (4s after level-up
-dismiss) · `surprised` (500ms) · `petted` (400ms) · `glance` (pupil
+dismiss) · `surprised` (500ms) · `petted` (400ms) · `glance` (gaze
 overlay only). Poses come from the moment queue / event stream; moods
 derive from state. The painter receives a frozen `KeeperRenderState`
 (mood, modifier?, pose?, phase, glanceTarget).
@@ -140,13 +140,13 @@ derive from state. The painter receives a frozen `KeeperRenderState`
 | Event                  | Face                                                | Sound                                                  |
 | ---------------------- | --------------------------------------------------- | ------------------------------------------------------ |
 | Quest complete (daily) | glance at the row, blink on return                  | chirp + mouth-pop                                      |
-| Weekly                 | 1dp squash + glance + dilate 150ms                  | chirp                                                  |
+| Weekly                 | 1dp squash + glance 150ms                           | chirp                                                  |
 | Monthly / yearly       | bounce + **surprised** + ring ping                  | chirp                                                  |
 | Counter increment      | quick downward glance                               | —                                                      |
 | Perfect Day            | **gilded**: Ember flash + ∪∪ + `D` + sparkle        | trill                                                  |
-| Milestone              | sparkle + dilate                                    | —                                                      |
+| Milestone              | sparkle                                             | —                                                      |
 | App open               | waking sequence                                     | —                                                      |
-| Profile visit          | looks up at you (pupils up-center), blinks, settles | —                                                      |
+| Profile visit          | looks up at you (gaze up-center), blinks, settles   | —                                                      |
 | **Pet** (tap, Profile) | ∪∪ + `D` + wiggle                                   | purr + **haptic purr** (two light impacts, 90ms apart) |
 | Long-press             | opens the Keeper sheet                              | —                                                      |
 
@@ -214,7 +214,7 @@ assets/sounds/        keeper_chirp.ogg · keeper_trill.ogg · keeper_purr.ogg
 ```
 
 **Fork port list** (the fork's structure survives almost wholesale — this
-design is its lineage): eyes + pupils + lids + mouth arcs, bob controller,
+design is its lineage): eyes + lids + mouth arcs, bob controller,
 z-particle concept, mood-palette structure. Changes: circle eyes → square
 blocks · bezier body → nothing (deleted) · hardcoded `Colors.black` →
 tokens · `withOpacity` → `withValues(alpha:)` · z `TextPainter` cached,
@@ -226,7 +226,7 @@ mouth-sync, glance channel, classifier replacement.
 `bobMs 2400 · bobAmpDp 2.5 · pulseMs 4000 · pulseScale 1.02 ·
 blinkMinMs 3000 · blinkMaxMs 7000 · doubleBlinkP 0.10 ·
 gazeMinMs 3000 · gazeMaxMs 8000 · gazeAmpU 0.8 ·
-glanceTravelMs 300 · glanceHoldMs 500 · dilate 1.4 · pinpoint 0.5 ·
+glanceTravelMs 300 · glanceHoldMs 500 · wide 1.12 ·
 wide 1.12 · pingMs 400 · gildFlashMs 600 · gildHoldMs 4000 ·
 mouthPopMs 150 · petWiggleMs 400 ·
 growth: 10 / 30 / 100 perfect days · gildLevel 30`
@@ -297,7 +297,10 @@ grumpy, `gap-20` for sad. Rendered **white-only**: hearts, z's, and highlights
 all stay monochrome (no pink/cyan). Two deliberate, user-approved deviations
 from the reference: the eye centers sit **8% closer** than the design gap
 (`_eyeSpread = 0.92`), and the class sigil rides **0.4u higher** (`cy - 4.4u`,
-its halo ring clips ~1px at adorned+). Gaze translates the whole eye capsule and
+its halo ring clips ~1px at adorned+). Eyes are solid pupil-less capsules
+exactly like the reference — no `tokens.bg` cutout in either theme (light
+mode reads near-black via `textPrimary`), mood dimming kept per §2. Gaze
+translates the whole eye capsule and
 slides the mouth at half travel (design parallax); the double-blink is the
 design's `scaleY(0.08)` squash; the love pose floats white hearts where the
 design spawns particles.
@@ -385,12 +388,13 @@ lives in `keeper_widget.dart`.
   `sad` before `grumpy` in the resolver (truth table fails) · drop the
   `onPointerHover` registration (hover gaze test dies) · drop the affection
   threshold in `_stroke` (stroke test dies) · delete a `KeeperThought._lines`
-  row (bubble test fails).
+  row (bubble test fails) · re-introduce a pupil rect in `_drawBaseEye`
+  (attentive/quiescent goldens flip).
 
 ### §14 · Acceptance gates (added)
 
 10. Tap the Today face three times fast → cheeky + wobble; keep petting →
-    heart eyes; hover-over it with a mouse → pupil tracks; rare-cadence
+    heart eyes; hover-over it with a mouse → gaze tracks; rare-cadence
     completion → shocked + ping; 4+ boops → a sigh and a sad face that recovers.
 11. Today + sheet show a thought bubble keyed to the face's live expression,
     rotating every ~7s — still strictly white/monochrome. The face is the
@@ -405,7 +409,8 @@ lives in `keeper_widget.dart`.
       `code.html` geometry: 64×64 capsule eyes (`gap-16`/`gap-14`/`gap-20`),
       per-expression design mouths, whole-eye gaze parallax + half-travel
       mouth, `scaleY(0.08)` squash blink, love-pose white heart particles —
-      white-on-dark only. Goldens regenerated (render tests 24→26 with
+      white-on-dark only. Solid pupil-less robo capsules (mood dimming kept,
+      light mode near-black via token). Goldens regenerated (render tests 24→26 with
       blink + heart mutation gates), mutation-checked, docs updated. (#waifu)
 - [ ] **P-KEEPER v3 — the Kiko totem (in-place)** — nine-expression affect
       layer (resolver + per-expression goldens, no plain mood can go sad) ·

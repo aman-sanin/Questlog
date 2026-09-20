@@ -46,6 +46,8 @@ class StreakEngine {
     );
 
     int currentStreak = 0;
+    int run = 0; // length of the run currently being walked (any era)
+    int bestStreak = 0; // longest run ever — survives breaks
     int wallet = availableFreezeWallet;
     final List<String> consumedRepairs = [];
     bool currentStreakFinalized = false;
@@ -67,6 +69,8 @@ class StreakEngine {
 
     if (currentPeriodCompleted >= target) {
       currentStreak++;
+      run++;
+      bestStreak = run;
     }
 
     for (final period in periods) {
@@ -112,27 +116,34 @@ class StreakEngine {
       final String pKey = rule.periodKey(period.startLocalDate, weekStart.value);
 
       if (isSatisfied) {
+        run++;
+        if (run > bestStreak) bestStreak = run;
         if (!currentStreakFinalized) {
           currentStreak++;
         }
       } else if (existingRepairs.contains(pKey)) {
-        // Previously consumed freeze repair keeps streak alive
+        // Previously consumed freeze repair bridges the run (unextended).
         continue;
       } else if (wallet > 0 && !currentStreakFinalized) {
-        // Consume available freeze from wallet to preserve streak
+        // Consume available freeze from wallet to preserve the current run.
         wallet--;
         consumedRepairs.add(pKey);
         continue;
       } else {
-        // Streak breaks here
+        // Run ends here: bank it, freeze the current count on first break,
+        // but keep scanning — older runs still count toward best.
+        if (run > bestStreak) bestStreak = run;
+        run = 0;
         currentStreakFinalized = true;
-        break;
+        continue;
       }
     }
 
+    if (run > bestStreak) bestStreak = run;
+
     return StreakResult(
       streak: currentStreak,
-      bestStreak: currentStreak,
+      bestStreak: bestStreak,
       newlyConsumedRepairs: consumedRepairs,
     );
   }

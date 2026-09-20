@@ -93,7 +93,7 @@ class FreezeChip extends StatelessWidget {
   const FreezeChip({
     super.key,
     required this.count,
-    this.capacity = 2,
+    this.capacity = 5,
   });
 
   @override

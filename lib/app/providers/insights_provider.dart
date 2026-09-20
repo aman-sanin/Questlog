@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/db/database.dart';
-import '../../domain/constants/xp_constants.dart';
 import '../../domain/engine/insights.dart';
 import '../../domain/engine/quest_state.dart';
 import '../../domain/engine/schedule_rule.dart';
@@ -38,7 +37,6 @@ class InsightsScreenState {
   final List<HeatmapDayStatus> heatmapDays;
   final List<HeatmapDayStatus> yearHeatmapDays;
   final List<QuestEvaluation> streakLeaderboard;
-  final int freezeWalletCount;
   final WeeklyInsightData weeklyInsight;
   final bool hasMonthlyRecap;
 
@@ -47,7 +45,6 @@ class InsightsScreenState {
     required this.heatmapDays,
     required this.yearHeatmapDays,
     required this.streakLeaderboard,
-    required this.freezeWalletCount,
     required this.weeklyInsight,
     required this.hasMonthlyRecap,
   });
@@ -267,7 +264,6 @@ InsightsScreenState _buildInsights({
     heatmapDays: monthDays,
     yearHeatmapDays: yearDays,
     streakLeaderboard: allQuests.take(10).toList(),
-    freezeWalletCount: XpConstants.freezeWalletCapacity,
     weeklyInsight: weeklyInsight,
     hasMonthlyRecap: today.day <= 7,
   );

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../../data/db/database.dart';
+import '../keeper/tunables.dart';
 import '../model/models.dart';
+import 'freezes.dart';
 
 enum BadgeCategory {
   journey,
@@ -11,6 +13,7 @@ enum BadgeCategory {
   economy,
   rarities,
   calling,
+  keeper,
   sealed,
 }
 
@@ -69,7 +72,7 @@ class BadgeStatus {
 
 class BadgeEngine {
   static const List<BadgeDefinition> catalog = [
-    // ── 1. JOURNEY (6) ────────────────────────────────────────────────────────
+    // ── 1. JOURNEY (11) ───────────────────────────────────────────────────────
     BadgeDefinition(
       key: 'first_step',
       title: 'First Step',
@@ -130,8 +133,58 @@ class BadgeEngine {
       progressKind: ProgressKind.cumulative,
       targetValue: 5000,
     ),
+    BadgeDefinition(
+      key: 'twenty_five',
+      title: 'Twenty-Five',
+      category: BadgeCategory.journey,
+      icon: Symbols.tag,
+      flavor: 'A quarter of a hundred.',
+      requirement: 'Complete 25 total quests.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 25,
+    ),
+    BadgeDefinition(
+      key: 'quarter_thousand',
+      title: 'Quarter Thousand',
+      category: BadgeCategory.journey,
+      icon: Symbols.layers,
+      flavor: 'Two hundred fifty, kept.',
+      requirement: 'Complete 250 total quests.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 250,
+    ),
+    BadgeDefinition(
+      key: 'half_thousand',
+      title: 'Half Thousand',
+      category: BadgeCategory.journey,
+      icon: Symbols.library_books,
+      flavor: 'A small library of days.',
+      requirement: 'Complete 500 total quests.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 500,
+    ),
+    BadgeDefinition(
+      key: 'two_thousand',
+      title: 'Two Thousand',
+      category: BadgeCategory.journey,
+      icon: Symbols.menu_book,
+      flavor: 'Volumes, plural.',
+      requirement: 'Complete 2,000 total quests.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 2000,
+    ),
+    BadgeDefinition(
+      key: 'ten_thousand',
+      title: 'Ten Thousand',
+      category: BadgeCategory.journey,
+      icon: Symbols.castle,
+      flavor: 'A fortress of entries.',
+      requirement: 'Complete 10,000 total quests.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 10000,
+    ),
 
-    // ── 2. STREAKS (7) ────────────────────────────────────────────────────────
+    // ── 2. STREAKS (12) ───────────────────────────────────────────────────────
     BadgeDefinition(
       key: 'weeks_worth',
       title: "A Week's Worth",
@@ -202,8 +255,58 @@ class BadgeEngine {
       progressKind: ProgressKind.peak,
       targetValue: 3,
     ),
+    BadgeDefinition(
+      key: 'fortnight_fire',
+      title: 'Fortnight Fire',
+      category: BadgeCategory.streaks,
+      icon: Symbols.bolt,
+      flavor: 'Fourteen, burning.',
+      requirement: 'Reach a streak of 14 periods on any quest.',
+      progressKind: ProgressKind.peak,
+      targetValue: 14,
+    ),
+    BadgeDefinition(
+      key: 'fifty_stack',
+      title: 'Fifty Stack',
+      category: BadgeCategory.streaks,
+      icon: Symbols.inventory,
+      flavor: 'Fifty high.',
+      requirement: 'Reach a streak of 50 periods on any quest.',
+      progressKind: ProgressKind.peak,
+      targetValue: 50,
+    ),
+    BadgeDefinition(
+      key: 'double_century',
+      title: 'Double Century',
+      category: BadgeCategory.streaks,
+      icon: Symbols.shield,
+      flavor: 'Two hundred deep.',
+      requirement: 'Reach a streak of 200 periods on any quest.',
+      progressKind: ProgressKind.peak,
+      targetValue: 200,
+    ),
+    BadgeDefinition(
+      key: 'twelve_weeks',
+      title: 'Twelve Weeks',
+      category: BadgeCategory.streaks,
+      icon: Symbols.calendar_view_week,
+      flavor: 'A quarter of weeks.',
+      requirement: 'Reach a 12-week streak on any weekly quest.',
+      progressKind: ProgressKind.peak,
+      targetValue: 12,
+    ),
+    BadgeDefinition(
+      key: 'half_year_moons',
+      title: 'Half-Year Moons',
+      category: BadgeCategory.streaks,
+      icon: Symbols.nightlight,
+      flavor: 'Six moons honored.',
+      requirement: 'Reach a 6-month streak on any monthly quest.',
+      progressKind: ProgressKind.peak,
+      targetValue: 6,
+    ),
 
-    // ── 3. PERFECTION (6) ─────────────────────────────────────────────────────
+    // ── 3. PERFECTION (11) ────────────────────────────────────────────────────
     BadgeDefinition(
       key: 'perfect_ten',
       title: 'Perfect Ten',
@@ -264,8 +367,58 @@ class BadgeEngine {
       progressKind: ProgressKind.event,
       targetValue: 1,
     ),
+    BadgeDefinition(
+      key: 'perfect_silver',
+      title: 'Perfect Silver',
+      category: BadgeCategory.perfection,
+      icon: Symbols.thumb_up,
+      flavor: 'Twenty-five clean pages.',
+      requirement: 'Achieve 25 Perfect Days.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 25,
+    ),
+    BadgeDefinition(
+      key: 'perfect_two_hundred',
+      title: 'Perfect Two Hundred',
+      category: BadgeCategory.perfection,
+      icon: Symbols.hotel_class,
+      flavor: 'Two hundred flawless.',
+      requirement: 'Achieve 200 Perfect Days.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 200,
+    ),
+    BadgeDefinition(
+      key: 'perfect_year',
+      title: 'Perfect Year',
+      category: BadgeCategory.perfection,
+      icon: Symbols.stars,
+      flavor: 'A year of clean pages.',
+      requirement: 'Achieve 365 Perfect Days.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 365,
+    ),
+    BadgeDefinition(
+      key: 'flawless_week',
+      title: 'Flawless Week',
+      category: BadgeCategory.perfection,
+      icon: Symbols.task_alt,
+      flavor: 'Seven in a row, perfect.',
+      requirement: 'Achieve 7 consecutive Perfect Days.',
+      progressKind: ProgressKind.peak,
+      targetValue: 7,
+    ),
+    BadgeDefinition(
+      key: 'flawless_season',
+      title: 'Flawless Season',
+      category: BadgeCategory.perfection,
+      icon: Symbols.spa,
+      flavor: 'Thirty days, no asterisks.',
+      requirement: 'Achieve 30 consecutive Perfect Days.',
+      progressKind: ProgressKind.peak,
+      targetValue: 30,
+    ),
 
-    // ── 4. GOALS (3) ──────────────────────────────────────────────────────────
+    // ── 4. GOALS (8) ──────────────────────────────────────────────────────────
     BadgeDefinition(
       key: 'goal_getter',
       title: 'Goal Getter',
@@ -296,15 +449,65 @@ class BadgeEngine {
       progressKind: ProgressKind.cumulative,
       targetValue: 10,
     ),
+    BadgeDefinition(
+      key: 'second_chapter',
+      title: 'Second Chapter',
+      category: BadgeCategory.goals,
+      icon: Symbols.book,
+      flavor: 'Two chapters closed.',
+      requirement: 'Complete 2 overarching goals.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 2,
+    ),
+    BadgeDefinition(
+      key: 'trilogy',
+      title: 'Trilogy',
+      category: BadgeCategory.goals,
+      icon: Symbols.library_books,
+      flavor: 'Three, beginning to end.',
+      requirement: 'Complete 3 overarching goals.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 3,
+    ),
+    BadgeDefinition(
+      key: 'lucky_seven_goals',
+      title: 'Lucky Seven',
+      category: BadgeCategory.goals,
+      icon: Symbols.casino,
+      flavor: 'Seven ventures finished.',
+      requirement: 'Complete 7 overarching goals.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 7,
+    ),
+    BadgeDefinition(
+      key: 'fifteen_halls',
+      title: 'Fifteen Halls',
+      category: BadgeCategory.goals,
+      icon: Symbols.corporate_fare,
+      flavor: 'Fifteen halls walked.',
+      requirement: 'Complete 15 overarching goals.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 15,
+    ),
+    BadgeDefinition(
+      key: 'silver_library',
+      title: 'Silver Library',
+      category: BadgeCategory.goals,
+      icon: Symbols.local_library,
+      flavor: 'Twenty-five chapters.',
+      requirement: 'Complete 25 overarching goals.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 25,
+    ),
 
-    // ── 5. ECONOMY (3) ────────────────────────────────────────────────────────
+    // ── 5. ECONOMY (8) ────────────────────────────────────────────────────────
     BadgeDefinition(
       key: 'first_freeze',
       title: 'First Freeze',
       category: BadgeCategory.economy,
       icon: Symbols.ac_unit,
       flavor: 'You banked your first mercy.',
-      requirement: 'Bank at least 1 streak freeze from a Perfect Week.',
+      requirement: 'Bank at least 1 streak freeze.',
       progressKind: ProgressKind.cumulative,
       targetValue: 1,
     ),
@@ -328,8 +531,58 @@ class BadgeEngine {
       progressKind: ProgressKind.cumulative,
       targetValue: 3,
     ),
+    BadgeDefinition(
+      key: 'first_grace',
+      title: 'First Grace',
+      category: BadgeCategory.economy,
+      icon: Symbols.handshake,
+      flavor: 'The first rescue.',
+      requirement: 'Use 1 streak freeze to preserve a streak.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 1,
+    ),
+    BadgeDefinition(
+      key: 'grace_fivefold',
+      title: 'Grace Fivefold',
+      category: BadgeCategory.economy,
+      icon: Symbols.diversity_3,
+      flavor: 'Five streaks preserved.',
+      requirement: 'Use 5 streak freezes to preserve streaks.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 5,
+    ),
+    BadgeDefinition(
+      key: 'grace_tenfold',
+      title: 'Grace Tenfold',
+      category: BadgeCategory.economy,
+      icon: Symbols.volunteer_activism,
+      flavor: 'Ten times spared.',
+      requirement: 'Use 10 streak freezes to preserve streaks.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 10,
+    ),
+    BadgeDefinition(
+      key: 'mercy_five',
+      title: 'Five Mercies',
+      category: BadgeCategory.economy,
+      icon: Symbols.ac_unit,
+      flavor: 'Five mercies banked.',
+      requirement: 'Bank at least 5 streak freezes.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 5,
+    ),
+    BadgeDefinition(
+      key: 'mercy_ten',
+      title: 'Ten Mercies',
+      category: BadgeCategory.economy,
+      icon: Symbols.inventory,
+      flavor: 'A full winter of mercy.',
+      requirement: 'Bank at least 10 streak freezes.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 10,
+    ),
 
-    // ── 6. RARITIES (6) ───────────────────────────────────────────────────────
+    // ── 6. RARITIES (11) ──────────────────────────────────────────────────────
     BadgeDefinition(
       key: 'new_years_quest',
       title: "New Year's Quest",
@@ -390,8 +643,58 @@ class BadgeEngine {
       progressKind: ProgressKind.peak,
       targetValue: 365,
     ),
+    BadgeDefinition(
+      key: 'spring_equinox',
+      title: 'Spring Equinox',
+      category: BadgeCategory.rarities,
+      icon: Symbols.eco,
+      flavor: 'Day and night, balanced.',
+      requirement: 'Complete a quest on March 20th (Spring Equinox).',
+      progressKind: ProgressKind.event,
+      targetValue: 1,
+    ),
+    BadgeDefinition(
+      key: 'autumn_equinox',
+      title: 'Autumn Equinox',
+      category: BadgeCategory.rarities,
+      icon: Symbols.forest,
+      flavor: 'The light turns.',
+      requirement: 'Complete a quest on September 22nd (Autumn Equinox).',
+      progressKind: ProgressKind.event,
+      targetValue: 1,
+    ),
+    BadgeDefinition(
+      key: 'hallows',
+      title: 'Hallows',
+      category: BadgeCategory.rarities,
+      icon: Symbols.skull,
+      flavor: 'Kept on the thin night.',
+      requirement: 'Complete a quest on October 31st.',
+      progressKind: ProgressKind.event,
+      targetValue: 1,
+    ),
+    BadgeDefinition(
+      key: 'yule',
+      title: 'Yule',
+      category: BadgeCategory.rarities,
+      icon: Symbols.redeem,
+      flavor: 'A gift to the log.',
+      requirement: 'Complete a quest on December 25th.',
+      progressKind: ProgressKind.event,
+      targetValue: 1,
+    ),
+    BadgeDefinition(
+      key: 'hearts_day',
+      title: "Hearts' Day",
+      category: BadgeCategory.rarities,
+      icon: Symbols.favorite,
+      flavor: 'Kept with love.',
+      requirement: 'Complete a quest on February 14th.',
+      progressKind: ProgressKind.event,
+      targetValue: 1,
+    ),
 
-    // ── 7. CALLING — 12 TRIALS (2 per domain) ────────────────────────────────
+    // ── 7. CALLING — 17 TRIALS ────────────────────────────────────────────────
     BadgeDefinition(
       key: 'trial_iron_will',
       title: 'Iron Will',
@@ -524,8 +827,160 @@ class BadgeEngine {
       progressKind: ProgressKind.cumulative,
       targetValue: 100,
     ),
+    BadgeDefinition(
+      key: 'first_tribute',
+      title: 'First Tribute',
+      category: BadgeCategory.calling,
+      icon: Symbols.swords,
+      flavor: 'The first offering.',
+      requirement: 'Complete 1 quest of your pledged calling.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 1,
+    ),
+    BadgeDefinition(
+      key: 'oathkeeper',
+      title: 'Oathkeeper',
+      category: BadgeCategory.calling,
+      icon: Symbols.gavel,
+      flavor: 'Twenty-five, in your colors.',
+      requirement: 'Complete 25 quests of your pledged calling.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 25,
+    ),
+    BadgeDefinition(
+      key: 'paragon',
+      title: 'Paragon',
+      category: BadgeCategory.calling,
+      icon: Symbols.anchor,
+      flavor: 'Two hundred fifty, unwavering.',
+      requirement: 'Complete 250 quests of your pledged calling.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 250,
+    ),
+    BadgeDefinition(
+      key: 'unbending',
+      title: 'Unbending',
+      category: BadgeCategory.calling,
+      icon: Symbols.account_balance,
+      flavor: 'Sixty periods, unbroken.',
+      requirement: 'Reach a 60-period streak on a quest of your pledged calling.',
+      progressKind: ProgressKind.peak,
+      targetValue: 60,
+    ),
+    BadgeDefinition(
+      key: 'full_circle',
+      title: 'Full Circle',
+      category: BadgeCategory.calling,
+      icon: Symbols.all_inclusive,
+      flavor: 'Every road, walked once.',
+      requirement: 'Complete at least 1 quest in all six callings.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 6,
+    ),
 
-    // ── 8. SEALED (7) ─────────────────────────────────────────────────────────
+    // ── 8. KEEPER (10) ────────────────────────────────────────────────────────
+    BadgeDefinition(
+      key: 'keeper_first_day',
+      title: 'First Day Together',
+      category: BadgeCategory.keeper,
+      icon: Symbols.pets,
+      flavor: 'It watched its first day happen.',
+      requirement: 'Log a completion on any day.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 1,
+    ),
+    BadgeDefinition(
+      key: 'keeper_first_watch',
+      title: 'First Watch',
+      category: BadgeCategory.keeper,
+      icon: Symbols.visibility,
+      flavor: 'The first perfect day, witnessed.',
+      requirement: 'Achieve 1 Perfect Day.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 1,
+    ),
+    BadgeDefinition(
+      key: 'keeper_waking',
+      title: 'Waking',
+      category: BadgeCategory.keeper,
+      icon: Symbols.alarm,
+      flavor: 'Ten perfect days. It stirs.',
+      requirement: 'Achieve 10 Perfect Days (the Keeper wakes).',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 10,
+    ),
+    BadgeDefinition(
+      key: 'keeper_adorned',
+      title: 'Adorned',
+      category: BadgeCategory.keeper,
+      icon: Symbols.candle,
+      flavor: 'Thirty. It shines a little.',
+      requirement: 'Achieve 30 Perfect Days (the Keeper is adorned).',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 30,
+    ),
+    BadgeDefinition(
+      key: 'keeper_trimmed',
+      title: 'Trimmed',
+      category: BadgeCategory.keeper,
+      icon: Symbols.bolt,
+      flavor: 'A hundred. Ember at the edges.',
+      requirement: 'Achieve 100 Perfect Days (the Keeper is trimmed).',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 100,
+    ),
+    BadgeDefinition(
+      key: 'keeper_company_week',
+      title: 'A Week of Company',
+      category: BadgeCategory.keeper,
+      icon: Symbols.groups,
+      flavor: 'Seven days kept company.',
+      requirement: 'Log completions on 7 distinct days.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 7,
+    ),
+    BadgeDefinition(
+      key: 'keeper_company_season',
+      title: 'A Season of Company',
+      category: BadgeCategory.keeper,
+      icon: Symbols.calendar_month,
+      flavor: 'Thirty days together.',
+      requirement: 'Log completions on 30 distinct days.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 30,
+    ),
+    BadgeDefinition(
+      key: 'keeper_company_year',
+      title: 'A Year of Company',
+      category: BadgeCategory.keeper,
+      icon: Symbols.public,
+      flavor: 'A full year, side by side.',
+      requirement: 'Log completions on 365 distinct days.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 365,
+    ),
+    BadgeDefinition(
+      key: 'keeper_level_ten',
+      title: 'Level Ten',
+      category: BadgeCategory.keeper,
+      icon: Symbols.trending_up,
+      flavor: 'Double digits. It stands taller.',
+      requirement: 'Reach player level 10.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 10,
+    ),
+    BadgeDefinition(
+      key: 'keeper_legend',
+      title: 'Legend',
+      category: BadgeCategory.keeper,
+      icon: Symbols.hotel_class,
+      flavor: 'Level thirty. The golden face.',
+      requirement: 'Reach player level 30 (the Keeper is gilded).',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 30,
+    ),
+
+    // ── 9. SEALED (12) ────────────────────────────────────────────────────────
     BadgeDefinition(
       key: 'night_owl',
       title: 'Night Owl',
@@ -601,19 +1056,76 @@ class BadgeEngine {
       targetValue: 12,
       sealed: true,
     ),
+    BadgeDefinition(
+      key: 'nightcap',
+      title: 'Nightcap',
+      category: BadgeCategory.sealed,
+      icon: Symbols.moon_stars,
+      flavor: 'One last entry before sleep.',
+      requirement: 'Log a completion between 22:00 and midnight.',
+      progressKind: ProgressKind.event,
+      sealed: true,
+    ),
+    BadgeDefinition(
+      key: 'high_noon',
+      title: 'High Noon',
+      category: BadgeCategory.sealed,
+      icon: Symbols.light_mode,
+      flavor: 'Kept at midday.',
+      requirement: 'Log a completion between 12:00 and 13:00.',
+      progressKind: ProgressKind.event,
+      sealed: true,
+    ),
+    BadgeDefinition(
+      key: 'century_backfill',
+      title: 'Century Backfill',
+      category: BadgeCategory.sealed,
+      icon: Symbols.update,
+      flavor: 'A hundred honest corrections.',
+      requirement: 'Log 100 backfilled completions.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 100,
+      sealed: true,
+    ),
+    BadgeDefinition(
+      key: 'annalist',
+      title: 'Annalist',
+      category: BadgeCategory.sealed,
+      icon: Symbols.border_color,
+      flavor: 'Two hundred fifty entries with words.',
+      requirement: 'Attach notes to 250 quest completions.',
+      progressKind: ProgressKind.cumulative,
+      targetValue: 250,
+      sealed: true,
+    ),
+    BadgeDefinition(
+      key: 'grand_marathon',
+      title: 'Grand Marathon',
+      category: BadgeCategory.sealed,
+      icon: Symbols.rocket_launch,
+      flavor: 'Twenty-five in a single day.',
+      requirement: 'Log 25 or more completions on a single calendar day.',
+      progressKind: ProgressKind.peak,
+      targetValue: 25,
+      sealed: true,
+    ),
   ];
 
-  /// Pure deterministic evaluation of all 50 badges based on the SQLite logbook state.
+  /// Pure deterministic evaluation of all 100 badges based on the SQLite logbook state.
+  /// Freeze grants derive from the completion log itself (see [FreezeEngine]);
+  /// perfect-week ledger events are XP-only and intentionally not read here.
   static List<BadgeStatus> evaluate({
     required List<CompletionData> completions,
     required List<QuestData> quests,
     required List<GoalData> goals,
-    required List<XpEventData> xpEvents,
     required List<StreakRepairData> streakRepairs,
     required ProfileData profile,
     required Map<String, int> questMaxStreaks,
     required Set<LocalDate> perfectDays,
     required Set<String> seenBadgeKeys,
+    required WeekStart weekStart,
+    required LocalDate today,
+    int playerLevel = 1,
   }) {
     final questMap = {for (final q in quests) q.id: q};
     final userCalling = profile.calling != null ? CallingDomain.values[profile.calling!] : null;
@@ -682,8 +1194,34 @@ class BadgeEngine {
       }
     }
 
-    // Perfect weeks from ledger
-    final perfectWeeksCount = xpEvents.where((e) => e.type == 2).length;
+    // Freeze grants derive from the log — the single source shared with the
+    // live wallet (2 per perfect daily/weekly week, 1 per essentials-only
+    // week). Ledger perfect-week events are XP-only artifacts, not counted.
+    final completionsByQuestForFreezes = <String, Map<LocalDate, int>>{};
+    for (final c in completions) {
+      final d = LocalDate.parse(c.localDate);
+      completionsByQuestForFreezes.putIfAbsent(c.questId, () => <LocalDate, int>{})[d] =
+          (completionsByQuestForFreezes[c.questId]![d] ?? 0) + c.value;
+    }
+    final freezeWeekly = FreezeEngine.weeklyGrants(
+      quests: quests,
+      completionsByQuest: completionsByQuestForFreezes,
+      weekStart: weekStart,
+      today: today,
+    );
+    var freezeGrantsTotal = 0;
+    var perfectWeeksCount = 0;
+    for (final g in freezeWeekly) {
+      freezeGrantsTotal += g.grants;
+      if (g.grants >= 2) perfectWeeksCount++;
+    }
+    final freezePeak =
+        FreezeEngine.peakWallet(grants: freezeWeekly, repairs: streakRepairs);
+    final freezeBalance = FreezeEngine.replayWallet(
+        grants: freezeWeekly, repairs: streakRepairs);
+
+    // Economy: repairs persist via consume-on-write.
+    int streakRepairsCount = streakRepairs.length;
 
     // Perfect calendar month check (every eligible day in a month perfect, with >= 20 eligible days)
     bool hasPerfectMonth = false;
@@ -699,31 +1237,7 @@ class BadgeEngine {
       }
     }
 
-    // Economy: Wallet replay
-    int perfectWeekGrants = perfectWeeksCount;
-    int streakRepairsCount = streakRepairs.length;
-    bool reachedTwoFreezes = false;
-
-    // Replay timeline of grants and repairs
-    final timeline = <({DateTime time, int delta})>[];
-    for (final e in xpEvents) {
-      if (e.type == 2) {
-        timeline.add((time: e.createdAt, delta: 1));
-      }
-    }
-    for (final r in streakRepairs) {
-      timeline.add((time: r.appliedAt, delta: -1));
-    }
-    timeline.sort((a, b) => a.time.compareTo(b.time));
-
-    int runningBalance = 0;
-    for (final item in timeline) {
-      runningBalance = (runningBalance + item.delta).clamp(0, 2);
-      if (runningBalance >= 2) {
-        reachedTwoFreezes = true;
-        break;
-      }
-    }
+    // (Freeze pre-calcs live above, next to perfectWeeksCount.)
 
     // Rarities calculations
     bool hasJan1 = false;
@@ -731,6 +1245,11 @@ class BadgeEngine {
     bool hasJun21 = false;
     bool hasFeb29 = false;
     bool hasYearOne = false;
+    bool hasMar20 = false;
+    bool hasSep22 = false;
+    bool hasOct31 = false;
+    bool hasDec25 = false;
+    bool hasFeb14 = false;
     LocalDate? firstCompletionDate;
 
     final distinctDates = <LocalDate>{};
@@ -745,11 +1264,17 @@ class BadgeEngine {
       if (d.month == 12 && d.day == 21) hasDec21 = true;
       if (d.month == 6 && d.day == 21) hasJun21 = true;
       if (d.month == 2 && d.day == 29) hasFeb29 = true;
+      if (d.month == 3 && d.day == 20) hasMar20 = true;
+      if (d.month == 9 && d.day == 22) hasSep22 = true;
+      if (d.month == 10 && d.day == 31) hasOct31 = true;
+      if (d.month == 12 && d.day == 25) hasDec25 = true;
+      if (d.month == 2 && d.day == 14) hasFeb14 = true;
 
       if (firstCompletionDate == null || d < firstCompletionDate) {
         firstCompletionDate = d;
       }
     }
+    final distinctDatesCount = distinctDates.length;
 
     if (firstCompletionDate != null) {
       for (final d in distinctDates) {
@@ -781,6 +1306,8 @@ class BadgeEngine {
     // Sealed pre-calculations
     bool hasNightOwl = false;
     bool hasDawnbreaker = false;
+    bool hasNightcap = false;
+    bool hasHighNoon = false;
     int backfilledCount = 0;
     int notesCount = 0;
     int maxCompletionsInOneDay = 0;
@@ -789,6 +1316,8 @@ class BadgeEngine {
       final hour = c.createdAt.hour;
       if (hour >= 0 && hour < 5) hasNightOwl = true;
       if (hour < 7) hasDawnbreaker = true;
+      if (hour >= 22) hasNightcap = true;
+      if (hour == 12) hasHighNoon = true;
 
       final localDate = LocalDate.parse(c.localDate);
       final createdLocalDate = LocalDate.fromDateTime(c.createdAt);
@@ -809,6 +1338,14 @@ class BadgeEngine {
 
     // Curator: >= 5 quests archived
     int archivedQuestsCount = quests.where((q) => q.archivedAt != null).length;
+
+    // Calling breadth + pledged-domain devotion
+    final domainsWithCompletions =
+        domainCompletionsCount.values.where((v) => v >= 1).length;
+    final pledgedCompletions =
+        userCalling != null ? (domainCompletionsCount[userCalling] ?? 0) : 0;
+    final pledgedStreak =
+        userCalling != null ? (maxStreakByDomain[userCalling] ?? 0) : 0;
 
     // ── Evaluate all catalog badges ─────────────────────────────────────────
     return catalog.map((b) {
@@ -842,6 +1379,26 @@ class BadgeEngine {
           currentVal = totalCompletionsCount;
           earned = earned || currentVal >= 5000;
           break;
+        case 'twenty_five':
+          currentVal = totalCompletionsCount;
+          earned = earned || currentVal >= 25;
+          break;
+        case 'quarter_thousand':
+          currentVal = totalCompletionsCount;
+          earned = earned || currentVal >= 250;
+          break;
+        case 'half_thousand':
+          currentVal = totalCompletionsCount;
+          earned = earned || currentVal >= 500;
+          break;
+        case 'two_thousand':
+          currentVal = totalCompletionsCount;
+          earned = earned || currentVal >= 2000;
+          break;
+        case 'ten_thousand':
+          currentVal = totalCompletionsCount;
+          earned = earned || currentVal >= 10000;
+          break;
 
         // STREAKS
         case 'weeks_worth':
@@ -872,6 +1429,26 @@ class BadgeEngine {
           currentVal = maxYearlyStreak;
           earned = earned || currentVal >= 3;
           break;
+        case 'fortnight_fire':
+          currentVal = maxAnyStreak;
+          earned = earned || currentVal >= 14;
+          break;
+        case 'fifty_stack':
+          currentVal = maxAnyStreak;
+          earned = earned || currentVal >= 50;
+          break;
+        case 'double_century':
+          currentVal = maxAnyStreak;
+          earned = earned || currentVal >= 200;
+          break;
+        case 'twelve_weeks':
+          currentVal = maxWeeklyStreak;
+          earned = earned || currentVal >= 12;
+          break;
+        case 'half_year_moons':
+          currentVal = maxMonthlyStreak;
+          earned = earned || currentVal >= 6;
+          break;
 
         // PERFECTION
         case 'perfect_ten':
@@ -898,6 +1475,26 @@ class BadgeEngine {
           currentVal = hasPerfectMonth ? 1 : 0;
           earned = earned || hasPerfectMonth;
           break;
+        case 'perfect_silver':
+          currentVal = perfectDaysCount;
+          earned = earned || currentVal >= 25;
+          break;
+        case 'perfect_two_hundred':
+          currentVal = perfectDaysCount;
+          earned = earned || currentVal >= 200;
+          break;
+        case 'perfect_year':
+          currentVal = perfectDaysCount;
+          earned = earned || currentVal >= 365;
+          break;
+        case 'flawless_week':
+          currentVal = maxConsecutivePerfectDays;
+          earned = earned || currentVal >= 7;
+          break;
+        case 'flawless_season':
+          currentVal = maxConsecutivePerfectDays;
+          earned = earned || currentVal >= 30;
+          break;
 
         // GOALS
         case 'goal_getter':
@@ -912,19 +1509,59 @@ class BadgeEngine {
           currentVal = completedGoalsCount;
           earned = earned || currentVal >= 10;
           break;
+        case 'second_chapter':
+          currentVal = completedGoalsCount;
+          earned = earned || currentVal >= 2;
+          break;
+        case 'trilogy':
+          currentVal = completedGoalsCount;
+          earned = earned || currentVal >= 3;
+          break;
+        case 'lucky_seven_goals':
+          currentVal = completedGoalsCount;
+          earned = earned || currentVal >= 7;
+          break;
+        case 'fifteen_halls':
+          currentVal = completedGoalsCount;
+          earned = earned || currentVal >= 15;
+          break;
+        case 'silver_library':
+          currentVal = completedGoalsCount;
+          earned = earned || currentVal >= 25;
+          break;
 
         // ECONOMY
         case 'first_freeze':
-          currentVal = perfectWeekGrants;
+          currentVal = freezeGrantsTotal;
           earned = earned || currentVal >= 1;
           break;
         case 'full_pantry':
-          currentVal = reachedTwoFreezes ? 2 : runningBalance;
-          earned = earned || reachedTwoFreezes;
+          currentVal = freezePeak >= 2 ? 2 : freezeBalance;
+          earned = earned || freezePeak >= 2;
           break;
         case 'grace_thrice':
           currentVal = streakRepairsCount;
           earned = earned || currentVal >= 3;
+          break;
+        case 'first_grace':
+          currentVal = streakRepairsCount;
+          earned = earned || currentVal >= 1;
+          break;
+        case 'grace_fivefold':
+          currentVal = streakRepairsCount;
+          earned = earned || currentVal >= 5;
+          break;
+        case 'grace_tenfold':
+          currentVal = streakRepairsCount;
+          earned = earned || currentVal >= 10;
+          break;
+        case 'mercy_five':
+          currentVal = freezeGrantsTotal;
+          earned = earned || currentVal >= 5;
+          break;
+        case 'mercy_ten':
+          currentVal = freezeGrantsTotal;
+          earned = earned || currentVal >= 10;
           break;
 
         // RARITIES
@@ -951,6 +1588,26 @@ class BadgeEngine {
         case 'unbroken_year':
           currentVal = maxConsecutiveActiveDays;
           earned = earned || currentVal >= 365;
+          break;
+        case 'spring_equinox':
+          currentVal = hasMar20 ? 1 : 0;
+          earned = earned || hasMar20;
+          break;
+        case 'autumn_equinox':
+          currentVal = hasSep22 ? 1 : 0;
+          earned = earned || hasSep22;
+          break;
+        case 'hallows':
+          currentVal = hasOct31 ? 1 : 0;
+          earned = earned || hasOct31;
+          break;
+        case 'yule':
+          currentVal = hasDec25 ? 1 : 0;
+          earned = earned || hasDec25;
+          break;
+        case 'hearts_day':
+          currentVal = hasFeb14 ? 1 : 0;
+          earned = earned || hasFeb14;
           break;
 
         // CALLING TRIALS
@@ -1014,6 +1671,72 @@ class BadgeEngine {
           currentVal = domainCompletionsCount[CallingDomain.artificer] ?? 0;
           earned = earned || (eligible && currentVal >= 100);
           break;
+        case 'first_tribute':
+          eligible = userCalling != null;
+          currentVal = pledgedCompletions;
+          earned = earned || (eligible && currentVal >= 1);
+          break;
+        case 'oathkeeper':
+          eligible = userCalling != null;
+          currentVal = pledgedCompletions;
+          earned = earned || (eligible && currentVal >= 25);
+          break;
+        case 'paragon':
+          eligible = userCalling != null;
+          currentVal = pledgedCompletions;
+          earned = earned || (eligible && currentVal >= 250);
+          break;
+        case 'unbending':
+          eligible = userCalling != null;
+          currentVal = pledgedStreak;
+          earned = earned || (eligible && currentVal >= 60);
+          break;
+        case 'full_circle':
+          currentVal = domainsWithCompletions;
+          earned = earned || currentVal >= 6;
+          break;
+
+        // KEEPER
+        case 'keeper_first_day':
+          currentVal = distinctDatesCount;
+          earned = earned || currentVal >= 1;
+          break;
+        case 'keeper_first_watch':
+          currentVal = perfectDaysCount;
+          earned = earned || currentVal >= 1;
+          break;
+        case 'keeper_waking':
+          currentVal = perfectDaysCount;
+          earned = earned || currentVal >= KeeperTunables.growthWaking;
+          break;
+        case 'keeper_adorned':
+          currentVal = perfectDaysCount;
+          earned = earned || currentVal >= KeeperTunables.growthAdorned;
+          break;
+        case 'keeper_trimmed':
+          currentVal = perfectDaysCount;
+          earned = earned || currentVal >= KeeperTunables.growthTrimmed;
+          break;
+        case 'keeper_company_week':
+          currentVal = distinctDatesCount;
+          earned = earned || currentVal >= 7;
+          break;
+        case 'keeper_company_season':
+          currentVal = distinctDatesCount;
+          earned = earned || currentVal >= 30;
+          break;
+        case 'keeper_company_year':
+          currentVal = distinctDatesCount;
+          earned = earned || currentVal >= 365;
+          break;
+        case 'keeper_level_ten':
+          currentVal = playerLevel;
+          earned = earned || currentVal >= 10;
+          break;
+        case 'keeper_legend':
+          currentVal = playerLevel;
+          earned = earned || currentVal >= KeeperTunables.gildLevel;
+          break;
 
         // SEALED
         case 'night_owl':
@@ -1043,6 +1766,26 @@ class BadgeEngine {
         case 'marathon_day':
           currentVal = maxCompletionsInOneDay;
           earned = earned || currentVal >= 12;
+          break;
+        case 'nightcap':
+          currentVal = hasNightcap ? 1 : 0;
+          earned = earned || hasNightcap;
+          break;
+        case 'high_noon':
+          currentVal = hasHighNoon ? 1 : 0;
+          earned = earned || hasHighNoon;
+          break;
+        case 'century_backfill':
+          currentVal = backfilledCount;
+          earned = earned || currentVal >= 100;
+          break;
+        case 'annalist':
+          currentVal = notesCount;
+          earned = earned || currentVal >= 250;
+          break;
+        case 'grand_marathon':
+          currentVal = maxCompletionsInOneDay;
+          earned = earned || currentVal >= 25;
           break;
       }
 

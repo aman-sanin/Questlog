@@ -1,8 +1,10 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 import '../../data/db/database.dart';
+import '../../domain/engine/freezes.dart';
 import '../../domain/engine/schedule_rule.dart';
 import '../../domain/engine/settlement.dart';
+import '../../domain/engine/streak.dart';
 import '../../domain/engine/xp.dart';
 import '../../domain/model/models.dart';
 
@@ -184,7 +186,89 @@ class QuestActions {
     // Run settlement
     await settle(today: date, weekStart: weekStart, now: now);
 
+    // Spend wallet freezes on any missed periods the balance covers.
+    await consumeFreezes(today: date, weekStart: weekStart, now: now);
+
     return completionId;
+  }
+
+  /// Spend wallet freezes on missed periods (essential quests first,
+  /// then oldest) and persist the repairs. Runs after a completion is
+  /// recorded; repairs are backdated to the missed period via periodKey.
+  /// Stale repairs are harmless: satisfied periods hit the satisfied branch
+  /// before the repair check, so an unneeded repair never changes a streak.
+  Future<void> consumeFreezes({
+    required LocalDate today,
+    required WeekStart weekStart,
+    required DateTime now,
+  }) async {
+    final quests = await db.questsDao.getActiveQuests();
+    if (quests.isEmpty) return;
+    final completions = await db.completionsDao.getAllCompletions();
+    final repairs = await db.ledgerDao.getStreakRepairs();
+
+    final completionsByQuest = <String, Map<LocalDate, int>>{};
+    for (final c in completions) {
+      final d = LocalDate.parse(c.localDate);
+      completionsByQuest.putIfAbsent(c.questId, () => {})[d] =
+          (completionsByQuest[c.questId]![d] ?? 0) + c.value;
+    }
+
+    var wallet = FreezeEngine.walletBalance(
+      quests: quests,
+      completionsByQuest: completionsByQuest,
+      repairs: repairs,
+      weekStart: weekStart,
+      today: today,
+    );
+    if (wallet <= 0) return;
+
+    final persisted = <String, Set<String>>{};
+    for (final r in repairs) {
+      persisted.putIfAbsent(r.questId, () => {}).add(r.periodKey);
+    }
+
+    final ordered = quests.toList()
+      ..sort((a, b) {
+        if (a.essential != b.essential) return a.essential ? -1 : 1;
+        final c = a.createdAt.compareTo(b.createdAt);
+        if (c != 0) return c;
+        return a.id.compareTo(b.id);
+      });
+
+    for (final q in ordered) {
+      if (wallet <= 0) break;
+      final qCompletions = completionsByQuest[q.id] ?? {};
+      LocalDate? firstDate;
+      for (final d in qCompletions.keys) {
+        if (firstDate == null || d < firstDate) firstDate = d;
+      }
+      final res = StreakEngine.calculate(
+        rule: q.rule,
+        targetType: TargetType.values[q.targetType],
+        targetValue: q.targetValue,
+        completionValues: qCompletions,
+        existingRepairs: persisted[q.id] ?? {},
+        today: today,
+        weekStart: weekStart,
+        firstCompletionDate: firstDate,
+        pausedUntil:
+            q.pausedUntil != null ? LocalDate.parse(q.pausedUntil!) : null,
+        availableFreezeWallet: wallet,
+      );
+      for (final pKey in res.newlyConsumedRepairs) {
+        await db.ledgerDao.insertStreakRepair(
+          StreakRepairsCompanion(
+            id: Value(_uuid.v4()),
+            questId: Value(q.id),
+            periodKey: Value(pKey),
+            appliedAt: Value(now),
+          ),
+        );
+        persisted.putIfAbsent(q.id, () => {}).add(pKey);
+        wallet--;
+      }
+    }
   }
 
   /// Undo a completion within the undo window

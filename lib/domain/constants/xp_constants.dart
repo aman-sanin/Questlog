@@ -8,10 +8,10 @@ class XpConstants {
   static const int baseYearly = 400;
 
   static const int perfectDayBonus = 15;
-  static const int perfectWeekBonus = 75; // +75 XP and grants 1 streak freeze
+  static const int perfectWeekBonus = 75; // +75 XP; the week also grants freezes (see FreezeEngine)
   static const int goalCompletionBonus = 250;
 
-  static const int freezeWalletCapacity = 2;
+  static const int freezeWalletCapacity = 5;
 
   static int baseForCadence(Cadence cadence) {
     switch (cadence) {

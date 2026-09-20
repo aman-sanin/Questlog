@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/db/database.dart';
 import '../../domain/engine/badges.dart';
+import '../../domain/engine/progression.dart';
 import '../../domain/engine/streak.dart';
 import '../../domain/model/models.dart';
 import 'database_provider.dart';
 import 'profile_provider.dart';
+import 'profile_view_provider.dart';
 
 class BadgesScreenState {
   final List<BadgeStatus> allBadges;
@@ -42,12 +44,18 @@ final seenMomentsStreamProvider = StreamProvider<Set<String>>((ref) {
   return ref.watch(ledgerDaoProvider).watchSeenMoments();
 });
 
+final repairsStreamProvider = StreamProvider<List<StreakRepairData>>((ref) {
+  return ref.watch(ledgerDaoProvider).watchStreakRepairs();
+});
+
 final badgesStateProvider = Provider<AsyncValue<BadgesScreenState>>((ref) {
   final completionsAsync = ref.watch(allCompletionsStreamProvider);
   final questsAsync = ref.watch(allQuestsStreamProvider);
   final goalsAsync = ref.watch(allGoalsStreamProvider);
   final profileAsync = ref.watch(profileStreamProvider);
   final seenMomentsAsync = ref.watch(seenMomentsStreamProvider);
+  final repairsAsync = ref.watch(repairsStreamProvider);
+  final totalXpAsync = ref.watch(totalXpStreamProvider);
   final today = ref.watch(effectiveLocalDateProvider);
   final weekStart = ref.watch(weekStartProvider);
 
@@ -55,7 +63,9 @@ final badgesStateProvider = Provider<AsyncValue<BadgesScreenState>>((ref) {
       questsAsync is AsyncLoading ||
       goalsAsync is AsyncLoading ||
       profileAsync is AsyncLoading ||
-      seenMomentsAsync is AsyncLoading) {
+      seenMomentsAsync is AsyncLoading ||
+      repairsAsync is AsyncLoading ||
+      totalXpAsync is AsyncLoading) {
     return const AsyncLoading();
   }
 
@@ -64,6 +74,8 @@ final badgesStateProvider = Provider<AsyncValue<BadgesScreenState>>((ref) {
   if (goalsAsync.hasError) return AsyncError(goalsAsync.error!, goalsAsync.stackTrace!);
   if (profileAsync.hasError) return AsyncError(profileAsync.error!, profileAsync.stackTrace!);
   if (seenMomentsAsync.hasError) return AsyncError(seenMomentsAsync.error!, seenMomentsAsync.stackTrace!);
+  if (repairsAsync.hasError) return AsyncError(repairsAsync.error!, repairsAsync.stackTrace!);
+  if (totalXpAsync.hasError) return AsyncError(totalXpAsync.error!, totalXpAsync.stackTrace!);
 
   final completions = completionsAsync.value ?? [];
   final quests = questsAsync.value ?? [];
@@ -148,12 +160,14 @@ final badgesStateProvider = Provider<AsyncValue<BadgesScreenState>>((ref) {
     completions: completions,
     quests: quests,
     goals: goals,
-    xpEvents: [],
-    streakRepairs: [],
+    streakRepairs: repairsAsync.value ?? [],
     profile: profile,
     questMaxStreaks: questMaxStreaks,
     perfectDays: perfectDays,
     seenBadgeKeys: seenMoments,
+    weekStart: weekStart,
+    today: today,
+    playerLevel: ProgressionEngine.levelFromXp(totalXpAsync.value ?? 0),
   );
 
   final grouped = <BadgeCategory, List<BadgeStatus>>{};

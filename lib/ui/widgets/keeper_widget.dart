@@ -34,7 +34,6 @@ class KeeperMotion {
   final double breathY;
   final Offset gaze;
   final double blink; // 1 = open … 0.08 = shut
-  final double pupilDilate;
   final double eyeWide;
   final double pingProgress; // -1 = none, else 0..1
   final double gildProgress; // -1 = none, else 0..1
@@ -52,7 +51,6 @@ class KeeperMotion {
     required this.breathY,
     required this.gaze,
     required this.blink,
-    required this.pupilDilate,
     required this.eyeWide,
     required this.pingProgress,
     required this.gildProgress,
@@ -72,7 +70,6 @@ class KeeperMotion {
     breathY: 1.0,
     gaze: Offset.zero,
     blink: 1.0,
-    pupilDilate: 1.0,
     eyeWide: 1.0,
     pingProgress: -1,
     gildProgress: -1,
@@ -200,7 +197,7 @@ class _KeeperWidgetState extends State<KeeperWidget>
   bool _tapMoved = false;
   bool _gazeActive = false;
 Offset _downPos = Offset.zero;
-  Offset _gazePx = Offset.zero; // current smoothed pupil offset (px)
+  Offset _gazePx = Offset.zero; // current smoothed gaze offset (px)
   Offset _gazeTargetPx = Offset.zero;
   final Stopwatch _lastMoveAt = Stopwatch()..start();
   Timer? _skepticalHoverTimer;
@@ -605,7 +602,7 @@ Offset _downPos = Offset.zero;
   }
 
   /// Desktop hover is itself a stroke: moving over the face purrs, and the
-  /// pupil follows the pointer (§7). Hovers arrive as [PointerHoverEvent].
+  /// gaze follows the pointer (§7). Hovers arrive as [PointerHoverEvent].
   void _onPointerHover(PointerHoverEvent event) {
     _setGazeTarget(event.localPosition);
     if (event.kind == PointerDeviceKind.mouse &&
@@ -647,8 +644,8 @@ Offset _downPos = Offset.zero;
     _gazeTargetPx = Offset.zero;
   }
 
-  /// Map a local pointer position to a clamped pupil offset; the pupil can
-  /// follow as far as the eye-socket clamp allows (§7).
+  /// Map a local pointer position to a clamped gaze offset; the whole eye
+  /// follows as far as the eye-socket clamp allows (§7).
   void _setGazeTarget(Offset local) {
     if (!mounted || (_reducedMotion ?? true)) return;
     _gazeActive = true;
@@ -739,12 +736,6 @@ Offset _downPos = Offset.zero;
     // Blink curve: open→shut→open across the controller.
     final blink = 1.0 - math.sin(math.pi * _blink.value).abs() * 0.92;
 
-    final wakePinpoint =
-        KeeperTunables.pinpoint +
-        (1 - KeeperTunables.pinpoint) * _wake.value.clamp(0.0, 1.0);
-    final intensify =
-        _gild.isAnimating || _celebrating || _wiggle.isAnimating;
-
     // Pointer gaze: ease toward the hover/pan target, then clamp with the
     // glance channel inside the socket (§7).
     if (_gazeActive) {
@@ -769,10 +760,6 @@ Offset _downPos = Offset.zero;
       breathY: breath,
       gaze: gaze,
       blink: blink,
-      pupilDilate:
-          wakePinpoint *
-          (widget.anticipation ? KeeperTunables.dilateAnticipation : 1.0) *
-          (intensify ? KeeperTunables.dilate : 1.0),
       eyeWide:
           (widget.anticipation ? KeeperTunables.wide : 1.0) *
           (1 + 0.3 * _surpriseWide.value),
@@ -1075,7 +1062,7 @@ class KeeperPainter extends CustomPainter {
           });
           continue;
         case KeeperExpression.shocked:
-          // Shocked: thin white ring hugging a dilated white core (§7).
+          // Shocked: thin white ring hugging a solid white core (§7).
           _drawInEye(canvas, ec, (c) {
             final s = motion.eyeWide;
             c.drawCircle(
@@ -1166,8 +1153,8 @@ class KeeperPainter extends CustomPainter {
     );
   }
 
-  /// The mood-modulated baseline eye: content capsules, attentive/quiescent
-  /// pupils watching inside, a resting half-lid, a closed line while asleep.
+  /// The mood-modulated baseline eye: solid design capsules, a resting
+  /// half-lid, a closed line while asleep. No pupils — the robo face (§7).
   void _drawBaseEye(Canvas canvas, Offset ec, double gw, Paint fill) {
     final closed = state.mood == KeeperMood.dormant;
     final halfLid = state.mood == KeeperMood.resting && state.summoned;
@@ -1194,11 +1181,6 @@ class KeeperPainter extends CustomPainter {
         Paint()..color = tokens.bg,
       );
     }
-
-    // Pupil — attentive / quiescent face watching the slice of the day (§5).
-    if ((moodHasPupil || _gildedFace) && !halfLid && motion.blink >= 0.3) {
-      _paintPupil(canvas, ec);
-    }
   }
 
   /// A shut eye — the design's blink squash held as a thin closed line (§5).
@@ -1224,24 +1206,7 @@ class KeeperPainter extends CustomPainter {
     ..cubicTo(48, 34, 32, 46, 32, 46)
     ..close();
 
-  bool get moodHasPupil =>
-      state.mood == KeeperMood.attentive || state.mood == KeeperMood.quiescent;
-
-  void _paintPupil(Canvas canvas, Offset ec) {
-    if (motion.blink < 0.3) return;
-    final side = (1.6 * _u * motion.pupilDilate).clamp(0.4 * _u, 1.0 * _u);
-    // Low-center default; quiescent sits slight-aside (§5).
-    final base = state.mood == KeeperMood.quiescent
-        ? Offset(0.4 * _u, 0)
-        : Offset(0, 0.6 * _u);
-    final pc = ec + Offset(motion.gaze.dx * 0.5, motion.gaze.dy * 0.5) + base;
-    canvas.drawRect(
-      Rect.fromCenter(center: pc, width: side, height: side),
-      Paint()..color = tokens.bg,
-    );
-  }
-
-  // ── Mouth ───────────────────────────────────────────────────────────────
+  // ── Mouth ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
   void _paintMouth(Canvas canvas, Paint stroke, Paint fill) {
     // Mouth-sync parallax: the design moves the mouth at half the eye travel.

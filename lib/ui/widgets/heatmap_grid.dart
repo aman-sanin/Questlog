@@ -75,14 +75,12 @@ class HeatmapGrid extends StatelessWidget {
 
             switch (day.intensity) {
               case HeatmapIntensity.offDay:
+                // Blank iff nothing was logged (misses show no red).
                 dotColor = tokens.textPrimary.withOpacity(0.08);
                 break;
               case HeatmapIntensity.paused:
                 dotColor = Colors.transparent;
                 dotBorder = Border.all(color: tokens.lineRule, width: 1);
-                break;
-              case HeatmapIntensity.missedEssential:
-                dotColor = tokens.miss;
                 break;
               case HeatmapIntensity.low:
                 dotColor = tokens.accent.withOpacity(0.20);

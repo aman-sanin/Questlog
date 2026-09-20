@@ -207,45 +207,47 @@ class InsightsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
 
-                  // Monthly Recap Teaser Card
-                  InkWell(
-                    onTap: () => context.push('/recap'),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: tokens.hero.withOpacity(0.08),
-                        border: Border.all(color: tokens.hero, width: 1),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Symbols.auto_awesome, size: 20, color: tokens.hero, fill: 1.0),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'MONTHLY RECAP AVAILABLE',
-                                  style: tokens.title(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: tokens.hero,
+                  // Monthly Recap Teaser Card (first week of the month only)
+                  if (state.hasMonthlyRecap) ...[
+                    InkWell(
+                      onTap: () => context.push('/recap'),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: tokens.hero.withOpacity(0.08),
+                          border: Border.all(color: tokens.hero, width: 1),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Symbols.auto_awesome, size: 20, color: tokens.hero, fill: 1.0),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'MONTHLY RECAP AVAILABLE',
+                                    style: tokens.title(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: tokens.hero,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Review your achievements and share your illuminated manuscript.',
-                                  style: tokens.body(fontSize: 12, color: tokens.textSecondary),
-                                ),
-                              ],
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Review your achievements and share your illuminated manuscript.',
+                                    style: tokens.body(fontSize: 12, color: tokens.textSecondary),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          Icon(Symbols.arrow_forward, size: 16, color: tokens.hero),
-                        ],
+                            Icon(Symbols.arrow_forward, size: 16, color: tokens.hero),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
+                  ],
 
                   // Rotating Weekly Insight Card
                   Container(

@@ -103,16 +103,22 @@ This document details all user-facing functions, sheets, screens, and interactiv
   - **Mastery in Motion**: Triggered when 14-day completion is $>90\%$ to suggest difficulty upgrades.
   - **Focus Your Energy**: Triggered when completion is $<50\%$ with high quest count to suggest pausing or switching to weekly windows.
   - **Welcome Back**: Triggered when returning after 14+ days away.
-- **Monthly Heatmap Grid**: 35-day interactive completion matrix with color-coded intensity levels.
+- **Monthly Heatmap Grid**: 35-day interactive completion matrix, GitHub-style —
+  blank iff nothing logged that day, accent shade scaling with volume
+  (1 / 2–3 / 4–6 / 7+ completions).
 - **Domain Affinity Bar**: Percentage breakdown of XP earned across Warrior, Sage, Monk, Bard, Ranger, and Artificer quests.
 - **Monthly Recap Access**: Card leading into the full monthly review.
 
 ---
 
 ### 📅 Monthly Recap Screen (`/recap`)
-- **Month-over-Month Trends**: Overall completion rate comparison against the previous month.
+- **Live manuscript**: recap of the last closed month — headline, completion
+  rate, XP, perfect days, best streak, trend vs prior month, freezes saved.
 - **Key Metrics**: Total XP earned, Perfect Days count, and Freezes saved.
-- **Highlights**: Most active Calling Domain and most completed quest of the month.
+- **Highlights**: Most active Calling Domain (affinity bar) and most completed
+  quest of the month (Quest-of-the-Month card).
+- **Access**: teaser card on Insights during the first 7 days of the month;
+  share button exports the recap as text.
 
 ---
 

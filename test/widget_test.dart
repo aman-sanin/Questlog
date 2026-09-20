@@ -296,4 +296,21 @@ void main() {
 
     await inMemoryDb.close();
   });
+
+  group('heatmapIntensityForCount: GitHub-style fixed buckets', () {
+    test('zero and negative stay blank', () {
+      expect(heatmapIntensityForCount(0), equals(HeatmapIntensity.offDay));
+      expect(heatmapIntensityForCount(-3), equals(HeatmapIntensity.offDay));
+    });
+
+    test('1 / 2-3 / 4-6 / 7+ map to low / medium / high / perfect', () {
+      expect(heatmapIntensityForCount(1), equals(HeatmapIntensity.low));
+      expect(heatmapIntensityForCount(2), equals(HeatmapIntensity.medium));
+      expect(heatmapIntensityForCount(3), equals(HeatmapIntensity.medium));
+      expect(heatmapIntensityForCount(4), equals(HeatmapIntensity.high));
+      expect(heatmapIntensityForCount(6), equals(HeatmapIntensity.high));
+      expect(heatmapIntensityForCount(7), equals(HeatmapIntensity.perfect));
+      expect(heatmapIntensityForCount(200), equals(HeatmapIntensity.perfect));
+    });
+  });
 }
